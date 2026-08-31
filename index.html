@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ceb">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TOUR | Laagan Na Gyud!</title>
+  <!-- Google Fonts para sa Adventure Vibe -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* --- COLOR PALETTE & VARIABLES --- */
+    :root {
+      --bg-dark: #0f1115;
+      --card-bg: #1a1d24;
+      --accent-color: #ff9f0a; /* Fire Gold / Amber */
+      --accent-hover: #ffb340;
+      --text-light: #f3f4f6;
+      --text-muted: #9ca3af;
+      --border-color: #2d313b;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-light);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* --- NAVIGATION BAR --- */
+    header {
+      background: rgba(15, 17, 21, 0.95);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;
+    }
+
+    .brand-logo {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: var(--accent-color);
+      text-decoration: none;
+      letter-spacing: 2px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .brand-logo span {
+      color: var(--text-light);
+    }
+
+    .nav-links {
+      display: flex;
+      list-style: none;
+      gap: 20px;
+    }
+
+    .nav-links a {
+      color: var(--text-light);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: color 0.3s;
+    }
+
+    .nav-links a:hover {
+      color: var(--accent-color);
+    }
+
+    /* Mobile Menu Toggle Button */
+    .menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text-light);
+      font-size: 1.8rem;
+      cursor: pointer;
+    }
+
+    /* --- HERO SECTION --- */
+    .hero {
+      min-height: 85vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 3rem 1.5rem;
+      background: linear-gradient(rgba(15, 17, 21, 0.75), rgba(15, 17, 21, 0.95)), 
+                  url('https://images.unsplash.com/photo-1558981806-ec527fa84c39?q=80&w=1600') center/cover no-repeat;
+      border-bottom: 2px solid var(--accent-color);
+    }
+
+    .hero-content {
+      max-width: 800px;
+    }
+
+    .badge {
+      background: var(--accent-color);
+      color: #000;
+      padding: 5px 15px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: inline-block;
+      margin-bottom: 15px;
+    }
+
+    .hero h1 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: clamp(2.2rem, 5vw, 4rem);
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      margin-bottom: 30px;
+      font-style: italic;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 12px 30px;
+      border-radius: 8px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.3s;
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background: var(--accent-color);
+      color: #000;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+    }
+
+    .btn-outline {
+      border: 2px solid var(--text-light);
+      color: var(--text-light);
+    }
+
+    .btn-outline:hover {
+      background: var(--text-light);
+      color: #000;
+      transform: translateY(-2px);
+    }
+
+    /* --- QUICK ACCESS GRID (CP/Laptop Responsive) --- */
+    .section-title {
+      text-align: center;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.8rem;
+      margin: 3rem 0 1.5rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .grid-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.5rem 4rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 25px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .card:hover {
+      border-color: var(--accent-color);
+      transform: translateY(-5px);
+    }
+
+    .card-icon {
+      font-size: 2.5rem;
+      margin-bottom: 15px;
+      display: block;
+    }
+
+    .card h3 {
+      font-size: 1.3rem;
+      margin-bottom: 10px;
+    }
+
+    .card p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+    }
+
+    /* --- FOOTER --- */
+    footer {
+      background: #0a0b0e;
+      text-align: center;
+      padding: 2rem 1.5rem;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    /* --- RESPONSIVE MOBILE STYLES --- */
+    @media (max-width: 768px) {
+      .menu-btn {
+        display: block;
+      }
+
+      .nav-links {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background: var(--bg-dark);
+        flex-direction: column;
+        padding: 20px;
+        gap: 15px;
+        border-bottom: 1px solid var(--border-color);
+        display: none; /* Hidden by default */
+      }
+
+      .nav-links.active {
+        display: flex;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. NAVIGATION HEADER -->
+  <header>
+    <div class="nav-container">
+      <!-- Logo -->
+      <a href="index.html" class="brand-logo">TOUR<span>Inc</span></a>
+      
+      <!-- Mobile Menu Toggle Button -->
+      <button class="menu-btn" id="mobileMenuBtn">☰</button>
+      
+      <!-- Navigation Links (Blank/Placeholder ready) -->
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="mmc.html">MasterMind's CUP</a></li>
+        <li><a href="scan.html">Checkpoint Scanner</a></li>
+        <li><a href="map.html">Rider Map</a></li>
+        <li><a href="report.html">Reports</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- 2. HERO SECTION -->
+  <section class="hero">
+    <div class="hero-content">
+      <span class="badge">LAAGAN GYUD KAAYO!</span>
+      <h1>DILI TA ISTRANGHERO SA KAUGALINGON NATONG NASUD!</h1>
+      <p>Official Portal for Tagum Organization of Unified Riders & its BIG EVENTS.</p>
+      
+      <div class="cta-buttons">
+        <a href="mmc.html" class="btn btn-primary">MasterMind's CUP</a>
+        <a href="scan.html" class="btn btn-outline">628 All Star Extreme</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. QUICK ACCESS MENU GRID -->
+  <h2 class="section-title">Rider & Staff Portal</h2>
+  <div class="grid-container">
+    
+    <!-- Card 1: MMC Event -->
+    <div class="card">
+      <span class="card-icon">🏆</span>
+      <h3>MasterMind's CUP</h3>
+      <p>Mga detalye, rules, ug registration para sa October & June endurance ride events.</p>
+      <a href="mmc.html" class="btn btn-outline">Open Event</a>
+    </div>
+
+    <!-- Card 2: Scanner (Standalone) -->
+    <div class="card">
+      <span class="card-icon">📷</span>
+      <h3>Checkpoint Scanner</h3>
+      <p>Standalone QR / Barcode Scanner tool para sa mga station verifiers ug marshals.</p>
+      <a href="scan.html" class="btn btn-primary">Open Scanner</a>
+    </div>
+
+    <!-- Card 3: Live Map -->
+    <div class="card">
+      <span class="card-icon">🗺️</span>
+      <h3>Rider Route & Map</h3>
+      <p>Tan-awa ang official route maps ug designated checkpoint stations sa tibuok nasud.</p>
+      <a href="map.html" class="btn btn-outline">View Map</a>
+    </div>
+
+    <!-- Card 4: Reports & Logs -->
+    <div class="card">
+      <span class="card-icon">📊</span>
+      <h3>Checkpoint Reports</h3>
+      <p>Susiha ang time-in logs, rider progress, ug endurance status reports.</p>
+      <a href="report.html" class="btn btn-outline">View Reports</a>
+    </div>
+
+  </div>
+
+  <!-- 4. FOOTER -->
+  <footer id="contact">
+    <p>&copy; 2013 <strong>Tagum Organization of Unified Riders Incorporated</strong>. All Rights Reserved.</p>
+    <p style="margin-top: 5px; color: var(--accent-color);">MasterMinds'CUP Endurance Event Series</p>
+  </footer>
+
+  <!-- 5. JAVASCRIPT FOR MOBILE MENU TOGGLE -->
+  <script>
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const navLinks = document.getElementById('navLinks');
+
+    mobileMenuBtn.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+    });
+  </script>
+
+</body>
+</html>
