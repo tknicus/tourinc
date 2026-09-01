@@ -51,7 +51,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1rem 1.5rem;
+      padding: 0.8rem 1.5rem;
     }
 
     .brand-logo {
@@ -74,6 +74,7 @@
       display: flex;
       list-style: none;
       gap: 20px;
+      align-items: center; /* Gitul-id para aligned ang logo ug text links */
     }
 
     .nav-links a {
@@ -86,6 +87,20 @@
 
     .nav-links a:hover {
       color: var(--accent-color);
+    }
+
+    /* Styling para sa High-Res Logo tapad sa Home */
+    .nav-logo-item img {
+      height: 42px; /* Gi-set sa saktong sukod aron klaro ang 300px badge nga walay guba */
+      width: auto;
+      object-fit: contain;
+      vertical-align: middle;
+      display: block;
+      transition: transform 0.2s;
+    }
+
+    .nav-logo-item img:hover {
+      transform: scale(1.1);
     }
 
     /* Mobile Menu Toggle Button */
@@ -277,8 +292,14 @@
       <!-- Mobile Menu Toggle Button -->
       <button class="menu-btn" id="mobileMenuBtn">☰</button>
       
-      <!-- Navigation Links (Blank/Placeholder ready) -->
+      <!-- Navigation Links -->
       <ul class="nav-links" id="navLinks">
+        <!-- 📷 HIGH-RES LOGO BUTANG SA LEFT SIDE SA HOME -->
+        <li class="nav-logo-item">
+          <a href="index.html">
+            <img src="logo.png" alt="TOUR Logo">
+          </a>
+        </li>
         <li><a href="index.html">Home</a></li>
         <li><a href="mmc.html">MasterMinds'CUP</a></li>
         <li><a href="scan.html">Checkpoint Scanner</a></li>
@@ -345,7 +366,7 @@
   <footer id="contact">
     <p>&copy; 2013 <strong>Tagum Organization of Unified Riders Inc.</strong>. All Rights Reserved.</p>
     <p style="margin-top: 5px; color: var(--accent-color);">MasterMinds'CUP Endurance Event Series</p>
-    <p style="margin-top: 3px; color:white;">technicus</p>
+    <p style="margin-top: 2px; color:white;">technicus</p>
   </footer>
 
   <!-- 5. JAVASCRIPT FOR MOBILE MENU TOGGLE -->
