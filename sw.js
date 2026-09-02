@@ -63,3 +63,13 @@ self.addEventListener('activate', event => {
   );
   self.clients.claim();
 });
+
+// 1. Paspas nga i-activate ang bag-ong Service Worker nga walay hulat-hulat
+self.addEventListener('install', (event) => {
+    self.skipWaiting();
+});
+
+// 2. Kuhaon dayon ang kontrol sa mga bukas nga tabs sa app
+self.addEventListener('activate', (event) => {
+    event.waitUntil(clients.claim());
+});
