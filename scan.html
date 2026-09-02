@@ -739,8 +739,32 @@
             updateCheckpointCheckmarks(savedRiderID);
             updateRiderProgress();
 
+            //if ('serviceWorker' in navigator) {
+            //    navigator.serviceWorker.register('./sw.js').catch(function(error) {});
+            //}
+            // 🔄 SERVICE WORKER UG AUTO-UPDATE NOTIFIER
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('./sw.js').catch(function(error) {});
+                navigator.serviceWorker.register('./sw.js').then(registration => {
+                    // Tig-paminaw kon naay bag-ong update ang sw.js sa server
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            // Kon na-download na ang bag-ong files ug ready na gamiton
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                
+                                // Ipakita ang pop-up sa user
+                                let updateMsg = confirm("📢 Naay bag-ong update sa Masterlist (Database)! I-refresh nato ang app aron makuha ang bag-ong listahan?\n\n(Ayaw kabalaka, DILI mawala ang imong na-scan ug offline data.)");
+                                
+                                if (updateMsg) {
+                                    // I-force reload aron ma-apply dayon ang bag-ong database.js
+                                    window.location.reload(true);
+                                }
+                            }
+                        });
+                    });
+                }).catch(error => {
+                    console.log("Service Worker Registration Failed:", error);
+                });
             }
 
             initBatteryMonitor();
