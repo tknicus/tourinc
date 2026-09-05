@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MasterMinds'CUP - Live Rider Map (Life360)</title>
+    <title>MasterMinds'CUP - Live Rider Map (Life360 Style)</title>
 
+    <!-- 🎨 STYLES & LEAFLET MAP CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="icon" type="image/png" href="scan.png">
     
@@ -30,16 +31,17 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 3px solid #cc0000;
-            height: 50px;
+            height: 55px;
             box-sizing: border-box;
         }
 
         h2 {
             margin: 0;
             color: #ffffff;
-            font-size: 18px;
+            font-size: 17px;
             font-style: italic;
             text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .back-btn {
@@ -51,13 +53,15 @@
             font-weight: bold;
             font-size: 13px;
             text-transform: uppercase;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            transition: 0.2s;
         }
         .back-btn:hover { background-color: #990000; }
 
         /* Map Container Height Fix */
         #map {
             width: 100%;
-            height: calc(100vh - 90px);
+            height: calc(100vh - 95px);
             background-color: #2b2b2b;
         }
 
@@ -65,36 +69,42 @@
             background: #1e1e1e;
             padding: 10px 20px;
             font-size: 12px;
-            color: #aaa;
+            color: #ccc;
             display: flex;
             justify-content: space-between;
+            align-items: center;
             border-top: 1px solid #333;
             height: 40px;
             box-sizing: border-box;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
+    <!-- NAVIGATION HEADER -->
     <header>
-        <h2>🛰️ MMC Live Rider Map (Life360 Style)</h2>
-        <a href="index.html" class="back-btn">Balik sa Home</a>
+        <h2>🛰️ MMC Live Rider Map (Life360)</h2>
+        <a href="scan.html" class="back-btn">Balik sa Scanner</a>
     </header>
 
+    <!-- MAP CONTAINER -->
     <div id="map"></div>
 
+    <!-- STATUS FOOTER -->
     <div class="status-bar">
         <span id="connectionStatus">🟢 Nakakonekta sa Supabase Live Feed</span>
-        <span>MasterMinds'CUP Endurance Series</span>
+        <span id="activeCountBadge" style="color: #ff9900;">Active Riders: 0</span>
     </div>
 
+    <!-- LEAFLET JS, SUPABASE JS UG DATABASE -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="database.js"></script>
     
     <script>
         // ==========================================
-        // 🗺️ MAP INITIALIZATION (CENTERED SA MINDANAO / DAVAO REGION)
+        // 🗺️ MAP INITIALIZATION (CENTERED SA DAVAO REGION / MINDANAO)
         // ==========================================
         const map = L.map('map').setView([7.4474, 125.8093], 10);
 
@@ -130,10 +140,10 @@
             }
 
             if (data) {
-                document.getElementById('connectionStatus').innerHTML = "🟢 Nakakonekta sa Supabase Live Feed (" + data.length + " active)";
+                document.getElementById('connectionStatus').innerHTML = "🟢 Live Feed Active";
+                document.getElementById('activeCountBadge').innerText = `Active Riders: ${data.length}`;
                 
                 data.forEach(rider => {
-                    // Safety check para sa lain-laing database column naming convention
                     const rider_id = rider.rider_id || rider.riderId || rider.id;
                     const latitude = parseFloat(rider.latitude || rider.lat);
                     const longitude = parseFloat(rider.longitude || rider.lon);
@@ -144,9 +154,15 @@
                     
                     let latLng = [latitude, longitude];
                     let batteryIcon = battery <= 15 ? `🪫 ${battery}%` : `🔋 ${battery}%`;
-                    let timeAgo = new Date(updated_at).toLocaleTimeString();
+                    let updateDate = new Date(updated_at);
+                    let timeAgoString = updateDate.toLocaleTimeString();
 
-                    // Kuhaa ang tinuod nga pangalan gikan sa database.js kon anaa man
+                    // Susiha kon dugay na ba ang last update (> 15 minutes = stale signal)
+                    let now = new Date();
+                    let diffMinutes = (now - updateDate) / (1000 * 60);
+                    let isStale = diffMinutes > 15;
+
+                    // Kuhaa ang tinuod nga pangalan gikan sa database.js
                     let riderFullName = "Rider #" + rider_id;
                     if (typeof riderDatabase !== 'undefined' && Array.isArray(riderDatabase)) {
                         let found = riderDatabase.find(r => r.idNum === String(rider_id));
@@ -168,20 +184,32 @@
                     
                     lastRiderPositions[rider_id] = { lat: latitude, lon: longitude };
 
+                    // Status text color styling
+                    let statusText = isStale ? "💤 Wala nay Signal (>15m)" : (isMoving ? "🏍️ Nagdagan" : "🛑 Naghunong");
+                    let statusColor = isStale ? "#888" : (isMoving ? "green" : "orange");
+
                     let popupContent = `
-                        <div style="font-family:sans-serif; color:#000; font-size:13px;">
+                        <div style="font-family:sans-serif; color:#000; font-size:13px; line-height: 1.4;">
                             <b style="color:#cc0000; font-size:14px;">${riderFullName}</b><br>
                             <span style="font-size:11px; color:#555;">ID: #${rider_id}</span><br>
-                            Status: <b style="color:${isMoving ? 'green' : 'orange'}">${isMoving ? '🏍️ Nagdagan' : '🛑 Naghunong'}</b><br>
+                            Status: <b style="color:${statusColor}">${statusText}</b><br>
                             📍 Lat: ${latitude.toFixed(5)}<br>
                             Lon: ${longitude.toFixed(5)}<br>
                             ${batteryIcon}<br>
-                            <span style="font-size:11px; color:#666;">Na-update: ${timeAgo}</span>
+                            <span style="font-size:11px; color:#666;">Na-update: ${timeAgoString}</span>
                         </div>
                     `;
 
+                    // Marker Icon Styling
                     let customIcon;
-                    if (isMoving) {
+                    if (isStale) {
+                        customIcon = L.divIcon({
+                            className: 'stale-rider-marker',
+                            html: `<div style="background-color: #555; color: #aaa; border: 2px solid #888; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; box-shadow: 0 0 5px rgba(0,0,0,0.8);">${rider_id.slice(-2)}</div>`,
+                            iconSize: [30, 30],
+                            iconAnchor: [15, 15]
+                        });
+                    } else if (isMoving) {
                         customIcon = L.divIcon({
                             className: 'moving-rider-marker',
                             html: `<div style="background-color: #ff9900; color: black; border: 2px solid #fff; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 0 10px rgba(0,0,0,0.8);" title="Naglihok si #${rider_id}">🏍️</div>`,
