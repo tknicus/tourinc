@@ -75,6 +75,33 @@
     </style>
 </head>
 <body>
+    <!-- ================= 0. GATEKEEPER SCREEN (OWNTRACKS CHECKBOX BARRIER) ================= -->
+    <div id="gatekeeperContainer" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000000; z-index: 999999; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
+        <div style="width: 100%; max-width: 380px; background: #111; padding: 25px; border-radius: 12px; border: 1px solid #333; color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.8); text-align: center;">
+            
+            <img src="mmc.png" alt="MasterMinds CUP Logo" style="width: 100px; display: block; margin: 0 auto 15px auto;">
+            <h3 style="color: #ff9900; margin-bottom: 5px; font-size: 18px;">LAKBANG 1: LIVE GPS TRACKING</h3>
+            <p style="font-size: 13px; color: #ccc; line-height: 1.5; margin-bottom: 15px;">
+                Para sa safety ug live monitoring sa MasterMinds'CUP, kinahanglan naay <b>OwnTracks</b> app ang imong selpon.
+            </p>
+            
+            <!-- Download Links para sa Android ug iPhone -->
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <a href="https://play.google.com/store/apps/details?id=org.owntracks.android" target="_blank" style="flex:1; background:#222; border:1px solid #444; color:#fff; padding:10px; text-decoration:none; border-radius:6px; font-size:12px; font-weight:bold; display:block;">🤖 Play Store<br><span style="font-size:10px; color:#aaa;">(Android)</span></a>
+                <a href="https://apps.apple.com/us/app/owntracks/id692987167" target="_blank" style="flex:1; background:#222; border:1px solid #444; color:#fff; padding:10px; text-decoration:none; border-radius:6px; font-size:12px; font-weight:bold; display:block;">🍏 App Store<br><span style="font-size:10px; color:#aaa;">(iPhone)</span></a>
+            </div>
+
+            <!-- Checkbox Barrier -->
+            <div style="background: #1a1a1a; padding: 15px; border-radius: 8px; border: 1px dashed #555; text-align: left; margin-bottom: 20px;">
+                <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-size: 13px; color: #fff;">
+                    <input type="checkbox" id="owntracksCheck" style="width: 20px; height: 20px; margin-top: 2px; accent-color: #cc0000; cursor: pointer;">
+                    <span>Oo, na-download ug na-install na nako ang OwnTracks sa akong selpon.</span>
+                </label>
+            </div>
+
+            <button id="proceedToLoginBtn" disabled style="width: 100%; background: #444; color: #888; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: not-allowed; font-size: 15px; transition: 0.3s;">IPADAYON SA LOGIN</button>
+        </div>
+    </div>
 
     <!-- ================= 1. FULL-SCREEN LOGIN OVERLAY ================= -->
     <div id="loginScreenContainer" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000000; z-index: 999999; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
@@ -413,9 +440,45 @@
         }
 
         // ==========================================
-        // 🚀 DOM INITIALIZATION & BACKDOORS
+        // 🚀 DOM INITIALIZATION, GATEKEEPER & BACKDOORS
         // ==========================================
         document.addEventListener("DOMContentLoaded", function() {
+            
+            // 🛑 1. GATEKEEPER CHECK (CHECKBOX BARRIER PARA SA OWNTRACKS)
+            let gatePassed = localStorage.getItem("mmc_gatekeeper_passed") === "true";
+            const gatekeeperContainer = document.getElementById("gatekeeperContainer");
+            const owntracksCheck = document.getElementById("owntracksCheck");
+            const proceedBtn = document.getElementById("proceedToLoginBtn");
+
+            // Kon wala pa na-pass ang gatekeeper screen, ipakita kini ug hunong una
+            if (!gatePassed && gatekeeperContainer) {
+                gatekeeperContainer.style.display = "flex";
+            }
+
+            if (owntracksCheck && proceedBtn) {
+                owntracksCheck.addEventListener("change", function() {
+                    if (this.checked) {
+                        proceedBtn.disabled = false;
+                        proceedBtn.style.background = "#cc0000";
+                        proceedBtn.style.color = "white";
+                        proceedBtn.style.cursor = "pointer";
+                    } else {
+                        proceedBtn.disabled = true;
+                        proceedBtn.style.background = "#444";
+                        proceedBtn.style.color = "#888";
+                        proceedBtn.style.cursor = "not-allowed";
+                    }
+                });
+
+                proceedBtn.addEventListener("click", function() {
+                    if (owntracksCheck.checked) {
+                        localStorage.setItem("mmc_gatekeeper_passed", "true");
+                        gatekeeperContainer.style.display = "none";
+                    }
+                });
+            }
+
+            // 🔐 2. LOGIN & SESSION CHECK
             let isLoggedIn = localStorage.getItem("tourIsLoggedIn");
             let savedRiderID = localStorage.getItem("tourRiderID");
             let isMarshal = localStorage.getItem("tourIsMarshal") === "true";
@@ -426,6 +489,11 @@
                 
                 checkEventStatus(savedRiderID);
                 initScannerApp(savedRiderID);
+
+                // 🚀 SUGDAN NA ANG LIVE GPS TRACKING KON NA-LOGIN NA DAAN
+                if (typeof startLiveGpsTracking === 'function') {
+                    startLiveGpsTracking(savedRiderID);
+                }
 
                 const scanQrBtn = document.getElementById('scanQrBtn');
                 if (scanQrBtn) {
