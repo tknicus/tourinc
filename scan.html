@@ -139,7 +139,7 @@
 
             <div id="liveLocation">📍 Nangita sa imong location...</div>
 
-            <!-- ⚙️ DIRI NATO GISULOD ANG 1-TAP BUTTON ARON HAPSAY SA UI -->
+            <!-- ⚙️ DIRI NATO GISULOD ANG 1-TAP BUTTON (Mawala dayon inig click) -->
             <div id="setupOwntracksContainer" style="display:none; text-align:center; margin-bottom:15px; background:#1a1a1a; padding:12px; border-radius:8px; border:1px solid #28a745;">
                 <p style="color: #ff9900; font-size: 12px; margin-top:0; margin-bottom:8px; font-weight:bold;">LAKBANG 2: IKONEKTA ANG OWNTRACKS</p>
                 <a id="oneTapConfigBtn" href="#" style="background: #28a745; color: white; padding: 10px 15px; text-decoration: none; border-radius: 6px; font-weight: bold; display: block; font-size: 14px;">
@@ -465,7 +465,6 @@
         // ⚙️ 1-TAP OWNTRACKS CONFIG GENERATOR HELPER
         // ==========================================
         function setupOwnTracksOneTapButton(riderId) {
-            // Susiha kon na-configure na ba ni sa una pa
             if (localStorage.getItem("mmc_owntracks_configured_" + riderId) === "true") {
                 const setupContainer = document.getElementById("setupOwntracksContainer");
                 if (setupContainer) setupContainer.style.display = "none";
@@ -489,19 +488,21 @@
             
             if (oneTapBtn && setupContainer) {
                 oneTapBtn.href = oneTapConfigUrl;
-                setupContainer.style.display = "block"; // Mogawas ang berde nga button
+                setupContainer.style.display = "block";
 
-                // Inig click sa rider, i-save sa localStorage ug i-hide dayon ang container
                 oneTapBtn.onclick = function() {
                     localStorage.setItem("mmc_owntracks_configured_" + riderId, "true");
                     setTimeout(() => {
                         setupContainer.style.display = "none";
-                    }, 500); // 0.5 seconds delay aron ma-proseso sa OwnTracks app ang URL
+                    }, 500);
                 };
             }
             console.log("OwnTracks One-Tap Link Created for Rider #" + riderId);
         }
 
+        // ==========================================
+        // 👑 ADMIN LONG-PRESS & 🕵️‍♂️ MARSHAL TRIPLE-TAP BACKDOORS
+        // ==========================================
         function setupLogoLongPress(logoElement) {
             if (!logoElement) return;
             let pressTimer;
@@ -1449,7 +1450,7 @@
                     try {
                         globalQrScanner = new Html5Qrcode("reader");
                         await globalQrScanner.start(
-                            { facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: {} } },
+                            { facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } },
                             async (decodedText) => {
                                 if (globalQrScanner) {
                                     try { await globalQrScanner.stop(); globalQrScanner.clear(); } catch(e) {}
