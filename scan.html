@@ -232,7 +232,6 @@
         const _supabaseUrl = 'https://iilfklquzyxmdergwawh.supabase.co';
         const _supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpbGZrbHF1enl4bWRlcmd3YXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MTkzMDcsImV4cCI6MjEwMzI5NTMwN30.jMctz666CGfTdODLqNr24O3dQ5SDM6K5GkmihCtDdBQ';
         
-        // Gamiton nato ang supabaseClient aron dili mag-conflict
         const supabaseLiveClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
 
         function startLiveGpsTracking(riderId) {
@@ -241,13 +240,11 @@
                 return;
             }
 
-            // Mo-ping ug mo-update sa Supabase matag 20 segundos (Life360 style)
             setInterval(() => {
                 navigator.geolocation.getCurrentPosition(async (position) => {
                     let lat = position.coords.latitude;
                     let lon = position.coords.longitude;
                     
-                    // Kuhaon ang battery level kon gi-suportahan sa phone
                     let battLevel = 100;
                     if (navigator.getBattery) {
                         try {
@@ -256,7 +253,6 @@
                         } catch(e) {}
                     }
 
-                    // I-upsert (Insert o Update) ang lokasyon sa rider sa Supabase
                     const { error } = await supabaseLiveClient
                         .from('rider_locations')
                         .upsert({ 
@@ -279,10 +275,8 @@
                     maximumAge: 0, 
                     timeout: 10000 
                 });
-            }, 20000); // 20,000ms = matag 20 segundos
+            }, 20000);
         }
-        
-        
         
         // ==========================================
         // 🛠️ CUSTOM PIN PROMPT HELPER (MODAL DIALOG)
@@ -338,13 +332,10 @@
         }
 
         async function verifyAndLogin() {
-            // ==========================================
-            // 📲 SMART OWNTRACKS INSTALLATION CHECK (ANDROID & iOS)
-            // ==========================================
             function checkOwnTracksRequirement() {
                 let isOwnTracksInstalled = localStorage.getItem("mmc_owntracks_ready");
                 if (isOwnTracksInstalled === "true") {
-                    return true; // Na-install na daan
+                    return true;
                 }
 
                 let confirmInstall = confirm("⚠️ MAHINUNGDANONG PAHIBALO:\n\nPara sa Life360-style Live Tracking sa MasterMinds'CUP, kinahanglan una nimo i-install ang 'OwnTracks' app.\n\nNa-install na ba nimo ang OwnTracks?");
@@ -353,7 +344,6 @@
                     localStorage.setItem("mmc_owntracks_ready", "true");
                     return true;
                 } else {
-                    // Smart Device Detector (Android vs iPhone)
                     let userAgent = navigator.userAgent || navigator.vendor || window.opera;
                     
                     if (/android/i.test(userAgent)) {
@@ -371,7 +361,7 @@
             }
 
             if (!checkOwnTracksRequirement()) {
-                return; // Mo-undang ug dili modayon og login kung wala na-install
+                return;
             }
 
             let inputtedID = document.getElementById("riderIdInput").value.trim();
@@ -410,7 +400,6 @@
                     localStorage.setItem("tourRiderName", rider.fullname);
                     localStorage.setItem("tourIsLoggedIn", "true");
 
-                    // Tawgon ang One-Tap generator function
                     setupOwnTracksOneTapButton(rider.idNum);
                     
                     if (rider.isMarshal === true) {
@@ -425,8 +414,6 @@
                     document.getElementById("scannerScreenContainer").style.display = "flex";
 
                     initScannerApp(rider.idNum);
-
-                    // 🛑 DILI NA NATO GINAGAMIT ANG startLiveGpsTracking (Tipid Baterya!)
 
                     const scanQrBtn = document.getElementById('scanQrBtn');
                     if (scanQrBtn) {
@@ -451,17 +438,15 @@
             const owntracksCheck = document.getElementById("owntracksCheck");
             const proceedBtn = document.getElementById("proceedToLoginBtn");
 
-            // 1. KUNG WALA PA NA-PASS ANG GATEKEEPER, IPAKITA LANG MUNA NIYA
             if (!gatePassed) {
                 if (gatekeeperContainer) gatekeeperContainer.style.display = "flex";
                 if (loginContainer) loginContainer.style.display = "none";
                 if (scannerContainer) scannerContainer.style.display = "none";
-                return; // Hunong diri, ayaw na i-execute ang uban hangtod ma-tsek
+                return;
             } else {
                 if (gatekeeperContainer) gatekeeperContainer.style.display = "none";
             }
 
-            // 2. KUNG NA-PASS NA, CHECK ANG LOGIN SESSION
             let isLoggedIn = localStorage.getItem("tourIsLoggedIn");
             let savedRiderID = localStorage.getItem("tourRiderID");
             let isMarshal = localStorage.getItem("tourIsMarshal") === "true";
@@ -473,10 +458,7 @@
                 checkEventStatus(savedRiderID);
                 initScannerApp(savedRiderID);
 
-                // Ipakita pud ang 1-Tap button bisan sa auto-login!
                 setupOwnTracksOneTapButton(savedRiderID);
-
-                // 🛑 WALA NA PUD NATO GITAWAG ANG startLiveGpsTracking DINHI
 
                 const scanQrBtn = document.getElementById('scanQrBtn');
                 if (scanQrBtn) {
@@ -492,7 +474,6 @@
             setupSignalTripleTap();
         });
 
-        // Event listener para sa Proceed button sa Gatekeeper
         document.addEventListener("DOMContentLoaded", function() {
             const owntracksCheck = document.getElementById("owntracksCheck");
             const proceedBtn = document.getElementById("proceedToLoginBtn");
@@ -518,7 +499,6 @@
                     if (owntracksCheck.checked) {
                         localStorage.setItem("mmc_gatekeeper_passed", "true");
                         if (gatekeeperContainer) gatekeeperContainer.style.display = "none";
-                        // Inig click, diha pa moabli ang login screen!
                         if (loginContainer) loginContainer.style.display = "flex";
                     }
                 });
@@ -531,11 +511,11 @@
         function setupOwnTracksOneTapButton(riderId) {
             const configJson = {
                 "_type": "configuration",
-                "mode": 3, // HTTP Mode para sa background tracking
+                "mode": 3,
                 "url": "https://iilfklquzyxmdergwawh.supabase.co/functions/v1/owntracks-webhook",
                 "username": "rider_" + riderId,
                 "deviceId": "phone",
-                "tid": riderId.slice(-2) // Last 2 digits sa ID para sa tracker ID
+                "tid": riderId.slice(-2)
             };
 
             const base64Config = btoa(JSON.stringify(configJson));
@@ -545,7 +525,7 @@
             const setupContainer = document.getElementById("setupOwntracksContainer");
             if (oneTapBtn && setupContainer) {
                 oneTapBtn.href = oneTapConfigUrl;
-                setupContainer.style.display = "block"; // Mogawas ang berde nga button!
+                setupContainer.style.display = "block";
             }
             console.log("OwnTracks One-Tap Link Created for Rider #" + riderId);
         }
@@ -650,7 +630,7 @@
         
         const routeScriptURLs = {
             "AS26": "https://script.google.com/macros/s/AKfycbxTau-qcMyRPmu753acuF4c6Pgm8jy3llrLSAzrzlS-0z-k_xmQoE_9-sl2yIXeMjJF/exec",
-            "G5": "https://script.google.com/macros/s/AKfycbx3wEteB4HL7gy3t3dS-lon5kY4MwKn8XTh-7I-RpK7IT3EISSf-9WUr0XxKsUB1rc8/exec",
+            "G5": "https://script.google.com/macros/s/AKfycb3wEteB4HL7gy3t3dS-lon5kY4MwKn8XTh-7I-RpK7IT3EISSf-9WUr0XxKsUB1rc8/exec",
             "G4": "https://script.google.com/macros/s/AKfycby8eFI-lHgB71fiDWBVy_Jm9U2SPlvHw2hfDr_2NQr5YZkzpbAQmO8DspSvT6XAtxbz/exec",
             "G3": "https://script.google.com/macros/s/AKfycbygg_k9reS3scefqvP_UKXxwCTihIBL0l2T5P1NgAaxMaXv_RBIP7sVfdNf3TXOnAmqyg/exec",
             "G1N": "https://script.google.com/macros/s/AKfycbzQFK6-oBnlLOKPk8_mvJST_ai__oAupaDSfjOKA3SK75CQ2vjl1_qadDsIDk8nbMIKCw/exec",
@@ -957,18 +937,12 @@
 
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('./sw.js').then(registration => {
-                    // Tig-paminaw kon naay bag-ong update ang sw.js sa server
                     registration.addEventListener('updatefound', () => {
                         const newWorker = registration.installing;
                         newWorker.addEventListener('statechange', () => {
-                            // Kon na-download na ang bag-ong files ug ready na gamiton
                             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                
-                                // Ipakita ang pop-up sa user
                                 let updateMsg = confirm("📢 Naay bag-ong update sa Masterlist (Database)! I-refresh nato ang app aron makuha ang bag-ong listahan?\n\n(Ayaw kabalaka, DILI mawala ang imong na-scan ug offline data.)");
-                                
                                 if (updateMsg) {
-                                    // I-force reload aron ma-apply dayon ang bag-ong database.js
                                     window.location.reload(true);
                                 }
                             }
@@ -1357,7 +1331,7 @@
                     if (firstUnfinishedCP === "") firstUnfinishedCP = cpVal;
                 }
             });
-            checklistDiv.innerHTML = countCompleted === 0 ? "<span style='color: #888;'>Wala pa nay nahuman nga Checkpoint.</span>" : htmlOutput;
+            checklistDiv.innerHTML = countCompleted === 0 ? "<span style='color: #888;'>Wala pay na-submit nga Checkpoint.</span>" : htmlOutput;
 
             const dropdown = document.getElementById('checkpoint');
             if (dropdown && firstUnfinishedCP !== "") {
