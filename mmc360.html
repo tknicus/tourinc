@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MasterMinds'CUP - Live Rider Map (Life360)</title>
 
-    <!-- 🎨 STYLES & LEAFLET MAP CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="icon" type="image/png" href="scan.png">
     
@@ -77,24 +76,21 @@
 </head>
 <body>
 
-    <!-- NAVIGATION HEADER -->
     <header>
         <h2>🛰️ MMC Live Rider Map (Life360 Style)</h2>
         <a href="index.html" class="back-btn">Balik sa Home</a>
     </header>
 
-    <!-- MAP CONTAINER -->
     <div id="map"></div>
 
-    <!-- STATUS FOOTER -->
     <div class="status-bar">
         <span id="connectionStatus">🟢 Nakakonekta sa Supabase Live Feed</span>
         <span>MasterMinds'CUP Endurance Series</span>
     </div>
 
-    <!-- LEAFLET JS & SUPABASE JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="database.js"></script>
     
     <script>
         // ==========================================
@@ -102,7 +98,7 @@
         // ==========================================
         const map = L.map('map').setView([7.4474, 125.8093], 10);
 
-        // OpenStreetMap Standard Tiles (Hayag, limpyo, ug walay watermark)
+        // OpenStreetMap Standard Tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '&copy; OpenStreetMap contributors'
@@ -120,7 +116,7 @@
         // 📡 FETCH & UPDATE RIDERS LOCATION
         // ==========================================
         const riderMarkers = {};
-        const lastRiderPositions = {}; // Katabang aron mahibaw-an kon naglihok ba
+        const lastRiderPositions = {}; 
 
         async function fetchLiveRiders() {
             const { data, error } = await supabaseMapClient
@@ -134,12 +130,30 @@
             }
 
             if (data) {
+                document.getElementById('connectionStatus').innerHTML = "🟢 Nakakonekta sa Supabase Live Feed (" + data.length + " active)";
+                
                 data.forEach(rider => {
-                    const { rider_id, latitude, longitude, battery, updated_at } = rider;
+                    // Safety check para sa lain-laing database column naming convention
+                    const rider_id = rider.rider_id || rider.riderId || rider.id;
+                    const latitude = parseFloat(rider.latitude || rider.lat);
+                    const longitude = parseFloat(rider.longitude || rider.lon);
+                    const battery = rider.battery !== undefined ? rider.battery : 100;
+                    const updated_at = rider.updated_at || rider.timestamp || new Date();
+
+                    if (!rider_id || isNaN(latitude) || isNaN(longitude)) return;
                     
                     let latLng = [latitude, longitude];
                     let batteryIcon = battery <= 15 ? `🪫 ${battery}%` : `🔋 ${battery}%`;
                     let timeAgo = new Date(updated_at).toLocaleTimeString();
+
+                    // Kuhaa ang tinuod nga pangalan gikan sa database.js kon anaa man
+                    let riderFullName = "Rider #" + rider_id;
+                    if (typeof riderDatabase !== 'undefined' && Array.isArray(riderDatabase)) {
+                        let found = riderDatabase.find(r => r.idNum === String(rider_id));
+                        if (found) {
+                            riderFullName = found.fullname || found.name;
+                        }
+                    }
 
                     // --- 🏍️ MOVEMENT CHECKER LOGIC ---
                     let isMoving = false;
@@ -156,7 +170,8 @@
 
                     let popupContent = `
                         <div style="font-family:sans-serif; color:#000; font-size:13px;">
-                            <b style="color:#cc0000; font-size:14px;">Rider ID: #${rider_id}</b><br>
+                            <b style="color:#cc0000; font-size:14px;">${riderFullName}</b><br>
+                            <span style="font-size:11px; color:#555;">ID: #${rider_id}</span><br>
                             Status: <b style="color:${isMoving ? 'green' : 'orange'}">${isMoving ? '🏍️ Nagdagan' : '🛑 Naghunong'}</b><br>
                             📍 Lat: ${latitude.toFixed(5)}<br>
                             Lon: ${longitude.toFixed(5)}<br>
@@ -176,7 +191,7 @@
                     } else {
                         customIcon = L.divIcon({
                             className: 'static-rider-marker',
-                            html: `<div style="background-color: #cc0000; color: white; border: 2px solid #fff; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; box-shadow: 0 0 8px rgba(0,0,0,0.8);">${rider_id}</div>`,
+                            html: `<div style="background-color: #cc0000; color: white; border: 2px solid #fff; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; box-shadow: 0 0 8px rgba(0,0,0,0.8);">${rider_id.slice(-2)}</div>`,
                             iconSize: [30, 30],
                             iconAnchor: [15, 15]
                         });
@@ -196,9 +211,9 @@
             }
         }
 
-        // 🔄 Automatic Refresh matag 10 segundos
+        // 🔄 Automatic Refresh matag 5 segundos
         fetchLiveRiders();
-        setInterval(fetchLiveRiders, 10000);
+        setInterval(fetchLiveRiders, 5000);
 
         // ⚡ REAL-TIME SUBSCRIPTION
         supabaseMapClient
