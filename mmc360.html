@@ -95,12 +95,11 @@
         const map = L.map('map').setView([7.4474, 125.8093], 10); // Default center (Tagum / Davao area)
 
         // Dark Mode Map Tile (CartoDB Dark Matter)
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-            subdomains: 'abcd',
-            maxZoom: 19
+        // Ilisi kini sa tileLayer nga walay API key requirement
+        L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
-
         // Store active markers para dili mag-doble
         const riderMarkers = {};
 
