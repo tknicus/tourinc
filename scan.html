@@ -11,6 +11,8 @@
     <link rel="apple-touch-icon" href="scan.png">
     <meta name="theme-color" content="#121212">
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <!-- 📷 QR CODE SCANNER LIBRARY 📷 -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     
@@ -188,6 +190,64 @@
     <script src="database.js"></script>
     <script>
         // ==========================================
+        // 🛰️ LIFE360-STYLE LIVE GPS BACKGROUND TRACKER
+        // ==========================================
+        const _supabaseUrl = 'https://iilfklquzyxmdergwawh.supabase.co';
+        const _supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpbGZrbHF1enl4bWRlcmd3YXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MTkzMDcsImV4cCI6MjEwMzI5NTMwN30.jMctz666CGfTdODLqNr24O3dQ5SDM6K5GkmihCtDdBQ';
+        
+        // Gamiton nato ang supabaseClient aron dili mag-conflict
+        const supabaseLiveClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
+
+        function startLiveGpsTracking(riderId) {
+            if (!navigator.geolocation) {
+                console.warn("Geolocation kay dili suportahan sa device.");
+                return;
+            }
+
+            // Mo-ping ug mo-update sa Supabase matag 20 segundos (Life360 style)
+            setInterval(() => {
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    let lat = position.coords.latitude;
+                    let lon = position.coords.longitude;
+                    
+                    // Kuhaon ang battery level kon gi-suportahan sa phone
+                    let battLevel = 100;
+                    if (navigator.getBattery) {
+                        try {
+                            let bat = await navigator.getBattery();
+                            battLevel = Math.round(bat.level * 100);
+                        } catch(e) {}
+                    }
+
+                    // I-upsert (Insert o Update) ang lokasyon sa rider sa Supabase
+                    const { error } = await supabaseLiveClient
+                        .from('rider_locations')
+                        .upsert({ 
+                            rider_id: riderId, 
+                            latitude: lat, 
+                            longitude: lon, 
+                            battery: battLevel,
+                            updated_at: new Date()
+                        }, { onConflict: 'rider_id' });
+
+                    if (error) {
+                        console.error("❌ GPS Supabase Error:", error.message);
+                    } else {
+                        console.log(`📍 Live GPS Ping sent! [Rider #${riderId}] Lat: ${lat}, Lon: ${lon}`);
+                    }
+                }, (error) => {
+                    console.error("⚠️ GPS Error sa background:", error.message);
+                }, { 
+                    enableHighAccuracy: true, 
+                    maximumAge: 0, 
+                    timeout: 10000 
+                });
+            }, 20000); // 20,000ms = matag 20 segundos
+        }
+        
+        
+        
+        // ==========================================
         // 🛠️ CUSTOM PIN PROMPT HELPER (MODAL DIALOG)
         // ==========================================
         function customPinPrompt(title, message) {
@@ -241,6 +301,42 @@
         }
 
         async function verifyAndLogin() {
+            // ==========================================
+            // 📲 SMART OWNTRACKS INSTALLATION CHECK (ANDROID & iOS)
+            // ==========================================
+            function checkOwnTracksRequirement() {
+                let isOwnTracksInstalled = localStorage.getItem("mmc_owntracks_ready");
+                if (isOwnTracksInstalled === "true") {
+                    return true; // Na-install na daan
+                }
+
+                let confirmInstall = confirm("⚠️ MAHINUNGDANONG PAHIBALO:\n\nPara sa Life360-style Live Tracking sa MasterMinds'CUP, kinahanglan una nimo i-install ang 'OwnTracks' app.\n\nNa-install na ba nimo ang OwnTracks?");
+                
+                if (confirmInstall) {
+                    localStorage.setItem("mmc_owntracks_ready", "true");
+                    return true;
+                } else {
+                    // Smart Device Detector (Android vs iPhone)
+                    let userAgent = navigator.userAgent || navigator.vendor || window.opera;
+                    
+                    if (/android/i.test(userAgent)) {
+                        alert("I-redirect ka namo sa Google Play Store aron i-download ang OwnTracks.");
+                        window.location.href = "https://play.google.com/store/apps/details?id=org.owntracks.android";
+                    } else if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+                        alert("I-redirect ka namo sa Apple App Store aron i-download ang OwnTracks.");
+                        window.location.href = "https://apps.apple.com/us/app/owntracks/id692987167";
+                    } else {
+                        alert("Palihug i-download ang OwnTracks app sa App Store o Play Store.");
+                        window.location.href = "https://owntracks.org/";
+                    }
+                    return false;
+                }
+            }
+
+            if (!checkOwnTracksRequirement()) {
+                return; // Mo-undang ug dili modayon og login kung wala na-install
+            }
+
             let inputtedID = document.getElementById("riderIdInput").value.trim();
             let inputtedPass = document.getElementById("riderPassInput").value.trim();
 
@@ -276,6 +372,17 @@
                     localStorage.setItem("defaultRiderID", rider.idNum);
                     localStorage.setItem("tourRiderName", rider.fullname);
                     localStorage.setItem("tourIsLoggedIn", "true");
+
+                    // ==========================================
+                    // 🗺️ LIFE360 / OWNTRACKS AUTO-CONFIGURATION
+                    // ==========================================
+                    // I-save ang rider ID para sa GPS background service
+                    localStorage.setItem("mmc_tracking_rider", rider.idNum);
+                    
+                    // Opsyonal: Pwede natong i-trigger ang OwnTracks URL scheme o i-save ang config
+                    // Ang OwnTracks mo-accept og configuration URL gikan sa web: owntracks://config?mode=3&url=...
+                    console.log("GPS Tracker configured for Rider #" + rider.idNum);
+                    // ==========================================
                     
                     if (rider.isMarshal === true) {
                         localStorage.setItem("tourIsMarshal", "true");
@@ -289,6 +396,9 @@
                     document.getElementById("scannerScreenContainer").style.display = "flex";
 
                     initScannerApp(rider.idNum);
+
+                    // Sugdan na nato ang pagpitik sa GPS location padulong sa Supabase table (rider_locations)
+                    startLiveGpsTracking(rider.idNum);
 
                     const scanQrBtn = document.getElementById('scanQrBtn');
                     if (scanQrBtn) {
@@ -739,10 +849,6 @@
             updateCheckpointCheckmarks(savedRiderID);
             updateRiderProgress();
 
-            //if ('serviceWorker' in navigator) {
-            //    navigator.serviceWorker.register('./sw.js').catch(function(error) {});
-            //}
-            // 🔄 SERVICE WORKER UG AUTO-UPDATE NOTIFIER
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('./sw.js').then(registration => {
                     // Tig-paminaw kon naay bag-ong update ang sw.js sa server
