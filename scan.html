@@ -509,6 +509,13 @@
         // ⚙️ 1-TAP OWNTRACKS CONFIG GENERATOR HELPER
         // ==========================================
         function setupOwnTracksOneTapButton(riderId) {
+            // Susiha kon na-configure na ba ni sa una pa
+            if (localStorage.getItem("mmc_owntracks_configured_" + riderId) === "true") {
+                const setupContainer = document.getElementById("setupOwntracksContainer");
+                if (setupContainer) setupContainer.style.display = "none";
+                return;
+            }
+
             const configJson = {
                 "_type": "configuration",
                 "mode": 3,
@@ -523,9 +530,18 @@
 
             const oneTapBtn = document.getElementById("oneTapConfigBtn");
             const setupContainer = document.getElementById("setupOwntracksContainer");
+            
             if (oneTapBtn && setupContainer) {
                 oneTapBtn.href = oneTapConfigUrl;
-                setupContainer.style.display = "block";
+                setupContainer.style.display = "block"; // Mogawas ang berde nga button
+
+                // Inig click sa rider, i-save sa localStorage ug i-hide dayon ang container
+                oneTapBtn.onclick = function() {
+                    localStorage.setItem("mmc_owntracks_configured_" + riderId, "true");
+                    setTimeout(() => {
+                        setupContainer.style.display = "none";
+                    }, 500); // Mura'g 0.5 seconds delay aron ma-proseso sa OwnTracks app ang URL
+                };
             }
             console.log("OwnTracks One-Tap Link Created for Rider #" + riderId);
         }
