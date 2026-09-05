@@ -367,16 +367,91 @@
     <p>&copy; 2013 <strong>Tagum Organization of Unified Riders Inc.</strong>. All Rights Reserved.</p>
     <p style="margin-top: 5px; color: var(--accent-color);">MasterMinds'CUP Endurance Event Series</p>
     <p style="margin-top: 2px; color:white;">technicus</p>
+
+    <!-- UNIQUE VISITOR COUNTER BADGE -->
+    <div style="text-align: center; margin-top: 15px; font-family: sans-serif; color: #a0aec0; font-size: 13px;">
+      👁️ Mga Naniid sa Page: <strong id="visitor-count" style="color: #00ff88;">---</strong>
+    </div>
   </footer>
 
-  <!-- 5. JAVASCRIPT FOR MOBILE MENU TOGGLE -->
+  //<!-- 5. JAVASCRIPT FOR MOBILE MENU TOGGLE -->
+  <!--script-->
+  //  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  //  const navLinks = document.getElementById('navLinks');
+
+  //  mobileMenuBtn.addEventListener('click', () => {
+  //    navLinks.classList.toggle('active');
+  //  });
+  <!--/script-->
+
+  <!-- 5. SUPABASE LIBRARY -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- 6. JAVASCRIPT LOGIC -->
   <script>
+    // --- Mobile Menu Logic ---
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
     const navLinks = document.getElementById('navLinks');
 
     mobileMenuBtn.addEventListener('click', () => {
       navLinks.classList.toggle('active');
     });
+
+    // --- Supabase Configuration ---
+    // IBUTANG DINHI ANG IMONG TINUOD NGA SUPABASE URL UG ANON KEY
+    const _supabaseUrl = 'I-PASTE_DIRI_ANG_IMONG_SUPABASE_URL';
+    const _supabaseAnonKey = 'I-PASTE_DIRI_ANG_IMONG_SUPABASE_ANON_KEY';
+    
+    const supabase = supabase.createClient(_supabaseUrl, _supabaseAnonKey);
+
+    // --- Unique Visitor Counter Logic ---
+    async function handleVisitorCounter() {
+      const visitorCountEl = document.getElementById('visitor-count');
+      const hasVisited = localStorage.getItem('mmc_has_visited');
+
+      try {
+        // 1. Kuhaon ang current views gikan sa Supabase
+        let { data: stats, error } = await supabase
+          .from('page_stats')
+          .select('total_views')
+          .eq('id', 1)
+          .single();
+
+        if (error) {
+          console.error('Error pag-kuha sa visitor count:', error);
+          return;
+        }
+
+        let currentViews = stats ? stats.total_views : 0;
+
+        // 2. Kon bag-ong bisita (wala pa'y stamp sa browser)
+        if (!hasVisited) {
+          currentViews += 1; // I-plus 1 ang ihap
+
+          // I-save ang bag-ong total sa Supabase
+          const { error: updateError } = await supabase
+            .from('page_stats')
+            .update({ total_views: currentViews })
+            .eq('id', 1);
+
+          if (!updateError) {
+            // I-stamp ang browser aron dili na mo-ihap usab kon i-refresh
+            localStorage.setItem('mmc_has_visited', 'true');
+          }
+        }
+
+        // 3. I-display ang numero sa screen
+        if (visitorCountEl) {
+          visitorCountEl.innerText = currentViews.toLocaleString();
+        }
+
+      } catch (err) {
+        console.error('Unexpected error sa counter:', err);
+      }
+    }
+
+    // Padaganon ang counter inig human og load sa page
+    document.addEventListener('DOMContentLoaded', handleVisitorCounter);
   </script>
 
 </body>
