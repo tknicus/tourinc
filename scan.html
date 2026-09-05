@@ -233,50 +233,6 @@
         const _supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpbGZrbHF1enl4bWRlcmd3YXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MTkzMDcsImV4cCI6MjEwMzI5NTMwN30.jMctz666CGfTdODLqNr24O3dQ5SDM6K5GkmihCtDdBQ';
         
         const supabaseLiveClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
-
-        function startLiveGpsTracking(riderId) {
-            if (!navigator.geolocation) {
-                console.warn("Geolocation kay dili suportahan sa device.");
-                return;
-            }
-
-            setInterval(() => {
-                navigator.geolocation.getCurrentPosition(async (position) => {
-                    let lat = position.coords.latitude;
-                    let lon = position.coords.longitude;
-                    
-                    let battLevel = 100;
-                    if (navigator.getBattery) {
-                        try {
-                            let bat = await navigator.getBattery();
-                            battLevel = Math.round(bat.level * 100);
-                        } catch(e) {}
-                    }
-
-                    const { error } = await supabaseLiveClient
-                        .from('rider_locations')
-                        .upsert({ 
-                            rider_id: riderId, 
-                            latitude: lat, 
-                            longitude: lon, 
-                            battery: battLevel,
-                            updated_at: new Date()
-                        }, { onConflict: 'rider_id' });
-
-                    if (error) {
-                        console.error("❌ GPS Supabase Error:", error.message);
-                    } else {
-                        console.log(`📍 Live GPS Ping sent! [Rider #${riderId}] Lat: ${lat}, Lon: ${lon}`);
-                    }
-                }, (error) => {
-                    console.error("⚠️ GPS Error sa background:", error.message);
-                }, { 
-                    enableHighAccuracy: true, 
-                    maximumAge: 0, 
-                    timeout: 10000 
-                });
-            }, 20000);
-        }
         
         // ==========================================
         // 🛠️ CUSTOM PIN PROMPT HELPER (MODAL DIALOG)
@@ -540,7 +496,7 @@
                     localStorage.setItem("mmc_owntracks_configured_" + riderId, "true");
                     setTimeout(() => {
                         setupContainer.style.display = "none";
-                    }, 500); // Mura'g 0.5 seconds delay aron ma-proseso sa OwnTracks app ang URL
+                    }, 500); // 0.5 seconds delay aron ma-proseso sa OwnTracks app ang URL
                 };
             }
             console.log("OwnTracks One-Tap Link Created for Rider #" + riderId);
@@ -1493,7 +1449,7 @@
                     try {
                         globalQrScanner = new Html5Qrcode("reader");
                         await globalQrScanner.start(
-                            { facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } },
+                            { facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: {} } },
                             async (decodedText) => {
                                 if (globalQrScanner) {
                                     try { await globalQrScanner.stop(); globalQrScanner.clear(); } catch(e) {}
