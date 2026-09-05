@@ -76,30 +76,41 @@
 </head>
 <body>
     <!-- ================= 0. GATEKEEPER SCREEN (OWNTRACKS CHECKBOX BARRIER) ================= -->
+    <!-- ================= 0. GATEKEEPER SCREEN (OWNTRACKS CHECKBOX BARRIER) ================= -->
     <div id="gatekeeperContainer" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000000; z-index: 999999; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
-        <div style="width: 100%; max-width: 380px; background: #111; padding: 25px; border-radius: 12px; border: 1px solid #333; color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.8); text-align: center;">
+        <div style="width: 100%; max-width: 380px; background: #111; padding: 25px; border-radius: 12px; border: 1px solid #333; color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.8); text-align: center; max-height: 90vh; overflow-y: auto;">
             
-            <img src="mmc.png" alt="MasterMinds CUP Logo" style="width: 100px; display: block; margin: 0 auto 15px auto;">
-            <h3 style="color: #ff9900; margin-bottom: 5px; font-size: 18px;">LAKBANG 1: LIVE GPS TRACKING</h3>
-            <p style="font-size: 13px; color: #ccc; line-height: 1.5; margin-bottom: 15px;">
+            <img src="mmc.png" alt="MasterMinds CUP Logo" style="width: 90px; display: block; margin: 0 auto 10px auto;">
+            <h3 style="color: #ff9900; margin-bottom: 5px; font-size: 17px;">LAKBANG 1: LIVE GPS TRACKING</h3>
+            <p style="font-size: 12px; color: #ccc; line-height: 1.4; margin-bottom: 12px;">
                 Para sa safety ug live monitoring sa MasterMinds'CUP, kinahanglan naay <b>OwnTracks</b> app ang imong selpon.
             </p>
             
             <!-- Download Links para sa Android ug iPhone -->
-            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <a href="https://play.google.com/store/apps/details?id=org.owntracks.android" target="_blank" style="flex:1; background:#222; border:1px solid #444; color:#fff; padding:10px; text-decoration:none; border-radius:6px; font-size:12px; font-weight:bold; display:block;">🤖 Play Store<br><span style="font-size:10px; color:#aaa;">(Android)</span></a>
-                <a href="https://apps.apple.com/us/app/owntracks/id692987167" target="_blank" style="flex:1; background:#222; border:1px solid #444; color:#fff; padding:10px; text-decoration:none; border-radius:6px; font-size:12px; font-weight:bold; display:block;">🍏 App Store<br><span style="font-size:10px; color:#aaa;">(iPhone)</span></a>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <a href="https://play.google.com/store/apps/details?id=org.owntracks.android" target="_blank" style="flex:1; background:#222; border:1px solid #444; color:#fff; padding:8px; text-decoration:none; border-radius:6px; font-size:11px; font-weight:bold; display:block;">🤖 Play Store<br><span style="font-size:9px; color:#aaa;">(Android)</span></a>
+                <a href="https://apps.apple.com/us/app/owntracks/id692987167" target="_blank" style="flex:1; background:#222; border:1px solid #444; color:#fff; padding:8px; text-decoration:none; border-radius:6px; font-size:11px; font-weight:bold; display:block;">🍏 App Store<br><span style="font-size:9px; color:#aaa;">(iPhone)</span></a>
+            </div>
+
+            <!-- ⚠️ IMPORTANTENG PAHINUMDOM SA BATTERY UG LOCATION -->
+            <div style="background: #2a1a00; border: 1px solid #ff9900; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 11px; color: #ffcc00; text-align: left; line-height: 1.4;">
+                <b>⚠️ PAHINUMDOM SA RIDER:</b><br>
+                Human ma-install, palihug siguruha nga:
+                <ul style="margin: 3px 0 0 15px; padding: 0; color: #ddd;">
+                    <li><b>Location:</b> I-set sa <i>"Allow all the time"</i>.</li>
+                    <li><b>Battery:</b> I-set sa <i>"Unrestricted"</i> aron dili mapalong ang GPS kung ma-off ang screen.</li>
+                </ul>
             </div>
 
             <!-- Checkbox Barrier -->
-            <div style="background: #1a1a1a; padding: 15px; border-radius: 8px; border: 1px dashed #555; text-align: left; margin-bottom: 20px;">
-                <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-size: 13px; color: #fff;">
-                    <input type="checkbox" id="owntracksCheck" style="width: 20px; height: 20px; margin-top: 2px; accent-color: #cc0000; cursor: pointer;">
-                    <span>Oo, na-download ug na-install na nako ang OwnTracks sa akong selpon.</span>
+            <div style="background: #1a1a1a; padding: 12px; border-radius: 8px; border: 1px dashed #555; text-align: left; margin-bottom: 15px;">
+                <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 12px; color: #fff;">
+                    <input type="checkbox" id="owntracksCheck" style="width: 18px; height: 18px; margin-top: 2px; accent-color: #cc0000; cursor: pointer;">
+                    <span>Oo, na-download ug na-install na nako, ug gibutang na nako sa Unrestricted ang battery.</span>
                 </label>
             </div>
 
-            <button id="proceedToLoginBtn" disabled style="width: 100%; background: #444; color: #888; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: not-allowed; font-size: 15px; transition: 0.3s;">IPADAYON SA LOGIN</button>
+            <button id="proceedToLoginBtn" disabled style="width: 100%; background: #444; color: #888; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: not-allowed; font-size: 14px; transition: 0.3s;">IPADAYON SA LOGIN</button>
         </div>
     </div>
 
