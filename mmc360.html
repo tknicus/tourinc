@@ -114,6 +114,10 @@
         // ==========================================
         // 📡 FETCH & UPDATE RIDERS LOCATION
         // ==========================================
+        // Store active markers ug ang ilang miaging pwesto para sa movement check
+        const riderMarkers = {};
+        const lastRiderPositions = {}; // Katabang aron mahibaw-an kon naglihok ba
+
         async function fetchLiveRiders() {
             const { data, error } = await supabaseMapClient
                 .from('rider_locations')
@@ -133,9 +137,26 @@
                     let batteryIcon = battery <= 15 ? `🪫 ${battery}%` : `🔋 ${battery}%`;
                     let timeAgo = new Date(updated_at).toLocaleTimeString();
 
+                    // --- 🏍️ MOVEMENT CHECKER LOGIC ---
+                    let isMoving = false;
+                    if (lastRiderPositions[rider_id]) {
+                        let oldLat = lastRiderPositions[rider_id].lat;
+                        let oldLon = lastRiderPositions[rider_id].lon;
+                        
+                        // Kon naay gamay nga kausaban sa coordinate, naglihok na siya
+                        if (oldLat !== latitude || oldLon !== longitude) {
+                            isMoving = true;
+                        }
+                    }
+                    
+                    // I-update ang storage sa pinakabag-ong pwesto
+                    lastRiderPositions[rider_id] = { lat: latitude, lon: longitude };
+
+                    // HTML Content para sa Popup
                     let popupContent = `
                         <div style="font-family:sans-serif; color:#000; font-size:13px;">
                             <b style="color:#cc0000; font-size:14px;">Rider ID: #${rider_id}</b><br>
+                            Status: <b style="color:${isMoving ? 'green' : 'orange'}">${isMoving ? '🏍️ Nagdagan' : '🛑 Naghunong'}</b><br>
                             📍 Lat: ${latitude.toFixed(5)}<br>
                             Lon: ${longitude.toFixed(5)}<br>
                             ${batteryIcon}<br>
@@ -143,19 +164,33 @@
                         </div>
                     `;
 
-                    if (riderMarkers[rider_id]) {
-                        // Kung naa na ang marker, i-update lang ang posisyon (Life360 style smooth move)
-                        riderMarkers[rider_id].setLatLng(latLng);
-                        riderMarkers[rider_id].getPopup().setContent(popupContent);
+                    // Pili og Icon: Motor kon naglihok, Lingin kon naghunong
+                    let customIcon;
+                    if (isMoving) {
+                        // Icon kon nagdagan (Motorcycle Emoji o Custom HTML)
+                        customIcon = L.divIcon({
+                            className: 'moving-rider-marker',
+                            html: `<div style="background-color: #ff9900; color: black; border: 2px solid #fff; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 0 10px rgba(0,0,0,0.8);" title="Naglihok si #${rider_id}">🏍️</div>`,
+                            iconSize: [35, 35],
+                            iconAnchor: [17, 17]
+                        });
                     } else {
-                        // Kung wala pa, himo og bag-ong marker sa mapa
-                        let customIcon = L.divIcon({
-                            className: 'custom-rider-marker',
+                        // Icon kon naghunong (Yano nga Lingin nga naay ID)
+                        customIcon = L.divIcon({
+                            className: 'static-rider-marker',
                             html: `<div style="background-color: #cc0000; color: white; border: 2px solid #fff; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; box-shadow: 0 0 8px rgba(0,0,0,0.8);">${rider_id}</div>`,
                             iconSize: [30, 30],
                             iconAnchor: [15, 15]
                         });
+                    }
 
+                    if (riderMarkers[rider_id]) {
+                        // I-update ang pwesto ug ang bag-ong icon (Motor vs Lingin)
+                        riderMarkers[rider_id].setLatLng(latLng);
+                        riderMarkers[rider_id].setIcon(customIcon);
+                        riderMarkers[rider_id].getPopup().setContent(popupContent);
+                    } else {
+                        // Himo og bag-ong marker kon wala pa
                         let marker = L.marker(latLng, { icon: customIcon }).addTo(map)
                             .bindPopup(popupContent);
                         
