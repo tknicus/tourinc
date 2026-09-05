@@ -55,10 +55,10 @@
         }
         .back-btn:hover { background-color: #990000; }
 
-        /* Dire nahimutang ang fix para sa itom nga screen */
+        /* Map Container Height Fix */
         #map {
             width: 100%;
-            height: calc(100vh - 90px); /* Siguradong mo-fill sa screen minus header ug footer */
+            height: calc(100vh - 90px);
             background-color: #2b2b2b;
         }
 
@@ -100,18 +100,13 @@
         // ==========================================
         // 🗺️ MAP INITIALIZATION (CENTERED SA MINDANAO / DAVAO REGION)
         // ==========================================
-        const map = L.map('map').setView([7.4474, 125.8093], 10); // Default center (Tagum / Davao area)
+        const map = L.map('map').setView([7.4474, 125.8093], 10);
 
-        // Dark Mode Map Tile (CartoDB Dark Matter)
-        // Ilisi kini sa tileLayer nga walay API key requirement
-        // Gamiton nato kini nga CartoDB Positron (Hayag/Clean white style) o OpenStreetMap Standard
+        // OpenStreetMap Standard Tiles (Hayag, limpyo, ug walay watermark)
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
-
-        // Store active markers para dili mag-doble
-        const riderMarkers = {};
 
         // ==========================================
         // 🔌 SUPABASE CONNECTION CONFIG
@@ -124,7 +119,6 @@
         // ==========================================
         // 📡 FETCH & UPDATE RIDERS LOCATION
         // ==========================================
-        // Store active markers ug ang ilang miaging pwesto para sa movement check
         const riderMarkers = {};
         const lastRiderPositions = {}; // Katabang aron mahibaw-an kon naglihok ba
 
@@ -153,16 +147,13 @@
                         let oldLat = lastRiderPositions[rider_id].lat;
                         let oldLon = lastRiderPositions[rider_id].lon;
                         
-                        // Kon naay gamay nga kausaban sa coordinate, naglihok na siya
                         if (oldLat !== latitude || oldLon !== longitude) {
                             isMoving = true;
                         }
                     }
                     
-                    // I-update ang storage sa pinakabag-ong pwesto
                     lastRiderPositions[rider_id] = { lat: latitude, lon: longitude };
 
-                    // HTML Content para sa Popup
                     let popupContent = `
                         <div style="font-family:sans-serif; color:#000; font-size:13px;">
                             <b style="color:#cc0000; font-size:14px;">Rider ID: #${rider_id}</b><br>
@@ -174,10 +165,8 @@
                         </div>
                     `;
 
-                    // Pili og Icon: Motor kon naglihok, Lingin kon naghunong
                     let customIcon;
                     if (isMoving) {
-                        // Icon kon nagdagan (Motorcycle Emoji o Custom HTML)
                         customIcon = L.divIcon({
                             className: 'moving-rider-marker',
                             html: `<div style="background-color: #ff9900; color: black; border: 2px solid #fff; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 0 10px rgba(0,0,0,0.8);" title="Naglihok si #${rider_id}">🏍️</div>`,
@@ -185,7 +174,6 @@
                             iconAnchor: [17, 17]
                         });
                     } else {
-                        // Icon kon naghunong (Yano nga Lingin nga naay ID)
                         customIcon = L.divIcon({
                             className: 'static-rider-marker',
                             html: `<div style="background-color: #cc0000; color: white; border: 2px solid #fff; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; box-shadow: 0 0 8px rgba(0,0,0,0.8);">${rider_id}</div>`,
@@ -195,12 +183,10 @@
                     }
 
                     if (riderMarkers[rider_id]) {
-                        // I-update ang pwesto ug ang bag-ong icon (Motor vs Lingin)
                         riderMarkers[rider_id].setLatLng(latLng);
                         riderMarkers[rider_id].setIcon(customIcon);
                         riderMarkers[rider_id].getPopup().setContent(popupContent);
                     } else {
-                        // Himo og bag-ong marker kon wala pa
                         let marker = L.marker(latLng, { icon: customIcon }).addTo(map)
                             .bindPopup(popupContent);
                         
@@ -214,12 +200,12 @@
         fetchLiveRiders();
         setInterval(fetchLiveRiders, 10000);
 
-        // ⚡ REAL-TIME SUBSCRIPTION (MOKalit og update kung naay bag-ong ping)
+        // ⚡ REAL-TIME SUBSCRIPTION
         supabaseMapClient
             .channel('public:rider_locations')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'rider_locations' }, payload => {
                 console.log('⚡ Real-time update nadawat:', payload);
-                fetchLiveRiders(); // Refresh dayon ang mapa
+                fetchLiveRiders();
             })
             .subscribe();
     </script>
