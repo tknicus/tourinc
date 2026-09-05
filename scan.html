@@ -103,8 +103,6 @@
         </div>
     </div>
 
-
-
     <!-- ================= 1. FULL-SCREEN LOGIN OVERLAY ================= -->
     <div id="loginScreenContainer" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000000; z-index: 999999; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
         <div style="width: 100%; max-width: 380px; background: #111; padding: 25px; border-radius: 12px; border: 1px solid #333; color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.8);">
@@ -139,7 +137,7 @@
 
             <div id="liveLocation">📍 Nangita sa imong location...</div>
 
-            <!-- ⚙️ DIRI NATO GISULOD ANG 1-TAP BUTTON (Mawala dayon inig click) -->
+            <!-- ⚙️ OWNTRACKS 1-TAP CONFIG BUTTON (Mawala human i-click) -->
             <div id="setupOwntracksContainer" style="display:none; text-align:center; margin-bottom:15px; background:#1a1a1a; padding:12px; border-radius:8px; border:1px solid #28a745;">
                 <p style="color: #ff9900; font-size: 12px; margin-top:0; margin-bottom:8px; font-weight:bold;">LAKBANG 2: IKONEKTA ANG OWNTRACKS</p>
                 <a id="oneTapConfigBtn" href="#" style="background: #28a745; color: white; padding: 10px 15px; text-decoration: none; border-radius: 6px; font-weight: bold; display: block; font-size: 14px;">
@@ -147,7 +145,7 @@
                 </a>
             </div>
 
-            <!-- 📊 HEADS-UP DASHBOARD (SIGNAL TRIPLE TAP PARA SA OVERRIDE) -->
+            <!-- 📊 HEADS-UP DASHBOARD (SIGNAL TRIPLE TAP PARA SA MARSHAL OVERRIDE) -->
             <div id="dashboard" style="background: #222; border: 2px solid #444; border-radius: 8px; padding: 12px; margin-bottom: 15px; color: white; display: flex; justify-content: space-between; align-items: center; font-family: Arial, sans-serif;">
                 <div style="text-align: center; width: 33%; cursor: pointer;" id="signalStatusWrapper" title="Triple tap here for Marshal Override">
                     <span style="color: #aaa; font-size: 11px; font-weight: bold; letter-spacing: 1px;">SIGNAL</span><br>
@@ -384,15 +382,104 @@
         }
 
         // ==========================================
-        // 🚀 DOM INITIALIZATION, GATEKEEPER & BACKDOORS
+        // 👑 ADMIN LONG-PRESS & 🕵️‍♂️ MARSHAL TRIPLE-TAP (GLOBAL BINDERS)
+        // ==========================================
+        function setupLogoLongPress(logoElement) {
+            if (!logoElement) return;
+            let pressTimer;
+
+            logoElement.addEventListener('contextmenu', e => e.preventDefault());
+
+            const startPress = (e) => {
+                e.preventDefault();
+                clearTimeout(pressTimer);
+                pressTimer = setTimeout(async () => {
+                    let passcode = await customPinPrompt("👑 ADMIN PANEL", "Pagsulod og Admin Passcode:");
+                    if (!passcode) return;
+
+                    if (typeof riderDatabase === 'undefined') {
+                        alert("⚠️ Error: Wala nabasa ang database.");
+                        return;
+                    }
+
+                    const hashedInput = await sha256Hash(passcode);
+                    let validAdmin = riderDatabase.find(r => r.passcode === hashedInput && (r.idNum === "0000" || r.idNum === "0001" || r.idNum === "0003"));
+
+                    if (validAdmin) {
+                        window.location.href = 'menu.html';
+                    } else {
+                        alert("❌ Sayop nga Passcode o dili ka awtorisado nga Admin!");
+                    }
+                }, 2500);
+            };
+
+            const cancelPress = () => clearTimeout(pressTimer);
+
+            logoElement.addEventListener('pointerdown', startPress);
+            logoElement.addEventListener('pointerup', cancelPress);
+            logoElement.addEventListener('pointercancel', cancelPress);
+            logoElement.addEventListener('pointerleave', cancelPress);
+        }
+
+        function setupSignalTripleTap() {
+            let tapCount = 0;
+            let tapTimeout;
+            const signalWrapper = document.getElementById('signalStatusWrapper');
+            const scanQrBtn = document.getElementById('scanQrBtn');
+
+            if (signalWrapper) {
+                signalWrapper.addEventListener('click', async function() {
+                    tapCount++;
+                    clearTimeout(tapTimeout);
+                    tapTimeout = setTimeout(() => { tapCount = 0; }, 1500);
+                    
+                    if (tapCount === 3) {
+                        tapCount = 0; 
+                        let currentMarshalStatus = localStorage.getItem('tourIsMarshal') === "true";
+
+                        if (!currentMarshalStatus) {
+                            let passcode = await customPinPrompt("🕵️‍♂️ MARSHAL OVERRIDE", "Pagsulod og Marshal Passcode (PIN):");
+                            if (!passcode) return;
+
+                            if (typeof riderDatabase !== 'undefined') {
+                                let hashedInput = await sha256Hash(passcode); 
+                                let validMarshal = riderDatabase.find(r => r.passcode === hashedInput && r.isMarshal === true);     
+                                
+                                if (validMarshal) {
+                                    localStorage.setItem('marshalMode', 'true'); 
+                                    localStorage.setItem('tourIsMarshal', 'true');
+                                    if (scanQrBtn) scanQrBtn.style.display = "block"; 
+                                    alert(`🔓 MARSHAL OVERRIDE ON! Welcome, Master ${validMarshal.fullname}! Naabli na ang QR Scanner.`);
+                                } else { 
+                                    alert("❌ Sayop nga Passcode!"); 
+                                }
+                            }
+                        } else {
+                            if (confirm("🔒 Gusto nimo i-lock ug ibalik sa Regular Rider Mode?")) {
+                                localStorage.setItem('marshalMode', 'false');
+                                localStorage.setItem('tourIsMarshal', 'false');
+                                if (scanQrBtn) scanQrBtn.style.display = "none"; 
+                                alert("🔒 Naka-Rider Mode na ang app.");
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // ==========================================
+        // 🚀 DOM INITIALIZATION & GATEKEEPER
         // ==========================================
         document.addEventListener("DOMContentLoaded", function() {
+            // I-bind dayon ang admin long-press ug signal triple-tap bisan unsa pa ang screen state
+            setupLogoLongPress(document.getElementById('loginLogo'));
+            setupLogoLongPress(document.getElementById('masterMindsLogo'));
+            setupSignalTripleTap();
+
             let gatePassed = localStorage.getItem("mmc_gatekeeper_passed") === "true";
             const gatekeeperContainer = document.getElementById("gatekeeperContainer");
             const loginContainer = document.getElementById("loginScreenContainer");
             const scannerContainer = document.getElementById("scannerScreenContainer");
-            const owntracksCheck = document.getElementById("owntracksCheck");
-            const proceedBtn = document.getElementById("proceedToLoginBtn");
 
             if (!gatePassed) {
                 if (gatekeeperContainer) gatekeeperContainer.style.display = "flex";
@@ -424,10 +511,6 @@
                 loginContainer.style.display = "flex";
                 scannerContainer.style.display = "none";
             }
-
-            setupLogoLongPress(document.getElementById('loginLogo'));
-            setupLogoLongPress(document.getElementById('masterMindsLogo'));
-            setupSignalTripleTap();
         });
 
         document.addEventListener("DOMContentLoaded", function() {
@@ -498,92 +581,6 @@
                 };
             }
             console.log("OwnTracks One-Tap Link Created for Rider #" + riderId);
-        }
-
-        // ==========================================
-        // 👑 ADMIN LONG-PRESS & 🕵️‍♂️ MARSHAL TRIPLE-TAP BACKDOORS
-        // ==========================================
-        function setupLogoLongPress(logoElement) {
-            if (!logoElement) return;
-            let pressTimer;
-
-            logoElement.addEventListener('contextmenu', e => e.preventDefault());
-
-            const startPress = () => {
-                pressTimer = setTimeout(async () => {
-                    let passcode = await customPinPrompt("👑 ADMIN PANEL", "Pagsulod og Admin Passcode:");
-                    if (!passcode) return;
-
-                    if (typeof riderDatabase === 'undefined') {
-                        alert("⚠️ Error: Wala nabasa ang database.");
-                        return;
-                    }
-
-                    const hashedInput = await sha256Hash(passcode);
-                    let validAdmin = riderDatabase.find(r => r.passcode === hashedInput && (r.idNum === "0000" || r.idNum === "0001" || r.idNum === "0003"));
-
-                    if (validAdmin) {
-                        window.location.href = 'menu.html';
-                    } else {
-                        alert("❌ Sayop nga Passcode o dili ka awtorisado nga Admin!");
-                    }
-                }, 2500);
-            };
-
-            const cancelPress = () => clearTimeout(pressTimer);
-
-            logoElement.addEventListener('mousedown', startPress);
-            logoElement.addEventListener('touchstart', startPress);
-            logoElement.addEventListener('mouseup', cancelPress);
-            logoElement.addEventListener('mouseleave', cancelPress);
-            logoElement.addEventListener('touchend', cancelPress);
-            logoElement.addEventListener('touchcancel', cancelPress);
-        }
-
-        function setupSignalTripleTap() {
-            let tapCount = 0;
-            let tapTimeout;
-            const signalWrapper = document.getElementById('signalStatusWrapper');
-            const scanQrBtn = document.getElementById('scanQrBtn');
-
-            if (signalWrapper) {
-                signalWrapper.addEventListener('click', async function() {
-                    tapCount++;
-                    clearTimeout(tapTimeout);
-                    tapTimeout = setTimeout(() => { tapCount = 0; }, 1500);
-                    
-                    if (tapCount === 3) {
-                        tapCount = 0; 
-                        let currentMarshalStatus = localStorage.getItem('tourIsMarshal') === "true";
-
-                        if (!currentMarshalStatus) {
-                            let passcode = await customPinPrompt("🕵️‍♂️ MARSHAL OVERRIDE", "Pagsulod og Marshal Passcode (PIN):");
-                            if (!passcode) return;
-
-                            if (typeof riderDatabase !== 'undefined') {
-                                let hashedInput = await sha256Hash(passcode); 
-                                let validMarshal = riderDatabase.find(r => r.passcode === hashedInput && r.isMarshal === true);     
-                                
-                                if (validMarshal) {
-                                    localStorage.setItem('marshalMode', 'true'); 
-                                    localStorage.setItem('tourIsMarshal', 'true');
-                                    if (scanQrBtn) scanQrBtn.style.display = "block"; 
-                                    alert(`🔓 MARSHAL OVERRIDE ON! Welcome, Master ${validMarshal.fullname}! Naabli na ang QR Scanner.`);
-                                } else { 
-                                    alert("❌ Sayop nga Passcode!"); 
-                                }
-                            }
-                        } else {
-                            if (confirm("🔒 Gusto nimo i-lock ug ibalik sa Regular Rider Mode?")) {
-                                localStorage.setItem('marshalMode', 'false');
-                                localStorage.setItem('tourIsMarshal', 'false');
-                                if (scanQrBtn) scanQrBtn.style.display = "none"; 
-                                alert("🔒 Naka-Rider Mode na ang app.");
-                            }
-                        }
-                    }
-                });
-            }
         }
 
         // ==========================================
