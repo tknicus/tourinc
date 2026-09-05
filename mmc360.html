@@ -96,10 +96,12 @@
 
         // Dark Mode Map Tile (CartoDB Dark Matter)
         // Ilisi kini sa tileLayer nga walay API key requirement
-        L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+        // Gamiton nato kini nga CartoDB Positron (Hayag/Clean white style) o OpenStreetMap Standard
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
+        
         // Store active markers para dili mag-doble
         const riderMarkers = {};
 
