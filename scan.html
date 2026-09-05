@@ -103,6 +103,8 @@
         </div>
     </div>
 
+
+
     <!-- ================= 1. FULL-SCREEN LOGIN OVERLAY ================= -->
     <div id="loginScreenContainer" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000000; z-index: 999999; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
         <div style="width: 100%; max-width: 380px; background: #111; padding: 25px; border-radius: 12px; border: 1px solid #333; color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.8);">
@@ -136,6 +138,14 @@
             <h2>Checkpoint Scanner</h2>
 
             <div id="liveLocation">📍 Nangita sa imong location...</div>
+
+            <!-- ⚙️ DIRI NATO GISULOD ANG 1-TAP BUTTON ARON HAPSAY SA UI -->
+            <div id="setupOwntracksContainer" style="display:none; text-align:center; margin-bottom:15px; background:#1a1a1a; padding:12px; border-radius:8px; border:1px solid #28a745;">
+                <p style="color: #ff9900; font-size: 12px; margin-top:0; margin-bottom:8px; font-weight:bold;">LAKBANG 2: IKONEKTA ANG OWNTRACKS</p>
+                <a id="oneTapConfigBtn" href="#" style="background: #28a745; color: white; padding: 10px 15px; text-decoration: none; border-radius: 6px; font-weight: bold; display: block; font-size: 14px;">
+                    ⚙️ ONE-TAP CONFIG SA OWNTRACKS
+                </a>
+            </div>
 
             <!-- 📊 HEADS-UP DASHBOARD (SIGNAL TRIPLE TAP PARA SA OVERRIDE) -->
             <div id="dashboard" style="background: #222; border: 2px solid #444; border-radius: 8px; padding: 12px; margin-bottom: 15px; color: white; display: flex; justify-content: space-between; align-items: center; font-family: Arial, sans-serif;">
@@ -400,16 +410,8 @@
                     localStorage.setItem("tourRiderName", rider.fullname);
                     localStorage.setItem("tourIsLoggedIn", "true");
 
-                    // ==========================================
-                    // 🗺️ LIFE360 / OWNTRACKS AUTO-CONFIGURATION
-                    // ==========================================
-                    // I-save ang rider ID para sa GPS background service
-                    localStorage.setItem("mmc_tracking_rider", rider.idNum);
-                    
-                    // Opsyonal: Pwede natong i-trigger ang OwnTracks URL scheme o i-save ang config
-                    // Ang OwnTracks mo-accept og configuration URL gikan sa web: owntracks://config?mode=3&url=...
-                    console.log("GPS Tracker configured for Rider #" + rider.idNum);
-                    // ==========================================
+                    // Tawgon ang One-Tap generator function
+                    setupOwnTracksOneTapButton(rider.idNum);
                     
                     if (rider.isMarshal === true) {
                         localStorage.setItem("tourIsMarshal", "true");
@@ -424,8 +426,7 @@
 
                     initScannerApp(rider.idNum);
 
-                    // Sugdan na nato ang pagpitik sa GPS location padulong sa Supabase table (rider_locations)
-                    startLiveGpsTracking(rider.idNum);
+                    // 🛑 DILI NA NATO GINAGAMIT ANG startLiveGpsTracking (Tipid Baterya!)
 
                     const scanQrBtn = document.getElementById('scanQrBtn');
                     if (scanQrBtn) {
@@ -443,17 +444,60 @@
         // 🚀 DOM INITIALIZATION, GATEKEEPER & BACKDOORS
         // ==========================================
         document.addEventListener("DOMContentLoaded", function() {
-            
-            // 🛑 1. GATEKEEPER CHECK (CHECKBOX BARRIER PARA SA OWNTRACKS)
             let gatePassed = localStorage.getItem("mmc_gatekeeper_passed") === "true";
             const gatekeeperContainer = document.getElementById("gatekeeperContainer");
+            const loginContainer = document.getElementById("loginScreenContainer");
+            const scannerContainer = document.getElementById("scannerScreenContainer");
             const owntracksCheck = document.getElementById("owntracksCheck");
             const proceedBtn = document.getElementById("proceedToLoginBtn");
 
-            // Kon wala pa na-pass ang gatekeeper screen, ipakita kini ug hunong una
-            if (!gatePassed && gatekeeperContainer) {
-                gatekeeperContainer.style.display = "flex";
+            // 1. KUNG WALA PA NA-PASS ANG GATEKEEPER, IPAKITA LANG MUNA NIYA
+            if (!gatePassed) {
+                if (gatekeeperContainer) gatekeeperContainer.style.display = "flex";
+                if (loginContainer) loginContainer.style.display = "none";
+                if (scannerContainer) scannerContainer.style.display = "none";
+                return; // Hunong diri, ayaw na i-execute ang uban hangtod ma-tsek
+            } else {
+                if (gatekeeperContainer) gatekeeperContainer.style.display = "none";
             }
+
+            // 2. KUNG NA-PASS NA, CHECK ANG LOGIN SESSION
+            let isLoggedIn = localStorage.getItem("tourIsLoggedIn");
+            let savedRiderID = localStorage.getItem("tourRiderID");
+            let isMarshal = localStorage.getItem("tourIsMarshal") === "true";
+
+            if (isLoggedIn === "true" && savedRiderID) {
+                loginContainer.style.display = "none";
+                scannerContainer.style.display = "flex";
+                
+                checkEventStatus(savedRiderID);
+                initScannerApp(savedRiderID);
+
+                // Ipakita pud ang 1-Tap button bisan sa auto-login!
+                setupOwnTracksOneTapButton(savedRiderID);
+
+                // 🛑 WALA NA PUD NATO GITAWAG ANG startLiveGpsTracking DINHI
+
+                const scanQrBtn = document.getElementById('scanQrBtn');
+                if (scanQrBtn) {
+                    scanQrBtn.style.display = isMarshal ? "block" : "none";
+                }
+            } else {
+                loginContainer.style.display = "flex";
+                scannerContainer.style.display = "none";
+            }
+
+            setupLogoLongPress(document.getElementById('loginLogo'));
+            setupLogoLongPress(document.getElementById('masterMindsLogo'));
+            setupSignalTripleTap();
+        });
+
+        // Event listener para sa Proceed button sa Gatekeeper
+        document.addEventListener("DOMContentLoaded", function() {
+            const owntracksCheck = document.getElementById("owntracksCheck");
+            const proceedBtn = document.getElementById("proceedToLoginBtn");
+            const gatekeeperContainer = document.getElementById("gatekeeperContainer");
+            const loginContainer = document.getElementById("loginScreenContainer");
 
             if (owntracksCheck && proceedBtn) {
                 owntracksCheck.addEventListener("change", function() {
@@ -473,44 +517,38 @@
                 proceedBtn.addEventListener("click", function() {
                     if (owntracksCheck.checked) {
                         localStorage.setItem("mmc_gatekeeper_passed", "true");
-                        gatekeeperContainer.style.display = "none";
+                        if (gatekeeperContainer) gatekeeperContainer.style.display = "none";
+                        // Inig click, diha pa moabli ang login screen!
+                        if (loginContainer) loginContainer.style.display = "flex";
                     }
                 });
             }
-
-            // 🔐 2. LOGIN & SESSION CHECK
-            let isLoggedIn = localStorage.getItem("tourIsLoggedIn");
-            let savedRiderID = localStorage.getItem("tourRiderID");
-            let isMarshal = localStorage.getItem("tourIsMarshal") === "true";
-
-            if (isLoggedIn === "true" && savedRiderID) {
-                document.getElementById("loginScreenContainer").style.display = "none";
-                document.getElementById("scannerScreenContainer").style.display = "flex";
-                
-                checkEventStatus(savedRiderID);
-                initScannerApp(savedRiderID);
-
-                // 🚀 SUGDAN NA ANG LIVE GPS TRACKING KON NA-LOGIN NA DAAN
-                if (typeof startLiveGpsTracking === 'function') {
-                    startLiveGpsTracking(savedRiderID);
-                }
-
-                const scanQrBtn = document.getElementById('scanQrBtn');
-                if (scanQrBtn) {
-                    scanQrBtn.style.display = isMarshal ? "block" : "none";
-                }
-            } else {
-                document.getElementById("loginScreenContainer").style.display = "flex";
-                document.getElementById("scannerScreenContainer").style.display = "none";
-            }
-
-            // 👑 SETUP LOGO LONG PRESS (ADMIN MENU)
-            setupLogoLongPress(document.getElementById('loginLogo'));
-            setupLogoLongPress(document.getElementById('masterMindsLogo'));
-
-            // 🕵️‍♂️ SETUP SIGNAL TRIPLE TAP (MARSHAL OVERRIDE)
-            setupSignalTripleTap();
         });
+
+        // ==========================================
+        // ⚙️ 1-TAP OWNTRACKS CONFIG GENERATOR HELPER
+        // ==========================================
+        function setupOwnTracksOneTapButton(riderId) {
+            const configJson = {
+                "_type": "configuration",
+                "mode": 3, // HTTP Mode para sa background tracking
+                "url": "https://iilfklquzyxmdergwawh.supabase.co/functions/v1/owntracks-webhook",
+                "username": "rider_" + riderId,
+                "deviceId": "phone",
+                "tid": riderId.slice(-2) // Last 2 digits sa ID para sa tracker ID
+            };
+
+            const base64Config = btoa(JSON.stringify(configJson));
+            const oneTapConfigUrl = `owntracks:///config?inline=${base64Config}`;
+
+            const oneTapBtn = document.getElementById("oneTapConfigBtn");
+            const setupContainer = document.getElementById("setupOwntracksContainer");
+            if (oneTapBtn && setupContainer) {
+                oneTapBtn.href = oneTapConfigUrl;
+                setupContainer.style.display = "block"; // Mogawas ang berde nga button!
+            }
+            console.log("OwnTracks One-Tap Link Created for Rider #" + riderId);
+        }
 
         function setupLogoLongPress(logoElement) {
             if (!logoElement) return;
