@@ -215,17 +215,25 @@
 
                     if (!rider_id || isNaN(latitude) || isNaN(longitude)) return;
 
+
                     // Kuhaa ang tinuod nga impormasyon gikan sa famdb.js (familyDatabase)
                     let riderFullName = "Member #" + rider_id;
                     let riderRoute = "Balay"; // Default
+                    let isValidFamilyMember = false;
                     
                     if (typeof familyDatabase !== 'undefined' && Array.isArray(familyDatabase)) {
                         let found = familyDatabase.find(r => String(r.idNum) === rider_id);
                         if (found) {
                             riderFullName = found.fullname || found.name;
                             if (found.route) riderRoute = String(found.route);
+                            isValidFamilyMember = true; // Naa siya sa famdb.js!
                         }
                     }
+
+                    // KUNG WALA SA FAMDB.JS (Sama sa 0000 o 0001 sa lumba), LAKTAWAN DAYON!
+                    if (!isValidFamilyMember) return;
+
+
 
                     // --- 🎛️ FILTER LOGIC ---
                     if (currentRouteFilter !== 'ALL' && riderRoute !== currentRouteFilter) {
