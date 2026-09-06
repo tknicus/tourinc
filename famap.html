@@ -100,6 +100,23 @@
             box-sizing: border-box;
             font-weight: bold;
         }
+
+        /* ========================================== */
+        /* 🪟 TRANSPARENT GLASS POP-UP BOX           */
+        /* ========================================== */
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+            background-color: rgba(255, 255, 255, 0.65) !important; /* 65% Puti nga Transparent */
+            backdrop-filter: blur(4px) !important; /* Hanap-hanap (blur) ang background nga kalsada */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+            border-radius: 12px !important;
+        }
+        .leaflet-popup-content {
+            margin: 10px 12px !important;
+        }
+        .leaflet-container a.leaflet-popup-close-button {
+            color: #333 !important; /* Himoon nga mas klaro ang 'X' button */
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -216,7 +233,6 @@
 
                     if (!rider_id || isNaN(latitude) || isNaN(longitude)) return;
 
-                    // Kuhaa ang tinuod nga impormasyon gikan sa famdb.js
                     let riderFullName = "Member #" + rider_id;
                     let riderRoute = "Balay"; 
                     let isValidFamilyMember = false;
@@ -230,10 +246,8 @@
                         }
                     }
 
-                    // KUNG WALA SA FAMDB.JS, LAKTAWAN DAYON!
                     if (!isValidFamilyMember) return;
 
-                    // --- 🎛️ FILTER LOGIC ---
                     if (currentRouteFilter !== 'ALL' && riderRoute !== currentRouteFilter) {
                         return; 
                     }
@@ -245,13 +259,10 @@
 
                     let now = new Date();
                     let diffMinutes = (now - updateDate) / (1000 * 60);
-                    if (diffMinutes > 720) return; // Hide kung lapas 12 oras walay update
+                    if (diffMinutes > 720) return; 
 
                     let isStale = diffMinutes > 15;
 
-                    // ==========================================
-                    // 🏍️ SPEED UG MOVEMENT CHECKER
-                    // ==========================================
                     let isMoving = false;
                     let speedKph = 0;
                     const prev = window.riderHistory[rider_id];
@@ -294,10 +305,8 @@
                         speedKph = 0;
                     }
                     
-                    // Kolor sa badge base sa Route (Balay = Pula, Laag = Asul)
                     let routeBadgeColor = riderRoute === "Laag" ? "#0066cc" : "#cc0000";
 
-                    // 💥 COMPACT POPUP: Pangalan ug Speed lang gyud! 💥
                     let popupContent = `
                         <div style="font-family:sans-serif; color:#000; line-height: 1.4; text-align: center; min-width: 100px;">
                             <b style="color:${routeBadgeColor}; font-size:16px;">${riderFullName}</b><br>
@@ -332,9 +341,6 @@
                     let marker = L.marker(latLng, { icon: customIcon }).addTo(map)
                         .bindPopup(popupContent);
                     
-                    // ==========================================
-                    // 🎯 "FOLLOW MODE" LOGIC GIDUGANG DINHI
-                    // ==========================================
                     marker.on('click', () => {
                         trackedRiderId = rider_id;
                         map.panTo(latLng, { animate: true, duration: 0.5 });
