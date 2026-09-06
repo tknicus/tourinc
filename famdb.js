@@ -5,5 +5,5 @@ const familyDatabase = [
     { idNum: "17", fullname: "eGie", route: "Magsaysay" },
     { idNum: "19", fullname: "pRenz", route: "Luzon" },
     { idNum: "28", fullname: "kHEr", route: "Dion" },
-    { idNum: "26", fullname: "technicus", route: "Balay" },
+    { idNum: "26", fullname: "ray", route: "Balay" },
 ];
