@@ -568,10 +568,13 @@
             const configJson = {
                 "_type": "configuration",
                 "mode": 3,
-                "url": "https://iilfklquzyxmdergwawh.supabase.co/functions/v1/owntracks-webhook",
+                // BULAWANONG UPDATE: Gi-apil ang rider_id sa tumoy sa URL
+                "url": "https://iilfklquzyxmdergwawh.supabase.co/functions/v1/owntracks-webhook?rider_id=" + riderId,
                 "username": "rider_" + riderId,
                 "deviceId": "phone",
-                "tid": riderId.slice(-2)
+                "tid": riderId.slice(-2),
+                "locatorDisplacement": 50, // Mo-update inig lihok og 50 meters
+                "locatorInterval": 60      // Mo-update matag 60 segundos bisan naghunong
             };
 
             const base64Config = btoa(JSON.stringify(configJson));
