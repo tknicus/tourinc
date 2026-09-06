@@ -240,7 +240,6 @@
                     const rider_id = String(rider.rider_id || rider.riderId || rider.id);
                     const latitude = parseFloat(rider.latitude || rider.lat);
                     const longitude = parseFloat(rider.longitude || rider.lon);
-                    const battery = rider.battery !== undefined ? rider.battery : 100;
                     const updated_at = rider.updated_at || rider.timestamp || new Date();
 
                     if (!rider_id || isNaN(latitude) || isNaN(longitude)) return;
@@ -271,9 +270,7 @@
                     displayedCount++;
                     
                     let latLng = [latitude, longitude];
-                    let batteryIcon = battery <= 15 ? `🪫 ${battery}%` : `🔋 ${battery}%`;
                     let updateDate = new Date(updated_at);
-                    let timeAgoString = updateDate.toLocaleTimeString();
 
                     let now = new Date();
                     let diffMinutes = (now - updateDate) / (1000 * 60);
@@ -291,20 +288,15 @@
                     if (prev) {
                         if (prev.updated_at !== updated_at) {
                             const distanceMeters = getDistanceFromLatLonInMeters(prev.lat, prev.lon, latitude, longitude);
-                            
-                            // Kalkulahon ang time difference sa Oras (Hours)
                             const timeDiffMs = new Date(updated_at).getTime() - new Date(prev.updated_at).getTime();
                             const timeDiffHours = timeDiffMs / (1000 * 60 * 60);
 
                             if (distanceMeters >= 15) {
                                 prev.isMoving = true;
-                                
-                                // Kuhaa ang speed. Kung naay "vel" sa database, gamita to. Kung wala, awtomatik compute.
                                 let actualSpeed = rider.vel !== undefined ? rider.vel : (rider.velocity !== undefined ? rider.velocity : 0);
                                 
                                 if (actualSpeed === 0 && timeDiffHours > 0) {
                                     let calcSpeed = (distanceMeters / 1000) / timeDiffHours;
-                                    // I-cap sa 300 kph max aron malikayan ang GPS glitches
                                     actualSpeed = calcSpeed < 300 ? calcSpeed : 0; 
                                 }
                                 
@@ -313,7 +305,7 @@
                                 prev.lon = longitude;
                             } else {
                                 prev.isMoving = false;
-                                prev.speed = 0; // Kung wala niabot 15m, 0 kph
+                                prev.speed = 0;
                             }
                             prev.updated_at = updated_at;
                         }
@@ -331,24 +323,16 @@
                         speedKph = 0;
                     }
                     
-                    let statusText = isStale ? "💤 Wala nay Signal (>15m)" : (isMoving ? `🏍️ Nagdagan (${speedKph} kph)` : "🛑 Naghunong / Nagpahuway");
-                    let statusColor = isStale ? "#888" : (isMoving ? "green" : "orange");
-
                     let routeInfo = getRouteDetails(riderRoute);
                     let routeBadgeColor = routeInfo.color;
                     let routeLabel = routeInfo.label;
 
-                    // 💥 GIDUGANG ANG SPEED SA POPUP 💥
+                    // 💥 COMPACT POPUP: ID#, Pangalan, Ruta, ug Speed Lang! 💥
                     let popupContent = `
-                        <div style="font-family:sans-serif; color:#000; font-size:13px; line-height: 1.4;">
-                            <b style="color:${routeBadgeColor}; font-size:14px;">${riderFullName}</b><br>
+                        <div style="font-family:sans-serif; color:#000; font-size:13px; line-height: 1.5; min-width: 140px;">
+                            <b style="color:${routeBadgeColor}; font-size:15px;">${riderFullName}</b><br>
                             <span style="font-size:11px; color:#555;">ID: #${rider_id} | Ruta: <b>${routeLabel}</b></span><br>
-                            Status: <b style="color:${statusColor}">${statusText}</b><br>
-                            ${isMoving ? `<b style="color: #0066cc; font-size:13px;">⚡ Kusog: ${speedKph} km/h</b><br>` : ''}
-                            📍 Lat: ${latitude.toFixed(5)}<br>
-                            Lon: ${longitude.toFixed(5)}<br>
-                            ${batteryIcon}<br>
-                            <span style="font-size:11px; color:#666;">Na-update: ${timeAgoString}</span>
+                            ${isMoving ? `<b style="color: #0066cc; font-size:14px;">⚡ Speed: ${speedKph} KM/H</b>` : `<b style="color: #d90429; font-size:12px;">🛑 Nakahunong / Standby</b>`}
                         </div>
                     `;
 
@@ -363,7 +347,7 @@
                     } else if (isMoving) {
                         customIcon = L.divIcon({
                             className: 'moving-rider-marker',
-                            html: `<div style="background-color: ${routeBadgeColor}; color: white; border: 2px solid #ffcc00; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 0 10px rgba(0,0,0,0.8);" title="${riderFullName} nagdagan og ${speedKph} kph!">🏍️</div>`,
+                            html: `<div style="background-color: ${routeBadgeColor}; color: white; border: 2px solid #ffcc00; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 0 10px rgba(0,0,0,0.8);" title="${riderFullName} - ${speedKph} kph">🏍️</div>`,
                             iconSize: [35, 35],
                             iconAnchor: [17, 17]
                         });
@@ -421,11 +405,6 @@
             if ('wakeLock' in navigator) {
                 try {
                     wakeLock = await navigator.wakeLock.request('screen');
-                    console.log("💡 Screen Wake Lock Aktibo! Dili na mapalong ang screen.");
-                    
-                    wakeLock.addEventListener('release', () => {
-                        console.log("💡 Wake Lock gibuhian.");
-                    });
                 } catch (err) {
                     console.error("❌ Wake Lock error:", err.message);
                 }
