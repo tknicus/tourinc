@@ -220,7 +220,7 @@
 
                     // Kuhaa ang tinuod nga impormasyon gikan sa database.js (Pangalan ug Ruta)
                     let riderFullName = "Rider #" + rider_id;
-                    let riderRoute = "777"; // Default route kung wala sa database.js
+                    let riderRoute = "home"; // Default route kung wala sa database.js
                     
                     if (typeof riderDatabase !== 'undefined' && Array.isArray(riderDatabase)) {
                         let found = riderDatabase.find(r => String(r.idNum) === rider_id);
