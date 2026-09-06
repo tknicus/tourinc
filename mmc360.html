@@ -101,6 +101,24 @@
             box-sizing: border-box;
             font-weight: bold;
         }
+
+        
+        /* ========================================== */
+        /* 🪟 TRANSPARENT GLASS POP-UP BOX           */
+        /* ========================================== */
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+            background-color: rgba(255, 255, 255, 0.0) !important; /* 65% Puti nga Transparent */
+            backdrop-filter: blur(0px) !important; /* Hanap-hanap (blur) ang background nga kalsada */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+            border-radius: 12px !important;
+        }
+        .leaflet-popup-content {
+            margin: 10px 12px !important;
+        }
+        .leaflet-container a.leaflet-popup-close-button {
+            color: #333 !important; /* Himoon nga mas klaro ang 'X' button */
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
