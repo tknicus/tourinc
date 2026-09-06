@@ -243,6 +243,51 @@
         fetchLiveRiders();
         setInterval(fetchLiveRiders, 5000);
 
+
+        // Global cache para sa miaging pwesto sa mga rider
+        if (!window.riderHistory) window.riderHistory = {};
+
+        function evaluateRiderStatus(riderId, newLat, newLon, updatedAt) {
+            const prev = window.riderHistory[riderId];
+            let statusText = "Nagdagan";
+            let statusClass = "moving";
+
+            if (prev) {
+                // Kuhaon ang distansya sa metros tali sa miaging pwesto ug karon
+                const distance = getDistanceFromLatLonInMeters(prev.lat, prev.lon, newLat, newLon);
+                
+                // Kung wala kaabot og 15 metros ang lihok, nagpahuway ra na!
+                if (distance < 15) {
+                    statusText = "Naghunong / Nagpahuway";
+                    statusClass = "resting";
+                }
+            }
+
+            // I-update ang history para sa sunod ngaLoop
+            window.riderHistory[riderId] = { lat: newLat, lon: newLon };
+            return { statusText, statusClass };
+        }
+
+        // Haversine formula para sa saktong distansya sa metros
+        function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
+            const R = 6371000; // Radius sa Yuta sa metros
+            const dLat = deg2rad(lat2 - lat1);
+            const dLon = deg2rad(lon2 - lon1);
+            const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        function deg2rad(deg) {
+            return deg * (Math.PI/180);
+        }
+
+
+
+
         // ⚡ REAL-TIME SUBSCRIPTION
         supabaseMapClient
             .channel('public:rider_locations')
