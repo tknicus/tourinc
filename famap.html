@@ -222,7 +222,7 @@
                     let riderFullName = "Rider #" + rider_id;
                     let riderRoute = "home"; // Default route kung wala sa database.js
                     
-                    if (typeof riderDatabase !== 'undefined' && Array.isArray(riderDatabase)) {
+                    if (typeof familyDatabase !== 'undefined' && Array.isArray(riderDatabase)) {
                         let found = riderDatabase.find(r => String(r.idNum) === rider_id);
                         if (found) {
                             riderFullName = found.fullname || found.name;
