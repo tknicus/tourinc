@@ -112,7 +112,7 @@
         <div class="filter-container">
             <span style="font-size: 11px; color: #aaa;">Filter Ruta:</span>
             <button class="filter-btn active" onclick="setRouteFilter('ALL', this)">Tanan</button>
-            <button class="filter-btn" onclick="setRouteFilter('Balay', this)">Balay(Pula)</button>
+            <button class="filter-btn" onclick="setRouteFilter('Balay', this)">Balay (Pula)</button>
             <button class="filter-btn" onclick="setRouteFilter('Laag', this)">Laag (Asul)</button>
         </div>
 
@@ -128,7 +128,7 @@
         <span id="activeCountBadge" style="color: #ff9900;">Active Riders: 0</span>
     </div>
 
-    <!-- LEAFLET JS, SUPABASE JS UG DATABASE -->
+    <!-- LEAFLET JS, SUPABASE JS UG FAMDB.JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="famdb.js"></script>
@@ -158,11 +158,9 @@
         function setRouteFilter(routeType, btnElement) {
             currentRouteFilter = routeType;
             
-            // I-update ang active button UI
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             btnElement.classList.add('active');
 
-            // I-refresh dayon ang display sa mapa
             fetchLiveRiders();
         }
 
@@ -201,7 +199,6 @@
             if (data) {
                 document.getElementById('connectionStatus').innerHTML = "🟢 Live Feed Active";
                 
-                // Limpyohan una ang mga marker sa mapa sa dili pa i-filter ug i-redraw
                 Object.keys(riderMarkers).forEach(id => {
                     map.removeLayer(riderMarkers[id]);
                     delete riderMarkers[id];
@@ -218,22 +215,21 @@
 
                     if (!rider_id || isNaN(latitude) || isNaN(longitude)) return;
 
-                    // Kuhaa ang tinuod nga impormasyon gikan sa database.js (Pangalan ug Ruta)
-                    let riderFullName = "Rider #" + rider_id;
-                    let riderRoute = "home"; // Default route kung wala sa database.js
+                    // Kuhaa ang tinuod nga impormasyon gikan sa famdb.js (familyDatabase)
+                    let riderFullName = "Member #" + rider_id;
+                    let riderRoute = "Balay"; // Default
                     
-                    if (typeof familyDatabase !== 'undefined' && Array.isArray(riderDatabase)) {
-                        let found = riderDatabase.find(r => String(r.idNum) === rider_id);
+                    if (typeof familyDatabase !== 'undefined' && Array.isArray(familyDatabase)) {
+                        let found = familyDatabase.find(r => String(r.idNum) === rider_id);
                         if (found) {
                             riderFullName = found.fullname || found.name;
-                            // Kuhaon ang ruta kung gipahimutang sa database.js (e.g., r.route o r.category)
                             if (found.route) riderRoute = String(found.route);
                         }
                     }
 
-                    // --- 🎛️ FILTER LOGIC (Tanan, 777, o 3000) ---
+                    // --- 🎛️ FILTER LOGIC ---
                     if (currentRouteFilter !== 'ALL' && riderRoute !== currentRouteFilter) {
-                        return; // Laktawan kung dili mao ang napili nga filter
+                        return; 
                     }
 
                     displayedCount++;
@@ -246,12 +242,11 @@
                     let now = new Date();
                     let diffMinutes = (now - updateDate) / (1000 * 60);
                     
-                    // ONTOUR / EVENT FINISHED AUTO-HIDE (Lapas sa 12 ka oras, i-hide)
                     if (diffMinutes > 720) return;
 
                     let isStale = diffMinutes > 15;
 
-                    // --- 🏍️ MOVEMENT CHECKER (Anti-Jitter) ---
+                    // --- 🏍️ MOVEMENT CHECKER ---
                     let isMoving = false;
                     const prev = window.riderHistory[rider_id];
 
@@ -278,18 +273,17 @@
                         isMoving = false;
                     }
                     
-                    let statusText = isStale ? "💤 Wala nay Signal (>15m)" : (isMoving ? "🏍️ Nagdagan" : "🛑 Naghunong / Nagpahuway");
+                    let statusText = isStale ? "💤 Wala nay Signal (>15m)" : (isMoving ? "🚶 Naglihok" : "🛑 Naghunong / Naa sa Balay");
                     let statusColor = isStale ? "#888" : (isMoving ? "green" : "orange");
 
-                    // Kolor sa badge base sa Ruta (777 = Pula, 3000 = Asul)
-                    let routeBadgeColor = riderRoute === "3000" ? "#0066cc" : "#cc0000";
-                    let routeLabel = riderRoute === "3000" ? "3,000 KM" : "777 KM";
+                    // Kolor sa badge base sa Route (Balay = Pula, Laag = Asul)
+                    let routeBadgeColor = riderRoute === "Laag" ? "#0066cc" : "#cc0000";
 
                     let popupContent = `
                         <div style="font-family:sans-serif; color:#000; font-size:13px; line-height: 1.4;">
                             <b style="color:${routeBadgeColor}; font-size:14px;">${riderFullName}</b><br>
-                            <span style="font-size:11px; color:#555;">ID: #${rider_id} | Ruta: <b>${routeLabel}</b></span><br>
-                            Status: <b style="color:${statusColor}">${statusText}</b><br>
+                            <span style="font-size:11px; color:#555;">ID: #${rider_id} | Status: <b>${riderRoute}</b></span><br>
+                            State: <b style="color:${statusColor}">${statusText}</b><br>
                             📍 Lat: ${latitude.toFixed(5)}<br>
                             Lon: ${longitude.toFixed(5)}<br>
                             ${batteryIcon}<br>
@@ -297,26 +291,25 @@
                         </div>
                     `;
 
-                    // Marker Icon Styling (Color-Coded!)
                     let customIcon;
                     if (isStale) {
                         customIcon = L.divIcon({
-                            className: 'stale-rider-marker',
-                            html: `<div style="background-color: #555; color: #aaa; border: 2px solid #888; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; box-shadow: 0 0 5px rgba(0,0,0,0.8);">${rider_id.slice(-2)}</div>`,
+                            className: 'stale-marker',
+                            html: `<div style="background-color: #555; color: #aaa; border: 2px solid #888; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; box-shadow: 0 0 5px rgba(0,0,0,0.8);">${rider_id}</div>`,
                             iconSize: [30, 30],
                             iconAnchor: [15, 15]
                         });
                     } else if (isMoving) {
                         customIcon = L.divIcon({
-                            className: 'moving-rider-marker',
-                            html: `<div style="background-color: ${routeBadgeColor}; color: white; border: 2px solid #ffcc00; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 0 10px rgba(0,0,0,0.8);" title="Naglihok si #${rider_id}">🏍️</div>`,
+                            className: 'moving-marker',
+                            html: `<div style="background-color: ${routeBadgeColor}; color: white; border: 2px solid #ffcc00; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 0 10px rgba(0,0,0,0.8);" title="Naglihok si ${riderFullName}">🚶</div>`,
                             iconSize: [35, 35],
                             iconAnchor: [17, 17]
                         });
                     } else {
                         customIcon = L.divIcon({
-                            className: 'static-rider-marker',
-                            html: `<div style="background-color: ${routeBadgeColor}; color: white; border: 2px solid #fff; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; box-shadow: 0 0 8px rgba(0,0,0,0.8);">${rider_id.slice(-2)}</div>`,
+                            className: 'static-marker',
+                            html: `<div style="background-color: ${routeBadgeColor}; color: white; border: 2px solid #fff; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; box-shadow: 0 0 8px rgba(0,0,0,0.8);">${rider_id}</div>`,
                             iconSize: [30, 30],
                             iconAnchor: [15, 15]
                         });
@@ -328,19 +321,16 @@
                     riderMarkers[rider_id] = marker;
                 });
 
-                document.getElementById('activeCountBadge').innerText = `Gipakita: ${displayedCount} Riders`;
+                document.getElementById('activeCountBadge').innerText = `Gipakita: ${displayedCount} Members`;
             }
         }
 
-        // 🔄 Automatic Refresh matag 5 segundos
         fetchLiveRiders();
         setInterval(fetchLiveRiders, 5000);
 
-        // ⚡ REAL-TIME SUBSCRIPTION
         supabaseMapClient
             .channel('public:rider_locations')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'rider_locations' }, payload => {
-                console.log('⚡ Real-time update nadawat:', payload);
                 fetchLiveRiders();
             })
             .subscribe();

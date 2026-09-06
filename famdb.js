@@ -1,4 +1,4 @@
 const familyDatabase = [
-    { idNum: "01", fullname: "technicus", level: "home" },
-    { idNum: "02", fullname: "kHEr", level: "work" },
+    { idNum: "01", fullname: "technicus", route: "Balay" },
+    { idNum: "02", fullname: "kHEr", route: "Laag" },
 ];
