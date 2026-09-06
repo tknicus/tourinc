@@ -269,20 +269,53 @@
         }
 
         // Haversine formula para sa saktong distansya sa metros
+        // 1. Function para kuhaon ang gilay-on sa metros tali sa duha ka lat/lon
         function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
-            const R = 6371000; // Radius sa Yuta sa metros
-            const dLat = deg2rad(lat2 - lat1);
-            const dLon = deg2rad(lon2 - lon1);
+            const R = 6371000; // Radius sa yuta sa meters
+            const dLat = (lat2 - lat1) * (Math.PI / 180);
+            const dLon = (lon2 - lon1) * (Math.PI / 180);
             const a = 
-                Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
-                Math.sin(dLon/2) * Math.sin(dLon/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * 
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c; // Gilay-on in meters
         }
 
-        function deg2rad(deg) {
-            return deg * (Math.PI/180);
+        // 2. Diha sa imong loop o function nga nagbasahan sa data gikan sa Supabase:
+        // Paggamit og memory object para ma-store ang miaging pwesto sa matag rider (e.g., previousPositions = {})
+
+        if (!window.previousPositions) {
+            window.previousPositions = {};
+        }
+
+        function evaluateRiderStatus(riderId, currentLat, currentLon, updatedAtString) {
+            let statusText = "Aktibo";
+            let statusColor = "green";
+
+            const prev = window.previousPositions[riderId];
+            
+            if (prev) {
+                // Kuhaon ang gilay-on sa gi-ambakan sa pin
+                const distanceMeters = getDistanceFromLatLonInMeters(prev.lat, prev.lon, currentLat, currentLon);
+                
+                // Kung ang giusab-usaban kay LESS THAN 15 METERS (Gihapon sa duol ra)
+                if (distanceMeters < 15) {
+                    statusText = "Nagpahuway";
+                    statusColor = "orange";
+                } else {
+                    // Kung nibalhin gyud og kapin 15 metros, naglihok na
+                    statusText = "Naglihok";
+                    statusColor = "green";
+                    // I-update ang miaging pwesto sa pinakabag-o
+                    window.previousPositions[riderId] = { lat: currentLat, lon: currentLon };
+                }
+            } else {
+                // First time load sa rider
+                window.previousPositions[riderId] = { lat: currentLat, lon: currentLon };
+            }
+
+            return { statusText, statusColor };
         }
 
 
