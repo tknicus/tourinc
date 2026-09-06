@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MasterMinds'CUP - Live Rider Map (Color-Coded)</title>
+    <title>MasterMinds'CUP - Live Rider Map</title>
 
     <!-- 🎨 STYLES & LEAFLET MAP CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -48,17 +48,18 @@
         /* FILTER BUTTONS STYLING */
         .filter-container {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .filter-btn {
             background-color: #333;
             color: white;
             border: 1px solid #555;
-            padding: 5px 10px;
+            padding: 4px 8px;
             border-radius: 4px;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: bold;
             cursor: pointer;
             transition: 0.2s;
@@ -81,7 +82,6 @@
         }
         .back-btn:hover { background-color: #666; }
 
-        /* Map Container Height Fix */
         #map {
             width: 100%;
             height: calc(100vh - 95px);
@@ -105,15 +105,23 @@
 </head>
 <body>
 
-    <!-- NAVIGATION HEADER WITH FILTERS -->
+    <!-- NAVIGATION HEADER WITH ROUTE FILTERS -->
     <header>
         <h2>🛰️ MMC Live Rider Map</h2>
         
         <div class="filter-container">
-            <span style="font-size: 11px; color: #aaa;">Filter Ruta:</span>
+            <span style="font-size: 11px; color: #aaa;">Ruta:</span>
             <button class="filter-btn active" onclick="setRouteFilter('ALL', this)">Tanan</button>
-            <button class="filter-btn" onclick="setRouteFilter('777', this)">777 KM (Pula)</button>
-            <button class="filter-btn" onclick="setRouteFilter('3000', this)">3000 KM (Asul)</button>
+            <button class="filter-btn" onclick="setRouteFilter('AS26', this)">AS26</button>
+            <button class="filter-btn" onclick="setRouteFilter('G1N', this)">G1N</button>
+            <button class="filter-btn" onclick="setRouteFilter('G1E', this)">G1E</button>
+            <button class="filter-btn" onclick="setRouteFilter('G1W', this)">G1W</button>
+            <button class="filter-btn" onclick="setRouteFilter('G1S', this)">G1S</button>
+            <button class="filter-btn" onclick="setRouteFilter('G3', this)">G3</button>
+            <button class="filter-btn" onclick="setRouteFilter('G4', this)">G4</button>
+            <button class="filter-btn" onclick="setRouteFilter('G5', this)">G5</button>
+            <button class="filter-btn" onclick="setRouteFilter('G7', this)">G7</button>
+            <button class="filter-btn" onclick="setRouteFilter('G8', this)">G8</button>
         </div>
 
         <a href="scan.html" class="back-btn">Balik sa Scanner</a>
@@ -152,17 +160,12 @@
         
         const supabaseMapClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
 
-        // Global State para sa Route Filter
         let currentRouteFilter = 'ALL';
 
         function setRouteFilter(routeType, btnElement) {
             currentRouteFilter = routeType;
-            
-            // I-update ang active button UI
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             btnElement.classList.add('active');
-
-            // I-refresh dayon ang display sa mapa
             fetchLiveRiders();
         }
 
@@ -185,6 +188,25 @@
         const riderMarkers = {};
 
         // ==========================================
+        // 🎨 ROUTE COLOR & LABEL MAPPER FUNCTION
+        // ==========================================
+        function getRouteDetails(code) {
+            switch(code) {
+                case 'AS26': return { label: 'AS26 (628 KM)', color: '#ff8800' };      // Orange
+                case 'G1N':  return { label: 'G1N (777 KM North)', color: '#cc0000' }; // Pula
+                case 'G1E':  return { label: 'G1E (777 KM East)', color: '#e63946' };  // Pula-pula
+                case 'G1W':  return { label: 'G1W (777 KM West)', color: '#d90429' };  // Pula-pula
+                case 'G1S':  return { label: 'G1S (777 KM South)', color: '#b7094c' }; // Pula-pula
+                case 'G3':   return { label: 'G3 (3333 KM)', color: '#0066cc' };       // Asul
+                case 'G4':   return { label: 'G4 (400 KM)', color: '#2a9d8f' };        // Teal / Berde
+                case 'G5':   return { label: 'G5 (5555 KM)', color: '#7209b7' };       // Lila (Purple)
+                case 'G7':   return { label: 'G7 (7777 KM)', color: '#f72585' };       // Pink
+                case 'G8':   return { label: 'G8 (888 KM)', color: '#e9c46a' };        // Gold / Yellow
+                default:     return { label: code ? code + ' KM' : 'Unknown', color: '#555555' };
+            }
+        }
+
+        // ==========================================
         // 📡 FETCH & UPDATE RIDERS LOCATION
         // ==========================================
         async function fetchLiveRiders() {
@@ -201,7 +223,6 @@
             if (data) {
                 document.getElementById('connectionStatus').innerHTML = "🟢 Live Feed Active";
                 
-                // Limpyohan una ang mga marker sa mapa sa dili pa i-filter ug i-redraw
                 Object.keys(riderMarkers).forEach(id => {
                     map.removeLayer(riderMarkers[id]);
                     delete riderMarkers[id];
@@ -218,24 +239,12 @@
 
                     if (!rider_id || isNaN(latitude) || isNaN(longitude)) return;
 
-
-                    // Kuhaa ang tinuod nga impormasyon gikan sa database.js (Pangalan ug Ruta)
-                    // Kuhaa ang tinuod nga impormasyon gikan sa database (route o level)
+                    // Kuhaa ang tinuod nga impormasyon gikan sa database.js
                     let riderFullName = "Rider #" + rider_id;
-                    let riderRoute = "AS26"; // Default route kung wala sa database
+                    let riderRoute = "AS26"; 
                     let isValidRider = false;
                     
-                    if (typeof familyDatabase !== 'undefined' && Array.isArray(familyDatabase)) {
-                        let found = familyDatabase.find(r => String(r.idNum) === rider_id);
-                        if (found) {
-                            riderFullName = found.fullname || found.name;
-                            // Susihon kung route ba o level ang gigamit sa database.js
-                            if (found.route) riderRoute = String(found.route);
-                            else if (found.level) riderRoute = String(found.level);
-                            isValidRider = true; 
-                        }
-                    } else if (typeof riderDatabase !== 'undefined' && Array.isArray(riderDatabase)) {
-                        // Para sa mmc360.html kung riderDatabase ang gigamit
+                    if (typeof riderDatabase !== 'undefined' && Array.isArray(riderDatabase)) {
                         let found = riderDatabase.find(r => String(r.idNum) === rider_id);
                         if (found) {
                             riderFullName = found.fullname || found.name;
@@ -245,38 +254,12 @@
                         }
                     }
 
-                    // KUNG WALA SA DATABASE, LAKTAWAN DAYON!
+                    // KUNG WALA SA RIDER DATABASE (Sama sa pamilya), LAKTAWAN DAYON!
                     if (!isValidRider) return;
 
-                    // ==========================================
-                    // 🎨 ROUTE COLOR & LABEL MAPPER FUNCTION
-                    // ==========================================
-                    function getRouteDetails(code) {
-                        switch(code) {
-                            case 'AS26': return { label: 'AS26 (628 KM)', color: '#ff8800' };      // Orange
-                            case 'G1N':  return { label: 'G1N (777 KM North)', color: '#cc0000' }; // Pula
-                            case 'G1E':  return { label: 'G1E (777 KM East)', color: '#e63946' };  // Pula-pula
-                            case 'G1W':  return { label: 'G1W (777 KM West)', color: '#d90429' };  // Pula-pula
-                            case 'G1S':  return { label: 'G1S (777 KM South)', color: '#b7094c' }; // Pula-pula
-                            case 'G3':   return { label: 'G3 (3333 KM)', color: '#0066cc' };       // Asul
-                            case 'G4':   return { label: 'G4 (400 KM)', color: '#2a9d8f' };        // Berde (Teal)
-                            case 'G5':   return { label: 'G5 (5555 KM)', color: '#7209b7' };       // Lila (Purple)
-                            case 'G7':   return { label: 'G7 (7777 KM)', color: '#f72585' };       // Pink
-                            case 'G8':   return { label: 'G8 (888 KM)', color: '#e9c46a' };        // Dilaw (Gold)
-                            default:     return { label: code + ' KM', color: '#555555' };         // Default Gray
-                        }
-                    }
-
-                    let routeInfo = getRouteDetails(riderRoute);
-                    let routeBadgeColor = routeInfo.color;
-                    let routeLabel = routeInfo.label;
-
-                    // KUNG WALA SA RIDER DATABASE (Sama sa pamilya nga ID "01" o "02"), LAKTAWAN DAYON!
-                    if (!isValidRider) return;
-
-                    // --- 🎛️ FILTER LOGIC (Tanan, 777, o 3000) ---
+                    // --- 🎛️ FILTER LOGIC ---
                     if (currentRouteFilter !== 'ALL' && riderRoute !== currentRouteFilter) {
-                        return; // Laktawan kung dili mao ang napili nga filter
+                        return; 
                     }
 
                     displayedCount++;
@@ -289,12 +272,10 @@
                     let now = new Date();
                     let diffMinutes = (now - updateDate) / (1000 * 60);
                     
-                    // ONTOUR / EVENT FINISHED AUTO-HIDE (Lapas sa 12 ka oras, i-hide)
                     if (diffMinutes > 720) return;
 
                     let isStale = diffMinutes > 15;
 
-                    // --- 🏍️ MOVEMENT CHECKER (Anti-Jitter) ---
                     let isMoving = false;
                     const prev = window.riderHistory[rider_id];
 
@@ -324,9 +305,10 @@
                     let statusText = isStale ? "💤 Wala nay Signal (>15m)" : (isMoving ? "🏍️ Nagdagan" : "🛑 Naghunong / Nagpahuway");
                     let statusColor = isStale ? "#888" : (isMoving ? "green" : "orange");
 
-                    // Kolor sa badge base sa Ruta (777 = Pula, 3000 = Asul)
-                    let routeBadgeColor = riderRoute === "3000" ? "#0066cc" : "#cc0000";
-                    let routeLabel = riderRoute === "3000" ? "3,000 KM" : "777 KM";
+                    // Kuhaa ang kolor ug label base sa route mapper function
+                    let routeInfo = getRouteDetails(riderRoute);
+                    let routeBadgeColor = routeInfo.color;
+                    let routeLabel = routeInfo.label;
 
                     let popupContent = `
                         <div style="font-family:sans-serif; color:#000; font-size:13px; line-height: 1.4;">
@@ -340,7 +322,6 @@
                         </div>
                     `;
 
-                    // Marker Icon Styling (Color-Coded!)
                     let customIcon;
                     if (isStale) {
                         customIcon = L.divIcon({
@@ -375,15 +356,12 @@
             }
         }
 
-        // 🔄 Automatic Refresh matag 5 segundos
         fetchLiveRiders();
         setInterval(fetchLiveRiders, 5000);
 
-        // ⚡ REAL-TIME SUBSCRIPTION
         supabaseMapClient
             .channel('public:rider_locations')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'rider_locations' }, payload => {
-                console.log('⚡ Real-time update nadawat:', payload);
                 fetchLiveRiders();
             })
             .subscribe();
