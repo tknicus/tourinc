@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MasterMinds'CUP - Live Rider Map (Life360 Style)</title>
+    <title>MasterMinds'CUP - Live Rider Map (Color-Coded)</title>
 
     <!-- 🎨 STYLES & LEAFLET MAP CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -26,37 +26,60 @@
 
         header {
             background-color: #1e1e1e;
-            padding: 15px 20px;
+            padding: 10px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 3px solid #cc0000;
             height: 55px;
             box-sizing: border-box;
+            flex-wrap: wrap;
         }
 
         h2 {
             margin: 0;
             color: #ffffff;
-            font-size: 17px;
+            font-size: 16px;
             font-style: italic;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
-        .back-btn {
-            background-color: #cc0000;
+        /* FILTER BUTTONS STYLING */
+        .filter-container {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .filter-btn {
+            background-color: #333;
             color: white;
-            padding: 8px 15px;
+            border: 1px solid #555;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .filter-btn:hover { background-color: #555; }
+        .filter-btn.active { background-color: #cc0000; border-color: #ff0000; }
+
+        .back-btn {
+            background-color: #444;
+            color: white;
+            padding: 6px 12px;
             text-decoration: none;
             border-radius: 4px;
             font-weight: bold;
-            font-size: 13px;
+            font-size: 11px;
             text-transform: uppercase;
             box-shadow: 0 2px 4px rgba(0,0,0,0.5);
             transition: 0.2s;
         }
-        .back-btn:hover { background-color: #990000; }
+        .back-btn:hover { background-color: #666; }
 
         /* Map Container Height Fix */
         #map {
@@ -82,9 +105,17 @@
 </head>
 <body>
 
-    <!-- NAVIGATION HEADER -->
+    <!-- NAVIGATION HEADER WITH FILTERS -->
     <header>
-        <h2>🛰️ MMC Live Rider Map (Life360)</h2>
+        <h2>🛰️ MMC Live Rider Map</h2>
+        
+        <div class="filter-container">
+            <span style="font-size: 11px; color: #aaa;">Filter Ruta:</span>
+            <button class="filter-btn active" onclick="setRouteFilter('ALL', this)">Tanan</button>
+            <button class="filter-btn" onclick="setRouteFilter('777', this)">777 KM (Pula)</button>
+            <button class="filter-btn" onclick="setRouteFilter('3000', this)">3000 KM (Asul)</button>
+        </div>
+
         <a href="scan.html" class="back-btn">Balik sa Scanner</a>
     </header>
 
@@ -104,11 +135,10 @@
     
     <script>
         // ==========================================
-        // 🗺️ MAP INITIALIZATION (CENTERED SA DAVAO REGION / MINDANAO)
+        // 🗺️ MAP INITIALIZATION
         // ==========================================
         const map = L.map('map').setView([7.4474, 125.8093], 10);
 
-        // OpenStreetMap Standard Tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '&copy; OpenStreetMap contributors'
@@ -122,11 +152,25 @@
         
         const supabaseMapClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
 
+        // Global State para sa Route Filter
+        let currentRouteFilter = 'ALL';
+
+        function setRouteFilter(routeType, btnElement) {
+            currentRouteFilter = routeType;
+            
+            // I-update ang active button UI
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btnElement.classList.add('active');
+
+            // I-refresh dayon ang display sa mapa
+            fetchLiveRiders();
+        }
+
         // ==========================================
         // 📏 HAVERSINE DISTANCE FORMULA (METERS)
         // ==========================================
         function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
-            const R = 6371000; // Radius sa yuta sa meters
+            const R = 6371000;
             const dLat = (lat2 - lat1) * (Math.PI / 180);
             const dLon = (lon2 - lon1) * (Math.PI / 180);
             const a = 
@@ -137,14 +181,12 @@
             return R * c; 
         }
 
-        // Global memory para sa pagtandi sa miaging pwesto
         if (!window.riderHistory) window.riderHistory = {};
+        const riderMarkers = {};
 
         // ==========================================
         // 📡 FETCH & UPDATE RIDERS LOCATION
         // ==========================================
-        const riderMarkers = {};
-
         async function fetchLiveRiders() {
             const { data, error } = await supabaseMapClient
                 .from('rider_locations')
@@ -158,8 +200,15 @@
 
             if (data) {
                 document.getElementById('connectionStatus').innerHTML = "🟢 Live Feed Active";
-                document.getElementById('activeCountBadge').innerText = `Active Riders: ${data.length}`;
                 
+                // Limpyohan una ang mga marker sa mapa sa dili pa i-filter ug i-redraw
+                Object.keys(riderMarkers).forEach(id => {
+                    map.removeLayer(riderMarkers[id]);
+                    delete riderMarkers[id];
+                });
+
+                let displayedCount = 0;
+
                 data.forEach(rider => {
                     const rider_id = String(rider.rider_id || rider.riderId || rider.id);
                     const latitude = parseFloat(rider.latitude || rider.lat);
@@ -168,75 +217,78 @@
                     const updated_at = rider.updated_at || rider.timestamp || new Date();
 
                     if (!rider_id || isNaN(latitude) || isNaN(longitude)) return;
+
+                    // Kuhaa ang tinuod nga impormasyon gikan sa database.js (Pangalan ug Ruta)
+                    let riderFullName = "Rider #" + rider_id;
+                    let riderRoute = "777"; // Default route kung wala sa database.js
+                    
+                    if (typeof riderDatabase !== 'undefined' && Array.isArray(riderDatabase)) {
+                        let found = riderDatabase.find(r => String(r.idNum) === rider_id);
+                        if (found) {
+                            riderFullName = found.fullname || found.name;
+                            // Kuhaon ang ruta kung gipahimutang sa database.js (e.g., r.route o r.category)
+                            if (found.route) riderRoute = String(found.route);
+                        }
+                    }
+
+                    // --- 🎛️ FILTER LOGIC (Tanan, 777, o 3000) ---
+                    if (currentRouteFilter !== 'ALL' && riderRoute !== currentRouteFilter) {
+                        return; // Laktawan kung dili mao ang napili nga filter
+                    }
+
+                    displayedCount++;
                     
                     let latLng = [latitude, longitude];
                     let batteryIcon = battery <= 15 ? `🪫 ${battery}%` : `🔋 ${battery}%`;
                     let updateDate = new Date(updated_at);
                     let timeAgoString = updateDate.toLocaleTimeString();
 
-                    // Susiha kon dugay na ba ang last update (> 15 minutes = stale signal)
                     let now = new Date();
                     let diffMinutes = (now - updateDate) / (1000 * 60);
+                    
+                    // ONTOUR / EVENT FINISHED AUTO-HIDE (Lapas sa 12 ka oras, i-hide)
+                    if (diffMinutes > 720) return;
+
                     let isStale = diffMinutes > 15;
-                    // Kung lapas na sa 24 oras (1440 minutos) ang last update, ayaw na i-apil sa mapa
-                    if (diffMinutes > 1440) return;
 
-                    // Kuhaa ang tinuod nga pangalan gikan sa database.js
-                    let riderFullName = "Rider #" + rider_id;
-                    if (typeof riderDatabase !== 'undefined' && Array.isArray(riderDatabase)) {
-                        let found = riderDatabase.find(r => String(r.idNum) === rider_id);
-                        if (found) {
-                            riderFullName = found.fullname || found.name;
-                        }
-                    }
-
-
-                    // --- 🏍️ TUMPAK NGA MOVEMENT CHECKER GAMIT ANG HAVERSINE (15 METERS) ---
+                    // --- 🏍️ MOVEMENT CHECKER (Anti-Jitter) ---
                     let isMoving = false;
                     const prev = window.riderHistory[rider_id];
 
                     if (prev) {
-                        // Susihon lang nato ang distansya KUNG bag-o ang timestamp (Naay bag-ong ping misulod)
                         if (prev.updated_at !== updated_at) {
                             const distanceMeters = getDistanceFromLatLonInMeters(prev.lat, prev.lon, latitude, longitude);
-                            
-                            // Kung nibalhin og KAPIN SA 15 METERS, pasabot nagdagan gyud!
                             if (distanceMeters >= 15) {
                                 prev.isMoving = true;
-                                // I-update ang anchor history kay ni-move man
                                 prev.lat = latitude;
                                 prev.lon = longitude;
                             } else {
-                                // Kung kuwang sa 15 meters, nagpahuway ra o nag-jitter
                                 prev.isMoving = false;
-                                // WALA GI-UPDATE ang lat/lon dinhi aron dili maanod ang anchor point!
                             }
-                            
-                            // I-save ang pinakabag-ong oras
                             prev.updated_at = updated_at;
                         }
-                        
-                        // Gamiton ang naka-save nga status (aron dili mag-flip-flop matag 5 segundos)
                         isMoving = prev.isMoving;
                     } else {
-                        // First time load sa rider
                         window.riderHistory[rider_id] = { 
                             lat: latitude, 
                             lon: longitude, 
                             updated_at: updated_at,
                             isMoving: false 
                         };
-                        isMoving = false; // Default to resting
+                        isMoving = false;
                     }
                     
-                    // Status text color styling
                     let statusText = isStale ? "💤 Wala nay Signal (>15m)" : (isMoving ? "🏍️ Nagdagan" : "🛑 Naghunong / Nagpahuway");
                     let statusColor = isStale ? "#888" : (isMoving ? "green" : "orange");
 
+                    // Kolor sa badge base sa Ruta (777 = Pula, 3000 = Asul)
+                    let routeBadgeColor = riderRoute === "3000" ? "#0066cc" : "#cc0000";
+                    let routeLabel = riderRoute === "3000" ? "3,000 KM" : "777 KM";
+
                     let popupContent = `
                         <div style="font-family:sans-serif; color:#000; font-size:13px; line-height: 1.4;">
-                            <b style="color:#cc0000; font-size:14px;">${riderFullName}</b><br>
-                            <span style="font-size:11px; color:#555;">ID: #${rider_id}</span><br>
+                            <b style="color:${routeBadgeColor}; font-size:14px;">${riderFullName}</b><br>
+                            <span style="font-size:11px; color:#555;">ID: #${rider_id} | Ruta: <b>${routeLabel}</b></span><br>
                             Status: <b style="color:${statusColor}">${statusText}</b><br>
                             📍 Lat: ${latitude.toFixed(5)}<br>
                             Lon: ${longitude.toFixed(5)}<br>
@@ -245,7 +297,7 @@
                         </div>
                     `;
 
-                    // Marker Icon Styling
+                    // Marker Icon Styling (Color-Coded!)
                     let customIcon;
                     if (isStale) {
                         customIcon = L.divIcon({
@@ -257,30 +309,26 @@
                     } else if (isMoving) {
                         customIcon = L.divIcon({
                             className: 'moving-rider-marker',
-                            html: `<div style="background-color: #ff9900; color: black; border: 2px solid #fff; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 0 10px rgba(0,0,0,0.8);" title="Naglihok si #${rider_id}">🏍️</div>`,
+                            html: `<div style="background-color: ${routeBadgeColor}; color: white; border: 2px solid #ffcc00; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 0 10px rgba(0,0,0,0.8);" title="Naglihok si #${rider_id}">🏍️</div>`,
                             iconSize: [35, 35],
                             iconAnchor: [17, 17]
                         });
                     } else {
                         customIcon = L.divIcon({
                             className: 'static-rider-marker',
-                            html: `<div style="background-color: #cc0000; color: white; border: 2px solid #fff; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; box-shadow: 0 0 8px rgba(0,0,0,0.8);">${rider_id.slice(-2)}</div>`,
+                            html: `<div style="background-color: ${routeBadgeColor}; color: white; border: 2px solid #fff; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; box-shadow: 0 0 8px rgba(0,0,0,0.8);">${rider_id.slice(-2)}</div>`,
                             iconSize: [30, 30],
                             iconAnchor: [15, 15]
                         });
                     }
 
-                    if (riderMarkers[rider_id]) {
-                        riderMarkers[rider_id].setLatLng(latLng);
-                        riderMarkers[rider_id].setIcon(customIcon);
-                        riderMarkers[rider_id].getPopup().setContent(popupContent);
-                    } else {
-                        let marker = L.marker(latLng, { icon: customIcon }).addTo(map)
-                            .bindPopup(popupContent);
-                        
-                        riderMarkers[rider_id] = marker;
-                    }
+                    let marker = L.marker(latLng, { icon: customIcon }).addTo(map)
+                        .bindPopup(popupContent);
+                    
+                    riderMarkers[rider_id] = marker;
                 });
+
+                document.getElementById('activeCountBadge').innerText = `Gipakita: ${displayedCount} Riders`;
             }
         }
 
