@@ -366,6 +366,43 @@
                 fetchLiveRiders();
             })
             .subscribe();
+        
+        
+        // ==========================================
+        // 💡 ANTI-SLEEP / SCREEN WAKE LOCK API
+        // ==========================================
+        let wakeLock = null;
+
+        async function keepScreenAwake() {
+            // I-tsek kung suportado sa browser ang Wake Lock
+            if ('wakeLock' in navigator) {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log("💡 Screen Wake Lock Aktibo! Dili na mapalong ang screen.");
+                    
+                    wakeLock.addEventListener('release', () => {
+                        console.log("💡 Wake Lock gibuhian (na-minimize o gisirado).");
+                    });
+                } catch (err) {
+                    console.error("❌ Wake Lock error:", err.message);
+                }
+            } else {
+                console.log("⚠️ Wake Lock API dili suportado sa kini nga browser.");
+            }
+        }
+
+        // Tawgon ang function aron mo-epekto dayon inig abli sa mapa
+        keepScreenAwake();
+
+        // Kung pananglitan mo-switch ka og laing app (like Messenger) unya mobalik sa mapa, 
+        // usahay buhian sa Android ang wake lock, busa i-activate nato pag-usab inig balik nimo.
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                keepScreenAwake();
+            }
+        });
+        
+        
     </script>
 </body>
 </html>
