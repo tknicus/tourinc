@@ -178,6 +178,8 @@
                     let now = new Date();
                     let diffMinutes = (now - updateDate) / (1000 * 60);
                     let isStale = diffMinutes > 15;
+                    // Kung lapas na sa 24 oras (1440 minutos) ang last update, ayaw na i-apil sa mapa
+                    if (diffMinutes > 1440) return;
 
                     // Kuhaa ang tinuod nga pangalan gikan sa database.js
                     let riderFullName = "Rider #" + rider_id;
@@ -188,7 +190,7 @@
                         }
                     }
 
-                    
+
                     // --- 🏍️ TUMPAK NGA MOVEMENT CHECKER GAMIT ANG HAVERSINE (15 METERS) ---
                     let isMoving = false;
                     const prev = window.riderHistory[rider_id];
