@@ -220,19 +220,56 @@
 
 
                     // Kuhaa ang tinuod nga impormasyon gikan sa database.js (Pangalan ug Ruta)
+                    // Kuhaa ang tinuod nga impormasyon gikan sa database (route o level)
                     let riderFullName = "Rider #" + rider_id;
-                    let riderRoute = "777"; // Default route kung wala sa database.js
+                    let riderRoute = "AS26"; // Default route kung wala sa database
                     let isValidRider = false;
                     
-                    if (typeof riderDatabase !== 'undefined' && Array.isArray(riderDatabase)) {
+                    if (typeof familyDatabase !== 'undefined' && Array.isArray(familyDatabase)) {
+                        let found = familyDatabase.find(r => String(r.idNum) === rider_id);
+                        if (found) {
+                            riderFullName = found.fullname || found.name;
+                            // Susihon kung route ba o level ang gigamit sa database.js
+                            if (found.route) riderRoute = String(found.route);
+                            else if (found.level) riderRoute = String(found.level);
+                            isValidRider = true; 
+                        }
+                    } else if (typeof riderDatabase !== 'undefined' && Array.isArray(riderDatabase)) {
+                        // Para sa mmc360.html kung riderDatabase ang gigamit
                         let found = riderDatabase.find(r => String(r.idNum) === rider_id);
                         if (found) {
                             riderFullName = found.fullname || found.name;
-                            // Kuhaon ang ruta kung gipahimutang sa database.js
                             if (found.route) riderRoute = String(found.route);
-                            isValidRider = true; // Naa siya sa database sa mga riders!
+                            else if (found.level) riderRoute = String(found.level);
+                            isValidRider = true;
                         }
                     }
+
+                    // KUNG WALA SA DATABASE, LAKTAWAN DAYON!
+                    if (!isValidRider) return;
+
+                    // ==========================================
+                    // 🎨 ROUTE COLOR & LABEL MAPPER FUNCTION
+                    // ==========================================
+                    function getRouteDetails(code) {
+                        switch(code) {
+                            case 'AS26': return { label: 'AS26 (628 KM)', color: '#ff8800' };      // Orange
+                            case 'G1N':  return { label: 'G1N (777 KM North)', color: '#cc0000' }; // Pula
+                            case 'G1E':  return { label: 'G1E (777 KM East)', color: '#e63946' };  // Pula-pula
+                            case 'G1W':  return { label: 'G1W (777 KM West)', color: '#d90429' };  // Pula-pula
+                            case 'G1S':  return { label: 'G1S (777 KM South)', color: '#b7094c' }; // Pula-pula
+                            case 'G3':   return { label: 'G3 (3333 KM)', color: '#0066cc' };       // Asul
+                            case 'G4':   return { label: 'G4 (400 KM)', color: '#2a9d8f' };        // Berde (Teal)
+                            case 'G5':   return { label: 'G5 (5555 KM)', color: '#7209b7' };       // Lila (Purple)
+                            case 'G7':   return { label: 'G7 (7777 KM)', color: '#f72585' };       // Pink
+                            case 'G8':   return { label: 'G8 (888 KM)', color: '#e9c46a' };        // Dilaw (Gold)
+                            default:     return { label: code + ' KM', color: '#555555' };         // Default Gray
+                        }
+                    }
+
+                    let routeInfo = getRouteDetails(riderRoute);
+                    let routeBadgeColor = routeInfo.color;
+                    let routeLabel = routeInfo.label;
 
                     // KUNG WALA SA RIDER DATABASE (Sama sa pamilya nga ID "01" o "02"), LAKTAWAN DAYON!
                     if (!isValidRider) return;
