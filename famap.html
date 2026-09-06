@@ -81,7 +81,6 @@
         }
         .back-btn:hover { background-color: #666; }
 
-        /* Map Container Height Fix */
         #map {
             width: 100%;
             height: calc(100vh - 95px);
@@ -107,7 +106,7 @@
 
     <!-- NAVIGATION HEADER WITH FILTERS -->
     <header>
-        <h2>🛰️ German Family Live Map</h2>
+        <h2>🛰️ Our Live Map</h2>
         
         <div class="filter-container">
             <span style="font-size: 11px; color: #aaa;">Filter Ruta:</span>
@@ -124,7 +123,7 @@
 
     <!-- STATUS FOOTER -->
     <div class="status-bar">
-        <span id="connectionStatus">🟢 Nakakonekta sa Supabase Live Feed</span>
+        <span id="connectionStatus">🟢 Nakakonekta sa Supabase</span>
         <span id="activeCountBadge" style="color: #ff9900;">Active Members: 0</span>
     </div>
 
@@ -152,15 +151,12 @@
         
         const supabaseMapClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
 
-        // Global State para sa Route Filter
         let currentRouteFilter = 'ALL';
 
         function setRouteFilter(routeType, btnElement) {
             currentRouteFilter = routeType;
-            
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             btnElement.classList.add('active');
-
             fetchLiveRiders();
         }
 
@@ -187,7 +183,7 @@
         let isRefreshing = false;
 
         // ==========================================
-        // 📡 FETCH & UPDATE RIDERS LOCATION
+        // 📡 FETCH & UPDATE LOCATIONS
         // ==========================================
         async function fetchLiveRiders() {
             const { data, error } = await supabaseMapClient
@@ -195,7 +191,7 @@
                 .select('*');
 
             if (error) {
-                console.error("❌ Error pagkuha sa rider locations:", error.message);
+                console.error("❌ Error pagkuha sa locations:", error.message);
                 document.getElementById('connectionStatus').innerHTML = "🔴 Naay problema sa koneksyon";
                 return;
             }
@@ -203,7 +199,6 @@
             if (data) {
                 document.getElementById('connectionStatus').innerHTML = "🟢 Live Feed Active";
                 
-                // 🎯 I-SET ANG REFRESHING FLAG ARON DILI MAWALA ANG FOCUS
                 isRefreshing = true;
                 Object.keys(riderMarkers).forEach(id => {
                     map.removeLayer(riderMarkers[id]);
@@ -217,15 +212,13 @@
                     const rider_id = String(rider.rider_id || rider.riderId || rider.id);
                     const latitude = parseFloat(rider.latitude || rider.lat);
                     const longitude = parseFloat(rider.longitude || rider.lon);
-                    const battery = rider.battery !== undefined ? rider.battery : 100;
                     const updated_at = rider.updated_at || rider.timestamp || new Date();
 
                     if (!rider_id || isNaN(latitude) || isNaN(longitude)) return;
 
-
-                    // Kuhaa ang tinuod nga impormasyon gikan sa famdb.js (familyDatabase)
+                    // Kuhaa ang tinuod nga impormasyon gikan sa famdb.js
                     let riderFullName = "Member #" + rider_id;
-                    let riderRoute = "Balay"; // Default
+                    let riderRoute = "Balay"; 
                     let isValidFamilyMember = false;
                     
                     if (typeof familyDatabase !== 'undefined' && Array.isArray(familyDatabase)) {
@@ -233,7 +226,7 @@
                         if (found) {
                             riderFullName = found.fullname || found.name;
                             if (found.route) riderRoute = String(found.route);
-                            isValidFamilyMember = true; // Naa siya sa famdb.js!
+                            isValidFamilyMember = true;
                         }
                     }
 
@@ -248,59 +241,67 @@
                     displayedCount++;
                     
                     let latLng = [latitude, longitude];
-                    let batteryIcon = battery <= 15 ? `🪫 ${battery}%` : `🔋 ${battery}%`;
                     let updateDate = new Date(updated_at);
-                    let timeAgoString = updateDate.toLocaleTimeString();
 
                     let now = new Date();
                     let diffMinutes = (now - updateDate) / (1000 * 60);
-                    
-                    if (diffMinutes > 720) return;
+                    if (diffMinutes > 720) return; // Hide kung lapas 12 oras walay update
 
                     let isStale = diffMinutes > 15;
 
-                    // --- 🏍️ MOVEMENT CHECKER ---
+                    // ==========================================
+                    // 🏍️ SPEED UG MOVEMENT CHECKER
+                    // ==========================================
                     let isMoving = false;
+                    let speedKph = 0;
                     const prev = window.riderHistory[rider_id];
 
                     if (prev) {
                         if (prev.updated_at !== updated_at) {
                             const distanceMeters = getDistanceFromLatLonInMeters(prev.lat, prev.lon, latitude, longitude);
+                            const timeDiffMs = new Date(updated_at).getTime() - new Date(prev.updated_at).getTime();
+                            const timeDiffHours = timeDiffMs / (1000 * 60 * 60);
+
                             if (distanceMeters >= 15) {
                                 prev.isMoving = true;
+                                let actualSpeed = rider.vel !== undefined ? rider.vel : (rider.velocity !== undefined ? rider.velocity : 0);
+                                
+                                if (actualSpeed === 0 && timeDiffHours > 0) {
+                                    let calcSpeed = (distanceMeters / 1000) / timeDiffHours;
+                                    actualSpeed = calcSpeed < 300 ? calcSpeed : 0; 
+                                }
+                                
+                                prev.speed = Math.round(actualSpeed);
                                 prev.lat = latitude;
                                 prev.lon = longitude;
                             } else {
                                 prev.isMoving = false;
+                                prev.speed = 0;
                             }
                             prev.updated_at = updated_at;
                         }
                         isMoving = prev.isMoving;
+                        speedKph = prev.speed || 0;
                     } else {
                         window.riderHistory[rider_id] = { 
                             lat: latitude, 
                             lon: longitude, 
                             updated_at: updated_at,
-                            isMoving: false 
+                            isMoving: false,
+                            speed: 0 
                         };
                         isMoving = false;
+                        speedKph = 0;
                     }
                     
-                    let statusText = isStale ? "💤 Wala nay Signal (>15m)" : (isMoving ? "🚶 Naglihok" : "🛑 Naghunong / Naa sa Balay");
-                    let statusColor = isStale ? "#888" : (isMoving ? "green" : "orange");
-
-                    // Kolor sa badge base sa Route
+                    // Kolor sa badge base sa Route (Balay = Pula, Laag = Asul)
                     let routeBadgeColor = riderRoute === "Laag" ? "#0066cc" : "#cc0000";
 
+                    // 💥 COMPACT POPUP: Pangalan ug Speed lang gyud! 💥
                     let popupContent = `
-                        <div style="font-family:sans-serif; color:#000; font-size:13px; line-height: 1.4;">
-                            <b style="color:${routeBadgeColor}; font-size:14px;">${riderFullName}</b><br>
-                            <span style="font-size:11px; color:#555;">ID: #${rider_id} | Status: <b>${riderRoute}</b></span><br>
-                            State: <b style="color:${statusColor}">${statusText}</b><br>
-                            📍 Lat: ${latitude.toFixed(5)}<br>
-                            Lon: ${longitude.toFixed(5)}<br>
-                            ${batteryIcon}<br>
-                            <span style="font-size:11px; color:#666;">Na-update: ${timeAgoString}</span>
+                        <div style="font-family:sans-serif; color:#000; line-height: 1.4; text-align: center; min-width: 100px;">
+                            <b style="color:${routeBadgeColor}; font-size:16px;">${riderFullName}</b><br>
+                            ${isMoving ? `<b style="color: #0066cc; font-size:15px;">⚡ ${speedKph} km/h</b>` : `<b style="color: #d90429; font-size:12px;">🛑 Standby</b>`}
                         </div>
                     `;
 
@@ -315,7 +316,7 @@
                     } else if (isMoving) {
                         customIcon = L.divIcon({
                             className: 'moving-marker',
-                            html: `<div style="background-color: ${routeBadgeColor}; color: white; border: 2px solid #ffcc00; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 0 10px rgba(0,0,0,0.8);" title="Naglihok si ${riderFullName}">🚶</div>`,
+                            html: `<div style="background-color: ${routeBadgeColor}; color: white; border: 2px solid #ffcc00; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 0 10px rgba(0,0,0,0.8);" title="${riderFullName} - ${speedKph} kph">🏍️</div>`,
                             iconSize: [35, 35],
                             iconAnchor: [17, 17]
                         });
@@ -349,7 +350,6 @@
                         marker.openPopup();
                         map.panTo(latLng, { animate: true, duration: 1.0 });
                     }
-                    // ==========================================
 
                     riderMarkers[rider_id] = marker;
                 });
@@ -368,7 +368,6 @@
             })
             .subscribe();
         
-        
         // ==========================================
         // 💡 ANTI-SLEEP / SCREEN WAKE LOCK API
         // ==========================================
@@ -378,16 +377,9 @@
             if ('wakeLock' in navigator) {
                 try {
                     wakeLock = await navigator.wakeLock.request('screen');
-                    console.log("💡 Screen Wake Lock Aktibo! Dili na mapalong ang screen.");
-                    
-                    wakeLock.addEventListener('release', () => {
-                        console.log("💡 Wake Lock gibuhian (na-minimize o gisirado).");
-                    });
                 } catch (err) {
                     console.error("❌ Wake Lock error:", err.message);
                 }
-            } else {
-                console.log("⚠️ Wake Lock API dili suportado sa kini nga browser.");
             }
         }
 
