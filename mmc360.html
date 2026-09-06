@@ -187,6 +187,10 @@
         if (!window.riderHistory) window.riderHistory = {};
         const riderMarkers = {};
 
+        // 🎯 MGA VARIABLES PARA SA "FOLLOW MODE"
+        let trackedRiderId = null;
+        let isRefreshing = false;
+
         // ==========================================
         // 🎨 ROUTE COLOR & LABEL MAPPER FUNCTION
         // ==========================================
@@ -223,10 +227,13 @@
             if (data) {
                 document.getElementById('connectionStatus').innerHTML = "🟢 Live Feed Active";
                 
+                // 🎯 I-SET ANG REFRESHING FLAG ARON DILI MAWALA ANG FOCUS
+                isRefreshing = true;
                 Object.keys(riderMarkers).forEach(id => {
                     map.removeLayer(riderMarkers[id]);
                     delete riderMarkers[id];
                 });
+                isRefreshing = false;
 
                 let displayedCount = 0;
 
@@ -350,6 +357,26 @@
                     let marker = L.marker(latLng, { icon: customIcon }).addTo(map)
                         .bindPopup(popupContent);
                     
+                    // ==========================================
+                    // 🎯 "FOLLOW MODE" LOGIC GIDUGANG DINHI
+                    // ==========================================
+                    marker.on('click', () => {
+                        trackedRiderId = rider_id;
+                        map.panTo(latLng, { animate: true, duration: 0.5 });
+                    });
+
+                    marker.on('popupclose', () => {
+                        if (!isRefreshing && trackedRiderId === rider_id) {
+                            trackedRiderId = null;
+                        }
+                    });
+
+                    if (trackedRiderId === rider_id) {
+                        marker.openPopup();
+                        map.panTo(latLng, { animate: true, duration: 1.0 });
+                    }
+                    // ==========================================
+
                     riderMarkers[rider_id] = marker;
                 });
 
@@ -367,14 +394,12 @@
             })
             .subscribe();
         
-        
         // ==========================================
         // 💡 ANTI-SLEEP / SCREEN WAKE LOCK API
         // ==========================================
         let wakeLock = null;
 
         async function keepScreenAwake() {
-            // I-tsek kung suportado sa browser ang Wake Lock
             if ('wakeLock' in navigator) {
                 try {
                     wakeLock = await navigator.wakeLock.request('screen');
@@ -391,18 +416,14 @@
             }
         }
 
-        // Tawgon ang function aron mo-epekto dayon inig abli sa mapa
         keepScreenAwake();
 
-        // Kung pananglitan mo-switch ka og laing app (like Messenger) unya mobalik sa mapa, 
-        // usahay buhian sa Android ang wake lock, busa i-activate nato pag-usab inig balik nimo.
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') {
                 keepScreenAwake();
             }
         });
-        
-        
+
     </script>
 </body>
 </html>
