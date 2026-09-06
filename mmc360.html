@@ -123,10 +123,27 @@
         const supabaseMapClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
 
         // ==========================================
+        // 📏 HAVERSINE DISTANCE FORMULA (METERS)
+        // ==========================================
+        function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
+            const R = 6371000; // Radius sa yuta sa meters
+            const dLat = (lat2 - lat1) * (Math.PI / 180);
+            const dLon = (lon2 - lon1) * (Math.PI / 180);
+            const a = 
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * 
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c; 
+        }
+
+        // Global memory para sa pagtandi sa miaging pwesto
+        if (!window.riderHistory) window.riderHistory = {};
+
+        // ==========================================
         // 📡 FETCH & UPDATE RIDERS LOCATION
         // ==========================================
         const riderMarkers = {};
-        const lastRiderPositions = {}; 
 
         async function fetchLiveRiders() {
             const { data, error } = await supabaseMapClient
@@ -144,7 +161,7 @@
                 document.getElementById('activeCountBadge').innerText = `Active Riders: ${data.length}`;
                 
                 data.forEach(rider => {
-                    const rider_id = rider.rider_id || rider.riderId || rider.id;
+                    const rider_id = String(rider.rider_id || rider.riderId || rider.id);
                     const latitude = parseFloat(rider.latitude || rider.lat);
                     const longitude = parseFloat(rider.longitude || rider.lon);
                     const battery = rider.battery !== undefined ? rider.battery : 100;
@@ -165,27 +182,53 @@
                     // Kuhaa ang tinuod nga pangalan gikan sa database.js
                     let riderFullName = "Rider #" + rider_id;
                     if (typeof riderDatabase !== 'undefined' && Array.isArray(riderDatabase)) {
-                        let found = riderDatabase.find(r => r.idNum === String(rider_id));
+                        let found = riderDatabase.find(r => String(r.idNum) === rider_id);
                         if (found) {
                             riderFullName = found.fullname || found.name;
                         }
                     }
 
-                    // --- 🏍️ MOVEMENT CHECKER LOGIC ---
+                    
+                    // --- 🏍️ TUMPAK NGA MOVEMENT CHECKER GAMIT ANG HAVERSINE (15 METERS) ---
                     let isMoving = false;
-                    if (lastRiderPositions[rider_id]) {
-                        let oldLat = lastRiderPositions[rider_id].lat;
-                        let oldLon = lastRiderPositions[rider_id].lon;
-                        
-                        if (oldLat !== latitude || oldLon !== longitude) {
-                            isMoving = true;
+                    const prev = window.riderHistory[rider_id];
+
+                    if (prev) {
+                        // Susihon lang nato ang distansya KUNG bag-o ang timestamp (Naay bag-ong ping misulod)
+                        if (prev.updated_at !== updated_at) {
+                            const distanceMeters = getDistanceFromLatLonInMeters(prev.lat, prev.lon, latitude, longitude);
+                            
+                            // Kung nibalhin og KAPIN SA 15 METERS, pasabot nagdagan gyud!
+                            if (distanceMeters >= 15) {
+                                prev.isMoving = true;
+                                // I-update ang anchor history kay ni-move man
+                                prev.lat = latitude;
+                                prev.lon = longitude;
+                            } else {
+                                // Kung kuwang sa 15 meters, nagpahuway ra o nag-jitter
+                                prev.isMoving = false;
+                                // WALA GI-UPDATE ang lat/lon dinhi aron dili maanod ang anchor point!
+                            }
+                            
+                            // I-save ang pinakabag-ong oras
+                            prev.updated_at = updated_at;
                         }
+                        
+                        // Gamiton ang naka-save nga status (aron dili mag-flip-flop matag 5 segundos)
+                        isMoving = prev.isMoving;
+                    } else {
+                        // First time load sa rider
+                        window.riderHistory[rider_id] = { 
+                            lat: latitude, 
+                            lon: longitude, 
+                            updated_at: updated_at,
+                            isMoving: false 
+                        };
+                        isMoving = false; // Default to resting
                     }
                     
-                    lastRiderPositions[rider_id] = { lat: latitude, lon: longitude };
-
                     // Status text color styling
-                    let statusText = isStale ? "💤 Wala nay Signal (>15m)" : (isMoving ? "🏍️ Nagdagan" : "🛑 Naghunong");
+                    let statusText = isStale ? "💤 Wala nay Signal (>15m)" : (isMoving ? "🏍️ Nagdagan" : "🛑 Naghunong / Nagpahuway");
                     let statusColor = isStale ? "#888" : (isMoving ? "green" : "orange");
 
                     let popupContent = `
@@ -242,84 +285,6 @@
         // 🔄 Automatic Refresh matag 5 segundos
         fetchLiveRiders();
         setInterval(fetchLiveRiders, 5000);
-
-
-        // Global cache para sa miaging pwesto sa mga rider
-        if (!window.riderHistory) window.riderHistory = {};
-
-        function evaluateRiderStatus(riderId, newLat, newLon, updatedAt) {
-            const prev = window.riderHistory[riderId];
-            let statusText = "Nagdagan";
-            let statusClass = "moving";
-
-            if (prev) {
-                // Kuhaon ang distansya sa metros tali sa miaging pwesto ug karon
-                const distance = getDistanceFromLatLonInMeters(prev.lat, prev.lon, newLat, newLon);
-                
-                // Kung wala kaabot og 15 metros ang lihok, nagpahuway ra na!
-                if (distance < 15) {
-                    statusText = "Naghunong / Nagpahuway";
-                    statusClass = "resting";
-                }
-            }
-
-            // I-update ang history para sa sunod ngaLoop
-            window.riderHistory[riderId] = { lat: newLat, lon: newLon };
-            return { statusText, statusClass };
-        }
-
-        // Haversine formula para sa saktong distansya sa metros
-        // 1. Function para kuhaon ang gilay-on sa metros tali sa duha ka lat/lon
-        function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
-            const R = 6371000; // Radius sa yuta sa meters
-            const dLat = (lat2 - lat1) * (Math.PI / 180);
-            const dLon = (lon2 - lon1) * (Math.PI / 180);
-            const a = 
-                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * 
-                Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return R * c; // Gilay-on in meters
-        }
-
-        // 2. Diha sa imong loop o function nga nagbasahan sa data gikan sa Supabase:
-        // Paggamit og memory object para ma-store ang miaging pwesto sa matag rider (e.g., previousPositions = {})
-
-        if (!window.previousPositions) {
-            window.previousPositions = {};
-        }
-
-        function evaluateRiderStatus(riderId, currentLat, currentLon, updatedAtString) {
-            let statusText = "Aktibo";
-            let statusColor = "green";
-
-            const prev = window.previousPositions[riderId];
-            
-            if (prev) {
-                // Kuhaon ang gilay-on sa gi-ambakan sa pin
-                const distanceMeters = getDistanceFromLatLonInMeters(prev.lat, prev.lon, currentLat, currentLon);
-                
-                // Kung ang giusab-usaban kay LESS THAN 15 METERS (Gihapon sa duol ra)
-                if (distanceMeters < 15) {
-                    statusText = "Nagpahuway";
-                    statusColor = "orange";
-                } else {
-                    // Kung nibalhin gyud og kapin 15 metros, naglihok na
-                    statusText = "Naglihok";
-                    statusColor = "green";
-                    // I-update ang miaging pwesto sa pinakabag-o
-                    window.previousPositions[riderId] = { lat: currentLat, lon: currentLon };
-                }
-            } else {
-                // First time load sa rider
-                window.previousPositions[riderId] = { lat: currentLat, lon: currentLon };
-            }
-
-            return { statusText, statusColor };
-        }
-
-
-
 
         // ⚡ REAL-TIME SUBSCRIPTION
         supabaseMapClient
