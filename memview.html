@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOURinc Club - Member Directory (View Only)</title>
+    <style>
+        body {
+            background-color: #121212; color: #f5f5f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding: 20px;
+        }
+        .container { max-width: 1100px; margin: auto; }
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid #cc0000; padding-bottom: 10px; margin-bottom: 20px;
+        }
+        h2 { margin: 0; color: #fff; }
+        
+        .back-btn {
+            background-color: #444; color: white; padding: 6px 12px;
+            text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 11px;
+            text-transform: uppercase; transition: 0.2s;
+        }
+        .back-btn:hover { background-color: #666; }
+
+        /* TABLE STYLES */
+        .table-container { overflow-x: auto; margin-top: 20px; max-height: 600px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #333; white-space: nowrap; }
+        th { background-color: #1e1e1e; color: #cc0000; position: sticky; top: 0; z-index: 10; }
+        tr:hover { background-color: #2a2a2a; }
+        
+        .search-box { width: 100%; padding: 12px; margin-bottom: 15px; background: #1e1e1e; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h2>🏍️ TOURinc Club - Member Directory</h2>
+        <a href="famap.html" class="back-btn">Balik sa Live Map</a>
+    </header>
+    
+    <!-- SEARCH BOX -->
+    <input type="text" id="searchBox" class="search-box" placeholder="🔍 Pangitaa ang ngalan, ID o aka..." onkeyup="filterTable()">
+    
+    <!-- LISTAHAN SA MGA MEMBERS (VIEW ONLY) -->
+    <div style="color: #aaa; font-size: 12px; margin-bottom: 5px;">Kinatibuk-ang Miyembro: <span id="memberCount">0</span></div>
+    
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Full Name</th>
+                    <th>A.K.A</th>
+                    <th>Contact</th>
+                    <th>Motor Make</th>
+                    <th>MS (Status)</th>
+                </tr>
+            </thead>
+            <tbody id="membersTableBody">
+                <!-- Diri mugawas ang mga members -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    // ==========================================
+    // 🔌 SUPABASE CONNECTION
+    // ==========================================
+    const _supabaseUrl = 'https://iilfklquzyxmdergwawh.supabase.co';
+    const _supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpbGZrbHF1enl4bWRlcmd3YXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MTkzMDcsImV4cCI6MjEwMzI5NTMwN30.jMctz666CGfTdODLqNr24O3dQ5SDM6K5GkmihCtDdBQ';
+    const dbClient = window.supabase.createClient(_supabaseUrl, _supabaseKey);
+
+    let allMembers = [];
+
+    // ==========================================
+    // 📥 FETCH MEMBERS GIKAN SA SUPABASE
+    // ==========================================
+    async function loadMembers() {
+        const { data, error } = await dbClient
+            .from('tour_members')
+            .select('*');
+        
+        if (error) {
+            console.error("❌ Error:", error.message);
+            return;
+        }
+
+        allMembers = data || [];
+        document.getElementById('memberCount').innerText = allMembers.length;
+        displayTable(allMembers);
+    }
+
+    function displayTable(members) {
+        const tbody = document.getElementById('membersTableBody');
+        tbody.innerHTML = '';
+
+        if (!members || members.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #777;">Walay nakit-an nga miyembro.</td></tr>`;
+            return;
+        }
+
+        members.forEach(member => {
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><b>${member.id || ''}</b></td>
+                <td>${member.full_name || ''}</td>
+                <td>${member.aka || ''}</td>
+                <td>${member.contact_no || ''}</td>
+                <td>${member.motor_make || ''}</td>
+                <td><span style="color: ${member.ms === 'ACTIVE' ? '#00ff00' : '#ff9900'};">${member.ms || ''}</span></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // ==========================================
+    // 🔍 SEARCH / FILTER TABLE
+    // ==========================================
+    function filterTable() {
+        const query = document.getElementById('searchBox').value.toLowerCase().trim();
+        if (!query) {
+            displayTable(allMembers);
+            return;
+        }
+
+        const filtered = allMembers.filter(m => 
+            (m.full_name && String(m.full_name).toLowerCase().includes(query)) ||
+            (m.id && String(m.id).toLowerCase().includes(query)) ||
+            (m.aka && String(m.aka).toLowerCase().includes(query))
+        );
+        displayTable(filtered);
+    }
+
+    loadMembers();
+</script>
+
+</body>
+</html>
