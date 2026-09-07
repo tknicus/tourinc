@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TOURinc Club - Admin Dashboard</title>
+    <title>TOUR Inc. - Admin Dashboard</title>
     <style>
         body {
             background-color: #121212; color: #f5f5f5;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0; padding: 0;
+            margin: 0; padding: 10px;
         }
         
         /* ========================================== */
@@ -17,21 +17,21 @@
         #loginOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: #121212; display: flex; justify-content: center;
-            align-items: center; z-index: 1000;
+            align-items: center; z-index: 1000; padding: 15px; box-sizing: border-box;
         }
         .login-box {
-            background-color: #1e1e1e; padding: 30px; border-radius: 8px;
-            border: 2px solid #cc0000; text-align: center; width: 300px;
-            box-shadow: 0 4px 15px rgba(204, 0, 0, 0.2);
+            background-color: #1e1e1e; padding: 25px; border-radius: 8px;
+            border: 2px solid #cc0000; text-align: center; width: 100%; max-width: 320px;
+            box-shadow: 0 4px 15px rgba(204, 0, 0, 0.2); box-sizing: border-box;
         }
-        .login-box h2 { border-bottom: none; margin-top: 0; }
+        .login-box h2 { border-bottom: none; margin-top: 0; font-size: 20px; }
         .login-box input {
             width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 4px;
-            border: 1px solid #444; background: #2b2b2b; color: #fff; box-sizing: border-box;
+            border: 1px solid #444; background: #2b2b2b; color: #fff; box-sizing: border-box; font-size: 14px;
         }
         .login-box button {
             width: 100%; background-color: #cc0000; padding: 10px; border: none;
-            color: white; font-weight: bold; border-radius: 4px; cursor: pointer;
+            color: white; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 14px;
         }
         .login-box button:hover { background-color: #ff0000; }
         #loginError { color: #ff4444; font-size: 12px; margin-top: 10px; display: none; font-weight: bold; }
@@ -39,40 +39,54 @@
         /* ========================================== */
         /* 📊 DASHBOARD STYLES                        */
         /* ========================================== */
-        #mainDashboard { display: none; padding: 20px; } 
-        .container { max-width: 1100px; margin: auto; }
-        h2 { border-bottom: 2px solid #cc0000; padding-bottom: 10px; color: #fff; margin-top: 0; }
+        #mainDashboard { display: none; padding: 10px; } 
+        .container { max-width: 1100px; margin: auto; width: 100%; box-sizing: border-box; }
+        h2 { border-bottom: 2px solid #cc0000; padding-bottom: 10px; color: #fff; margin-top: 0; font-size: 20px; }
         
         /* FORM STYLES */
-        .form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
-        .form-group { display: flex; flex-direction: column; }
-        label { font-size: 11px; color: #aaa; margin-bottom: 5px; text-transform: uppercase; }
+        .form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+        .form-group { display: flex; flex-direction: column; width: 100%; box-sizing: border-box; }
+        label { font-size: 11px; color: #aaa; margin-bottom: 5px; text-transform: uppercase; font-weight: bold; }
         input, select, textarea {
-            padding: 8px 10px; background-color: #2b2b2b; color: #fff;
-            border: 1px solid #444; border-radius: 4px; font-size: 13px;
+            width: 100%; padding: 10px; background-color: #2b2b2b; color: #fff;
+            border: 1px solid #444; border-radius: 4px; font-size: 14px; box-sizing: border-box;
         }
         input:focus, select:focus, textarea:focus { border-color: #cc0000; outline: none; }
-        textarea { resize: vertical; height: 60px; grid-column: span 3; }
+        textarea { resize: vertical; height: 70px; grid-column: span 3; }
         
-        .btn-group { display: flex; gap: 10px; margin-top: 15px; grid-column: span 3; }
-        .btn-save { background-color: #0066cc; padding: 10px 20px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s; color: white; }
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; grid-column: span 3; align-items: center; flex-wrap: wrap; }
+        .btn-save { background-color: #0066cc; padding: 12px 20px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; color: white; font-size: 14px; }
         .btn-save:hover { background-color: #004c99; }
-        .btn-clear { background-color: #555; padding: 10px 20px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s; color: white; }
+        .btn-clear { background-color: #555; padding: 12px 20px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; color: white; font-size: 14px; }
         .btn-clear:hover { background-color: #777; }
         
         /* TABLE STYLES */
-        .table-container { overflow-x: auto; margin-top: 30px; max-height: 500px; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #333; white-space: nowrap; }
+        .table-container { overflow-x: auto; margin-top: 20px; max-height: 500px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 600px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #333; white-space: nowrap; }
         th { background-color: #1e1e1e; color: #cc0000; position: sticky; top: 0; z-index: 10; }
         tr:hover { background-color: #2a2a2a; }
-        .btn-edit { background-color: #e9c46a; color: #000; padding: 4px 8px; font-size: 11px; border-radius: 3px; cursor: pointer; border: none; font-weight: bold; }
+        .btn-edit { background-color: #e9c46a; color: #000; padding: 6px 12px; font-size: 11px; border-radius: 3px; cursor: pointer; border: none; font-weight: bold; }
         
-        .search-box { width: 100%; padding: 10px; margin-bottom: 15px; background: #1e1e1e; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box; }
-        .header-wrap { display: flex; justify-content: space-between; align-items: center; }
-        .btn-logout { background: #444; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .search-box { width: 100%; padding: 12px; margin-bottom: 15px; background: #1e1e1e; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        .header-wrap { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
+        .btn-logout { background: #444; color: #fff; border: none; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
         .btn-logout:hover { background: #cc0000; }
-        #welcomeAdmin { color: #e9c46a; font-size: 14px; font-weight: bold; margin-right: 15px; }
+        #welcomeAdmin { color: #e9c46a; font-size: 13px; font-weight: bold; }
+
+        /* ========================================== */
+        /* 📱 RESPONSIVE PARA SA CELLPHONE (MOBILE)   */
+        /* ========================================== */
+        @media (max-width: 768px) {
+            body { padding: 5px; }
+            .container { padding: 10px; }
+            .form-grid { display: flex; flex-direction: column; gap: 12px; }
+            textarea, .btn-group { grid-column: span 1 !important; }
+            .header-wrap { flex-direction: column; align-items: flex-start; }
+            .btn-group { flex-direction: column; align-items: stretch; }
+            .btn-group button { width: 100%; }
+            #systemMessage { text-align: center; margin-top: 5px; }
+        }
     </style>
 </head>
 <body>
@@ -92,8 +106,8 @@
 <div id="mainDashboard">
     <div class="container">
         <div class="header-wrap">
-            <h2>🏍️ TOURinc Club - Admin Dashboard</h2>
-            <div>
+            <h2>🏍️ TOUR Inc. - Admin Dashboard</h2>
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                 <span id="welcomeAdmin"></span>
                 <button class="btn-logout" onclick="logoutAdmin()">🚪 LOGOUT</button>
             </div>
@@ -127,12 +141,12 @@
             <div class="btn-group">
                 <button class="btn-save" onclick="saveMember()">💾 I-SAVE ANG MEMBER</button>
                 <button class="btn-clear" onclick="clearForm()">🧹 Clear / Bag-ong Entry</button>
-                <span id="systemMessage" style="color: #00ff00; margin-left: 15px; align-self: center; font-weight: bold;"></span>
+                <span id="systemMessage" style="color: #00ff00; font-weight: bold;"></span>
             </div>
         </div>
 
         <!-- LISTAHAN SA MGA MEMBERS -->
-        <h3 style="margin-top: 30px; color: #aaa;">Listahan sa mga Na-save nga Members (<span id="memberCount">0</span>)</h3>
+        <h3 style="margin-top: 30px; color: #aaa; font-size: 16px;">Listahan sa mga Na-save nga Members (<span id="memberCount">0</span>)</h3>
         <input type="text" id="searchBox" class="search-box" placeholder="🔍 Pangitaa ang ngalan, ID o aka..." onkeyup="filterTable()">
         
         <div class="table-container">
@@ -169,11 +183,10 @@
     // ⏱️ 5-MINUTE INACTIVITY AUTO-LOGOUT TIMER
     // ==========================================
     let inactivityTimer;
-    const INACTIVITY_LIMIT = 5 * 60 * 1000; // 5 minutos (sa milliseconds)
+    const INACTIVITY_LIMIT = 5 * 60 * 1000; // 5 minutos
 
     function resetInactivityTimer() {
         clearTimeout(inactivityTimer);
-        // Kung ang dashboard kay naka-display, i-set ang timer
         if (document.getElementById('mainDashboard').style.display === "block") {
             inactivityTimer = setTimeout(() => {
                 alert("⏳ Na-logout ka tungod sa 5 ka minutos nga walay kalihokan (inactivity).");
@@ -182,10 +195,8 @@
         }
     }
 
-    // Bantayan ang lihok sa mouse, pag-type, o pag-click
     window.onload = function() {
-        const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
-        events.forEach(event => {
+        ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(event => {
             window.addEventListener(event, resetInactivityTimer);
         });
     };
@@ -217,7 +228,7 @@
             document.getElementById('mainDashboard').style.display = "block";
             document.getElementById('welcomeAdmin').innerText = `👋 Welcome, ${validAdmin.fullname}!`;
             loadMembers(); 
-            resetInactivityTimer(); // Sugdan ang 5-min timer inig sulod
+            resetInactivityTimer();
         } else {
             document.getElementById('loginError').style.display = "block";
         }
@@ -228,7 +239,7 @@
     });
 
     function logoutAdmin() {
-        clearTimeout(inactivityTimer); // I-off ang timer
+        clearTimeout(inactivityTimer);
         document.getElementById('adminIdNum').value = '';
         document.getElementById('adminPin').value = '';
         document.getElementById('welcomeAdmin').innerText = '';
@@ -238,7 +249,7 @@
     }
 
     // ==========================================
-    // 🔌 SUPABASE CONNECTION
+    // 🔌 SUPABASE CONNECTION (SORTED BY ID)
     // ==========================================
     const _supabaseUrl = 'https://iilfklquzyxmdergwawh.supabase.co';
     const _supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpbGZrbHF1enl4bWRlcmd3YXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MTkzMDcsImV4cCI6MjEwMzI5NTMwN30.jMctz666CGfTdODLqNr24O3dQ5SDM6K5GkmihCtDdBQ';
@@ -246,14 +257,11 @@
 
     let allMembers = [];
 
-    // ==========================================
-    // 📥 FETCH MEMBERS GIKAN SA SUPABASE (GI-ORDER BY ID)
-    // ==========================================
     async function loadMembers() {
         const { data, error } = await dbClient
             .from('tour_members')
             .select('*')
-            .order('id', { ascending: true }); // <--- Mao kini ang magpa-sunod sa ID!
+            .order('id', { ascending: true }); // Magsunod-sunod ang ID
         
         if (error) { alert("Error sa Supabase: " + error.message); return; }
         
