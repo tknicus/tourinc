@@ -153,7 +153,7 @@
 
     <!-- LISTAHAN SA MGA MEMBERS -->
     <h3 style="margin-top: 30px; color: #aaa;">Listahan sa mga Na-save nga Members (<span id="memberCount">0</span>)</h3>
-    <input type="text" id="searchBox" class="search-box" placeholder="🔍 Pangitaa ang ngalan, ID o aka (e.g. Marcenito o 13-08)..." onkeyup="filterTable()">
+    <input type="text" id="searchBox" class="search-box" placeholder="🔍 Pangitaa ang ngalan, ID o aka..." onkeyup="filterTable()">
     
     <div class="table-container">
         <table>
@@ -178,29 +178,31 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
     // ==========================================
-    // 🔌 SUPABASE CONNECTION
+    // 🔌 SUPABASE CONNECTION (Fixed variable name)
     // ==========================================
     const _supabaseUrl = 'https://iilfklquzyxmdergwawh.supabase.co';
     const _supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpbGZrbHF1enl4bWRlcmd3YXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MTkzMDcsImV4cCI6MjEwMzI5NTMwN30.jMctz666CGfTdODLqNr24O3dQ5SDM6K5GkmihCtDdBQ';
-    const supabase = window.supabase.createClient(_supabaseUrl, _supabaseKey);
+    const dbClient = window.supabase.createClient(_supabaseUrl, _supabaseKey);
 
     let allMembers = [];
 
     // ==========================================
-    // 📥 FETCH MEMBERS GIKAN SA SUPABASE (GI-LIMIT ANG RANGE NGADTO SA 300)
+    // 📥 FETCH MEMBERS GIKAN SA SUPABASE
     // ==========================================
     async function loadMembers() {
-        const { data, error } = await supabase
+        console.log("Nag-konekta sa Supabase...");
+        
+        const { data, error } = await dbClient
             .from('tour_members')
-            .select('*')
-            .range(0, 300); // Aron makuha ang tanang 263+ ka miyembro
+            .select('*');
         
         if (error) {
-            console.error("Error loading members:", error);
-            alert("Error sa pagkuha sa data: " + error.message);
+            console.error("❌ Supabase Error:", error.message);
+            alert("Error sa Supabase: " + error.message);
             return;
         }
 
+        console.log("✅ Data nga nakuha:", data);
         allMembers = data || [];
         document.getElementById('memberCount').innerText = allMembers.length;
         displayTable(allMembers);
@@ -210,7 +212,7 @@
         const tbody = document.getElementById('membersTableBody');
         tbody.innerHTML = '';
 
-        if (members.length === 0) {
+        if (!members || members.length === 0) {
             tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #777;">Walay nakit-an nga miyembro.</td></tr>`;
             return;
         }
@@ -267,7 +269,7 @@
             commitment: document.getElementById('commitment').value
         };
 
-        const { error } = await supabase.from('tour_members').upsert([memberData]);
+        const { error } = await dbClient.from('tour_members').upsert([memberData]);
 
         if (error) {
             showMessage("❌ Error: " + error.message, "#ff0000");
@@ -279,7 +281,7 @@
     }
 
     // ==========================================
-    // ✏️ EDIT MEMBER (Ibutang sa Form)
+    // ✏️ EDIT MEMBER
     // ==========================================
     function editMember(id) {
         const member = allMembers.find(m => String(m.id).trim() === String(id).trim());
