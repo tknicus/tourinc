@@ -79,18 +79,16 @@
     let allMembers = [];
 
     // ==========================================
-    // 📥 FETCH MEMBERS GIKAN SA SUPABASE
+    // 📥 FETCH MEMBERS GIKAN SA SUPABASE (GI-ORDER BY ID)
     // ==========================================
     async function loadMembers() {
         const { data, error } = await dbClient
             .from('tour_members')
-            .select('*');
+            .select('*')
+            .order('id', { ascending: true }); // <--- Mao kini ang magpa-sunod sa ID!
         
-        if (error) {
-            console.error("❌ Error:", error.message);
-            return;
-        }
-
+        if (error) { alert("Error sa Supabase: " + error.message); return; }
+        
         allMembers = data || [];
         document.getElementById('memberCount').innerText = allMembers.length;
         displayTable(allMembers);
