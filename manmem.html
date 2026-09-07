@@ -52,10 +52,8 @@
     
     <!-- ENTRY / EDIT FORM -->
     <div class="form-grid">
-        <input type="hidden" id="record_id"> 
-        
         <div class="form-group">
-            <label>Ref / ID *</label>
+            <label>ID *</label>
             <input type="text" id="id" placeholder="e.g. 13-08-T-001" required>
         </div>
         <div class="form-group">
@@ -75,6 +73,10 @@
             <input type="text" id="address" placeholder="Purok, Brgy, City">
         </div>
         <div class="form-group">
+            <label>Status (Civil Status)</label>
+            <input type="text" id="status" placeholder="Married, Single...">
+        </div>
+        <div class="form-group">
             <label>Sex</label>
             <select id="sex">
                 <option value="Male">Male</option>
@@ -83,11 +85,11 @@
         </div>
         <div class="form-group">
             <label>Height</label>
-            <input type="text" id="height" placeholder="e.g. 175 cm">
+            <input type="text" id="height" placeholder="e.g. 167 cm">
         </div>
         <div class="form-group">
             <label>Weight</label>
-            <input type="text" id="weight" placeholder="e.g. 70 kg">
+            <input type="text" id="weight" placeholder="e.g. 70kgs">
         </div>
         <div class="form-group">
             <label>Occupation</label>
@@ -98,10 +100,6 @@
             <input type="text" id="contact_no" placeholder="09...">
         </div>
         <div class="form-group">
-            <label>Blood Type</label>
-            <input type="text" id="blood_type" placeholder="e.g. O+, A">
-        </div>
-        <div class="form-group">
             <label>GSIS No.</label>
             <input type="text" id="gsis" placeholder="GSIS ID">
         </div>
@@ -110,16 +108,20 @@
             <input type="text" id="sss" placeholder="SSS ID">
         </div>
         <div class="form-group">
+            <label>Lic No.</label>
+            <input type="text" id="licno" placeholder="Driver's License">
+        </div>
+        <div class="form-group">
             <label>TIN No.</label>
             <input type="text" id="tin" placeholder="TIN ID">
         </div>
         <div class="form-group">
-            <label>Lic No.</label>
-            <input type="text" id="lic_no" placeholder="Driver's License">
-        </div>
-        <div class="form-group">
             <label>Date Joined</label>
             <input type="text" id="joined" placeholder="Month Day, Year">
+        </div>
+        <div class="form-group">
+            <label>Blood Type</label>
+            <input type="text" id="blood_type" placeholder="e.g. A, B, O">
         </div>
         <div class="form-group">
             <label>Motor Class</label>
@@ -127,14 +129,11 @@
         </div>
         <div class="form-group">
             <label>Motor Make</label>
-            <input type="text" id="motor_make" placeholder="Kawasaki, Honda, Yamaha...">
+            <input type="text" id="motor_make" placeholder="Kawasaki, Honda...">
         </div>
         <div class="form-group">
-            <label>Status</label>
-            <select id="status">
-                <option value="ACTIVE">ACTIVE</option>
-                <option value="INACTIVE">INACTIVE</option>
-            </select>
+            <label>MS (Active Status)</label>
+            <input type="text" id="ms" placeholder="ACTIVE / INACTIVE">
         </div>
         <div class="form-group">
             <label>Reason for Joining</label>
@@ -154,18 +153,18 @@
 
     <!-- LISTAHAN SA MGA MEMBERS -->
     <h3 style="margin-top: 30px; color: #aaa;">Listahan sa mga Na-save nga Members</h3>
-    <input type="text" id="searchBox" class="search-box" placeholder="🔍 Pangitaa ang ngalan, ID o aka (e.g. technicus)..." onkeyup="filterTable()">
+    <input type="text" id="searchBox" class="search-box" placeholder="🔍 Pangitaa ang ngalan, ID o aka (e.g. Marcenito o 13-08)..." onkeyup="filterTable()">
     
     <div class="table-container">
         <table>
             <thead>
                 <tr>
-                    <th>ID / Ref</th>
+                    <th>ID</th>
                     <th>Full Name</th>
                     <th>A.K.A</th>
                     <th>Contact</th>
                     <th>Motor Make</th>
-                    <th>Status</th>
+                    <th>MS (Status)</th>
                     <th>Aksyon</th>
                 </tr>
             </thead>
@@ -219,7 +218,7 @@
                 <td>${member.aka || ''}</td>
                 <td>${member.contact_no || ''}</td>
                 <td>${member.motor_make || ''}</td>
-                <td><span style="color: ${member.status === 'ACTIVE' ? '#00ff00' : '#ff0000'};">${member.status || 'ACTIVE'}</span></td>
+                <td><span style="color: ${member.ms === 'ACTIVE' ? '#00ff00' : '#ff9900'};">${member.ms || ''}</span></td>
                 <td><button class="btn-edit" onclick="editMember('${member.id}')">✏️ Edit</button></td>
             `;
             tbody.appendChild(tr);
@@ -244,25 +243,25 @@
             aka: document.getElementById('aka').value,
             dob: document.getElementById('dob').value,
             address: document.getElementById('address').value,
+            status: document.getElementById('status').value,
             sex: document.getElementById('sex').value,
             height: document.getElementById('height').value,
             weight: document.getElementById('weight').value,
             occupation: document.getElementById('occupation').value,
+            contact_no: document.getElementById('contact_no').value,
             gsis: document.getElementById('gsis').value,
             sss: document.getElementById('sss').value,
+            licno: document.getElementById('licno').value,
             tin: document.getElementById('tin').value,
-            lic_no: document.getElementById('lic_no').value,
-            contact_no: document.getElementById('contact_no').value,
             joined: document.getElementById('joined').value,
             blood_type: document.getElementById('blood_type').value,
             motor_class: document.getElementById('motor_class').value,
             motor_make: document.getElementById('motor_make').value,
+            ms: document.getElementById('ms').value,
             reason: document.getElementById('reason').value,
-            commitment: document.getElementById('commitment').value,
-            status: document.getElementById('status').value
+            commitment: document.getElementById('commitment').value
         };
 
-        // I-tsek kung naa na ba daan ang ID sa database (Upsert / Update or Insert)
         const { error } = await supabase.from('tour_members').upsert([memberData]);
 
         if (error) {
@@ -285,22 +284,23 @@
             document.getElementById('aka').value = member.aka || '';
             document.getElementById('dob').value = member.dob || '';
             document.getElementById('address').value = member.address || '';
+            document.getElementById('status').value = member.status || '';
             document.getElementById('sex').value = member.sex || 'Male';
             document.getElementById('height').value = member.height || '';
             document.getElementById('weight').value = member.weight || '';
             document.getElementById('occupation').value = member.occupation || '';
+            document.getElementById('contact_no').value = member.contact_no || '';
             document.getElementById('gsis').value = member.gsis || '';
             document.getElementById('sss').value = member.sss || '';
+            document.getElementById('licno').value = member.licno || '';
             document.getElementById('tin').value = member.tin || '';
-            document.getElementById('lic_no').value = member.lic_no || '';
-            document.getElementById('contact_no').value = member.contact_no || '';
             document.getElementById('joined').value = member.joined || '';
             document.getElementById('blood_type').value = member.blood_type || '';
             document.getElementById('motor_class').value = member.motor_class || '';
             document.getElementById('motor_make').value = member.motor_make || '';
+            document.getElementById('ms').value = member.ms || '';
             document.getElementById('reason').value = member.reason || '';
             document.getElementById('commitment').value = member.commitment || '';
-            document.getElementById('status').value = member.status || 'ACTIVE';
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
             showMessage("📝 Ga-edit ka karon. I-click ang Save inig human.", "#e9c46a");
@@ -316,22 +316,23 @@
         document.getElementById('aka').value = '';
         document.getElementById('dob').value = '';
         document.getElementById('address').value = '';
+        document.getElementById('status').value = '';
         document.getElementById('sex').value = 'Male';
         document.getElementById('height').value = '';
         document.getElementById('weight').value = '';
         document.getElementById('occupation').value = '';
+        document.getElementById('contact_no').value = '';
         document.getElementById('gsis').value = '';
         document.getElementById('sss').value = '';
+        document.getElementById('licno').value = '';
         document.getElementById('tin').value = '';
-        document.getElementById('lic_no').value = '';
-        document.getElementById('contact_no').value = '';
         document.getElementById('joined').value = '';
         document.getElementById('blood_type').value = '';
         document.getElementById('motor_class').value = '';
         document.getElementById('motor_make').value = '';
+        document.getElementById('ms').value = '';
         document.getElementById('reason').value = '';
         document.getElementById('commitment').value = '';
-        document.getElementById('status').value = 'ACTIVE';
         showMessage("", "");
     }
 
