@@ -3,15 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TOURinc Club - Member Management Dashboard</title>
+    <title>TOURinc Club - Admin Dashboard</title>
     <style>
         body {
             background-color: #121212; color: #f5f5f5;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0; padding: 20px;
+            margin: 0; padding: 0;
         }
+        
+        /* ========================================== */
+        /* 🔒 LOGIN SCREEN STYLES                     */
+        /* ========================================== */
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #121212; display: flex; justify-content: center;
+            align-items: center; z-index: 1000;
+        }
+        .login-box {
+            background-color: #1e1e1e; padding: 30px; border-radius: 8px;
+            border: 2px solid #cc0000; text-align: center; width: 300px;
+            box-shadow: 0 4px 15px rgba(204, 0, 0, 0.2);
+        }
+        .login-box h2 { border-bottom: none; margin-top: 0; }
+        .login-box input {
+            width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 4px;
+            border: 1px solid #444; background: #2b2b2b; color: #fff; box-sizing: border-box;
+        }
+        .login-box button {
+            width: 100%; background-color: #cc0000; padding: 10px; border: none;
+            color: white; font-weight: bold; border-radius: 4px; cursor: pointer;
+        }
+        .login-box button:hover { background-color: #ff0000; }
+        #loginError { color: #ff4444; font-size: 12px; margin-top: 10px; display: none; font-weight: bold; }
+
+        /* ========================================== */
+        /* 📊 DASHBOARD STYLES                        */
+        /* ========================================== */
+        #mainDashboard { display: none; padding: 20px; } 
         .container { max-width: 1100px; margin: auto; }
-        h2 { border-bottom: 2px solid #cc0000; padding-bottom: 10px; color: #fff; }
+        h2 { border-bottom: 2px solid #cc0000; padding-bottom: 10px; color: #fff; margin-top: 0; }
         
         /* FORM STYLES */
         .form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
@@ -25,13 +55,9 @@
         textarea { resize: vertical; height: 60px; grid-column: span 3; }
         
         .btn-group { display: flex; gap: 10px; margin-top: 15px; grid-column: span 3; }
-        button {
-            padding: 10px 20px; border: none; border-radius: 4px;
-            font-weight: bold; cursor: pointer; transition: 0.2s; color: white;
-        }
-        .btn-save { background-color: #0066cc; }
+        .btn-save { background-color: #0066cc; padding: 10px 20px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s; color: white; }
         .btn-save:hover { background-color: #004c99; }
-        .btn-clear { background-color: #555; }
+        .btn-clear { background-color: #555; padding: 10px 20px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s; color: white; }
         .btn-clear:hover { background-color: #777; }
         
         /* TABLE STYLES */
@@ -43,142 +69,176 @@
         .btn-edit { background-color: #e9c46a; color: #000; padding: 4px 8px; font-size: 11px; border-radius: 3px; cursor: pointer; border: none; font-weight: bold; }
         
         .search-box { width: 100%; padding: 10px; margin-bottom: 15px; background: #1e1e1e; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box; }
+        .header-wrap { display: flex; justify-content: space-between; align-items: center; }
+        .btn-logout { background: #444; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .btn-logout:hover { background: #cc0000; }
+        #welcomeAdmin { color: #e9c46a; font-size: 14px; font-weight: bold; margin-right: 15px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>🏍️ TOURinc Club - Member Entry & Edit Dashboard</h2>
-    
-    <!-- ENTRY / EDIT FORM -->
-    <div class="form-grid">
-        <div class="form-group">
-            <label>ID *</label>
-            <input type="text" id="id" placeholder="e.g. 13-08-T-001" required>
-        </div>
-        <div class="form-group">
-            <label>Full Name *</label>
-            <input type="text" id="full_name" placeholder="Tinuod nga Pangalan" required>
-        </div>
-        <div class="form-group">
-            <label>A.K.A. / Pitik</label>
-            <input type="text" id="aka" placeholder="Alyas">
-        </div>
-        <div class="form-group">
-            <label>Date of Birth (DOB)</label>
-            <input type="text" id="dob" placeholder="Month Day, Year">
-        </div>
-        <div class="form-group" style="grid-column: span 2;">
-            <label>Address</label>
-            <input type="text" id="address" placeholder="Purok, Brgy, City">
-        </div>
-        <div class="form-group">
-            <label>Status (Civil Status)</label>
-            <input type="text" id="status" placeholder="Married, Single...">
-        </div>
-        <div class="form-group">
-            <label>Sex</label>
-            <select id="sex">
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Height</label>
-            <input type="text" id="height" placeholder="e.g. 167 cm">
-        </div>
-        <div class="form-group">
-            <label>Weight</label>
-            <input type="text" id="weight" placeholder="e.g. 70kgs">
-        </div>
-        <div class="form-group">
-            <label>Occupation</label>
-            <input type="text" id="occupation" placeholder="Trabaho">
-        </div>
-        <div class="form-group">
-            <label>Contact Number</label>
-            <input type="text" id="contact_no" placeholder="09...">
-        </div>
-        <div class="form-group">
-            <label>GSIS No.</label>
-            <input type="text" id="gsis" placeholder="GSIS ID">
-        </div>
-        <div class="form-group">
-            <label>SSS No.</label>
-            <input type="text" id="sss" placeholder="SSS ID">
-        </div>
-        <div class="form-group">
-            <label>Lic No.</label>
-            <input type="text" id="licno" placeholder="Driver's License">
-        </div>
-        <div class="form-group">
-            <label>TIN No.</label>
-            <input type="text" id="tin" placeholder="TIN ID">
-        </div>
-        <div class="form-group">
-            <label>Date Joined</label>
-            <input type="text" id="joined" placeholder="Month Day, Year">
-        </div>
-        <div class="form-group">
-            <label>Blood Type</label>
-            <input type="text" id="blood_type" placeholder="e.g. A, B, O">
-        </div>
-        <div class="form-group">
-            <label>Motor Class</label>
-            <input type="text" id="motor_class" placeholder="Touring, Underbone, etc.">
-        </div>
-        <div class="form-group">
-            <label>Motor Make</label>
-            <input type="text" id="motor_make" placeholder="Kawasaki, Honda...">
-        </div>
-        <div class="form-group">
-            <label>MS (Active Status)</label>
-            <input type="text" id="ms" placeholder="ACTIVE / INACTIVE">
-        </div>
-        <div class="form-group">
-            <label>Reason for Joining</label>
-            <textarea id="reason" placeholder="Ngano niapil..."></textarea>
-        </div>
-        <div class="form-group">
-            <label>Commitment</label>
-            <textarea id="commitment" placeholder="Commitment sa grupo..."></textarea>
-        </div>
-
-        <div class="btn-group">
-            <button class="btn-save" onclick="saveMember()">💾 I-SAVE ANG MEMBER</button>
-            <button class="btn-clear" onclick="clearForm()">🧹 Clear / Bag-ong Entry</button>
-            <span id="systemMessage" style="color: #00ff00; margin-left: 15px; align-self: center; font-weight: bold;"></span>
-        </div>
+<!-- 🔒 LOGIN OVERLAY -->
+<div id="loginOverlay">
+    <div class="login-box">
+        <h2>🔒 ADMIN LOGIN</h2>
+        <input type="text" id="adminIdNum" placeholder="ID Num (e.g. 0000)" autocomplete="off">
+        <input type="password" id="adminPin" placeholder="Passcode" autocomplete="off">
+        <button onclick="checkLogin()">SULOD</button>
+        <div id="loginError">❌ Sipyat ang ID o Passcode!</div>
     </div>
+</div>
 
-    <!-- LISTAHAN SA MGA MEMBERS -->
-    <h3 style="margin-top: 30px; color: #aaa;">Listahan sa mga Na-save nga Members (<span id="memberCount">0</span>)</h3>
-    <input type="text" id="searchBox" class="search-box" placeholder="🔍 Pangitaa ang ngalan, ID o aka..." onkeyup="filterTable()">
-    
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Full Name</th>
-                    <th>A.K.A</th>
-                    <th>Contact</th>
-                    <th>Motor Make</th>
-                    <th>MS (Status)</th>
-                    <th>Aksyon</th>
-                </tr>
-            </thead>
-            <tbody id="membersTableBody">
-                <!-- Diri mugawas ang mga members -->
-            </tbody>
-        </table>
+<!-- 📊 MAIN DASHBOARD (Gitago Daan) -->
+<div id="mainDashboard">
+    <div class="container">
+        <div class="header-wrap">
+            <h2>🏍️ TOURinc Club - Admin Dashboard</h2>
+            <div>
+                <span id="welcomeAdmin"></span>
+                <button class="btn-logout" onclick="logoutAdmin()">🚪 LOGOUT</button>
+            </div>
+        </div>
+        
+        <!-- ENTRY / EDIT FORM -->
+        <div class="form-grid">
+            <div class="form-group"><label>ID *</label><input type="text" id="id" placeholder="e.g. 13-08-T-001" required></div>
+            <div class="form-group"><label>Full Name *</label><input type="text" id="full_name" placeholder="Tinuod nga Pangalan" required></div>
+            <div class="form-group"><label>A.K.A. / Pitik</label><input type="text" id="aka" placeholder="Alyas"></div>
+            <div class="form-group"><label>Date of Birth (DOB)</label><input type="text" id="dob" placeholder="Month Day, Year"></div>
+            <div class="form-group" style="grid-column: span 2;"><label>Address</label><input type="text" id="address" placeholder="Purok, Brgy, City"></div>
+            <div class="form-group"><label>Status (Civil Status)</label><input type="text" id="status" placeholder="Married, Single..."></div>
+            <div class="form-group"><label>Sex</label><select id="sex"><option value="Male">Male</option><option value="Female">Female</option></select></div>
+            <div class="form-group"><label>Height</label><input type="text" id="height" placeholder="e.g. 167 cm"></div>
+            <div class="form-group"><label>Weight</label><input type="text" id="weight" placeholder="e.g. 70kgs"></div>
+            <div class="form-group"><label>Occupation</label><input type="text" id="occupation" placeholder="Trabaho"></div>
+            <div class="form-group"><label>Contact Number</label><input type="text" id="contact_no" placeholder="09..."></div>
+            <div class="form-group"><label>GSIS No.</label><input type="text" id="gsis" placeholder="GSIS ID"></div>
+            <div class="form-group"><label>SSS No.</label><input type="text" id="sss" placeholder="SSS ID"></div>
+            <div class="form-group"><label>Lic No.</label><input type="text" id="licno" placeholder="Driver's License"></div>
+            <div class="form-group"><label>TIN No.</label><input type="text" id="tin" placeholder="TIN ID"></div>
+            <div class="form-group"><label>Date Joined</label><input type="text" id="joined" placeholder="Month Day, Year"></div>
+            <div class="form-group"><label>Blood Type</label><input type="text" id="blood_type" placeholder="e.g. A, B, O"></div>
+            <div class="form-group"><label>Motor Class</label><input type="text" id="motor_class" placeholder="Touring, Underbone, etc."></div>
+            <div class="form-group"><label>Motor Make</label><input type="text" id="motor_make" placeholder="Kawasaki, Honda..."></div>
+            <div class="form-group"><label>MS (Active Status)</label><input type="text" id="ms" placeholder="ACTIVE / INACTIVE"></div>
+            <div class="form-group"><label>Reason for Joining</label><textarea id="reason" placeholder="Ngano niapil..."></textarea></div>
+            <div class="form-group"><label>Commitment</label><textarea id="commitment" placeholder="Commitment sa grupo..."></textarea></div>
+
+            <div class="btn-group">
+                <button class="btn-save" onclick="saveMember()">💾 I-SAVE ANG MEMBER</button>
+                <button class="btn-clear" onclick="clearForm()">🧹 Clear / Bag-ong Entry</button>
+                <span id="systemMessage" style="color: #00ff00; margin-left: 15px; align-self: center; font-weight: bold;"></span>
+            </div>
+        </div>
+
+        <!-- LISTAHAN SA MGA MEMBERS -->
+        <h3 style="margin-top: 30px; color: #aaa;">Listahan sa mga Na-save nga Members (<span id="memberCount">0</span>)</h3>
+        <input type="text" id="searchBox" class="search-box" placeholder="🔍 Pangitaa ang ngalan, ID o aka..." onkeyup="filterTable()">
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Full Name</th>
+                        <th>A.K.A</th>
+                        <th>Contact</th>
+                        <th>Motor Make</th>
+                        <th>MS (Status)</th>
+                        <th>Aksyon</th>
+                    </tr>
+                </thead>
+                <tbody id="membersTableBody"></tbody>
+            </table>
+        </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
     // ==========================================
-    // 🔌 SUPABASE CONNECTION (Fixed variable name)
+    // 🔐 ADMIN / MARSHAL DATABASE (OFFLINE LIST)
+    // ==========================================
+    const adminDatabase = [
+        { idNum: "0000", fullname: "ELKAPITAN", passcode: "a045f58fe4162bb9227e93f549390aef6219914df85029f74f6057c3fda6ca85", isMarshal: true },
+        { idNum: "0001", fullname: "technicus", passcode: "4c327801d652b4e7b3449684f83febb4fea62dbd2c80ee4136f32ecbccc0f45e", isMarshal: true },
+        { idNum: "0002", fullname: "Long Way Ph", passcode: "e40e0225f947f1ae6cba2245dd9a1a50361512bb718c1ca1ce3f983fe3b3aa4e", isMarshal: true }
+    ];
+
+    // ==========================================
+    // ⏱️ 5-MINUTE INACTIVITY AUTO-LOGOUT TIMER
+    // ==========================================
+    let inactivityTimer;
+    const INACTIVITY_LIMIT = 5 * 60 * 1000; // 5 minutos (sa milliseconds)
+
+    function resetInactivityTimer() {
+        clearTimeout(inactivityTimer);
+        // Kung ang dashboard kay naka-display, i-set ang timer
+        if (document.getElementById('mainDashboard').style.display === "block") {
+            inactivityTimer = setTimeout(() => {
+                alert("⏳ Na-logout ka tungod sa 5 ka minutos nga walay kalihokan (inactivity).");
+                logoutAdmin();
+            }, INACTIVITY_LIMIT);
+        }
+    }
+
+    // Bantayan ang lihok sa mouse, pag-type, o pag-click
+    window.onload = function() {
+        const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+        events.forEach(event => {
+            window.addEventListener(event, resetInactivityTimer);
+        });
+    };
+
+    // ==========================================
+    // 🔐 SECURE LOGIN SYSTEM LOGIC (SHA-256)
+    // ==========================================
+    async function sha256(message) {
+        const msgBuffer = new TextEncoder().encode(message);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    async function checkLogin() {
+        const inputId = document.getElementById('adminIdNum').value.trim();
+        const inputPin = document.getElementById('adminPin').value.trim();
+
+        if (!inputId || !inputPin) {
+            document.getElementById('loginError').style.display = "block";
+            return;
+        }
+
+        const pinHash = await sha256(inputPin);
+        const validAdmin = adminDatabase.find(admin => admin.idNum === inputId && admin.passcode === pinHash);
+
+        if (validAdmin) {
+            document.getElementById('loginOverlay').style.display = "none";
+            document.getElementById('mainDashboard').style.display = "block";
+            document.getElementById('welcomeAdmin').innerText = `👋 Welcome, ${validAdmin.fullname}!`;
+            loadMembers(); 
+            resetInactivityTimer(); // Sugdan ang 5-min timer inig sulod
+        } else {
+            document.getElementById('loginError').style.display = "block";
+        }
+    }
+
+    document.getElementById('adminPin').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') checkLogin();
+    });
+
+    function logoutAdmin() {
+        clearTimeout(inactivityTimer); // I-off ang timer
+        document.getElementById('adminIdNum').value = '';
+        document.getElementById('adminPin').value = '';
+        document.getElementById('welcomeAdmin').innerText = '';
+        document.getElementById('loginError').style.display = "none";
+        document.getElementById('loginOverlay').style.display = "flex";
+        document.getElementById('mainDashboard').style.display = "none";
+    }
+
+    // ==========================================
+    // 🔌 SUPABASE CONNECTION
     // ==========================================
     const _supabaseUrl = 'https://iilfklquzyxmdergwawh.supabase.co';
     const _supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpbGZrbHF1enl4bWRlcmd3YXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MTkzMDcsImV4cCI6MjEwMzI5NTMwN30.jMctz666CGfTdODLqNr24O3dQ5SDM6K5GkmihCtDdBQ';
@@ -186,23 +246,10 @@
 
     let allMembers = [];
 
-    // ==========================================
-    // 📥 FETCH MEMBERS GIKAN SA SUPABASE
-    // ==========================================
     async function loadMembers() {
-        console.log("Nag-konekta sa Supabase...");
+        const { data, error } = await dbClient.from('tour_members').select('*');
+        if (error) { alert("Error sa Supabase: " + error.message); return; }
         
-        const { data, error } = await dbClient
-            .from('tour_members')
-            .select('*');
-        
-        if (error) {
-            console.error("❌ Supabase Error:", error.message);
-            alert("Error sa Supabase: " + error.message);
-            return;
-        }
-
-        console.log("✅ Data nga nakuha:", data);
         allMembers = data || [];
         document.getElementById('memberCount').innerText = allMembers.length;
         displayTable(allMembers);
@@ -211,12 +258,10 @@
     function displayTable(members) {
         const tbody = document.getElementById('membersTableBody');
         tbody.innerHTML = '';
-
         if (!members || members.length === 0) {
             tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #777;">Walay nakit-an nga miyembro.</td></tr>`;
             return;
         }
-
         members.forEach(member => {
             let tr = document.createElement('tr');
             tr.innerHTML = `
@@ -232,127 +277,58 @@
         });
     }
 
-    // ==========================================
-    // 💾 SAVE O UPDATE SA MEMBER
-    // ==========================================
     async function saveMember() {
         const memberId = document.getElementById('id').value.trim();
         const full_name = document.getElementById('full_name').value.trim();
-        
-        if (!memberId || !full_name) {
-            alert("Kinahanglan butangan ang ID ug Full Name!");
-            return;
-        }
+        if (!memberId || !full_name) { alert("Kinahanglan butangan ang ID ug Full Name!"); return; }
 
         const memberData = {
-            id: memberId,
-            full_name: full_name,
-            aka: document.getElementById('aka').value,
-            dob: document.getElementById('dob').value,
-            address: document.getElementById('address').value,
-            status: document.getElementById('status').value,
-            sex: document.getElementById('sex').value,
-            height: document.getElementById('height').value,
-            weight: document.getElementById('weight').value,
-            occupation: document.getElementById('occupation').value,
-            contact_no: document.getElementById('contact_no').value,
-            gsis: document.getElementById('gsis').value,
-            sss: document.getElementById('sss').value,
-            licno: document.getElementById('licno').value,
-            tin: document.getElementById('tin').value,
-            joined: document.getElementById('joined').value,
-            blood_type: document.getElementById('blood_type').value,
-            motor_class: document.getElementById('motor_class').value,
-            motor_make: document.getElementById('motor_make').value,
-            ms: document.getElementById('ms').value,
-            reason: document.getElementById('reason').value,
+            id: memberId, full_name: full_name, aka: document.getElementById('aka').value,
+            dob: document.getElementById('dob').value, address: document.getElementById('address').value,
+            status: document.getElementById('status').value, sex: document.getElementById('sex').value,
+            height: document.getElementById('height').value, weight: document.getElementById('weight').value,
+            occupation: document.getElementById('occupation').value, contact_no: document.getElementById('contact_no').value,
+            gsis: document.getElementById('gsis').value, sss: document.getElementById('sss').value,
+            licno: document.getElementById('licno').value, tin: document.getElementById('tin').value,
+            joined: document.getElementById('joined').value, blood_type: document.getElementById('blood_type').value,
+            motor_class: document.getElementById('motor_class').value, motor_make: document.getElementById('motor_make').value,
+            ms: document.getElementById('ms').value, reason: document.getElementById('reason').value,
             commitment: document.getElementById('commitment').value
         };
 
         const { error } = await dbClient.from('tour_members').upsert([memberData]);
-
-        if (error) {
-            showMessage("❌ Error: " + error.message, "#ff0000");
-        } else {
-            showMessage("✅ Na-save na ang impormasyon!", "#00ff00");
-            clearForm();
-            loadMembers();
-        }
+        if (error) { showMessage("❌ Error: " + error.message, "#ff0000"); } 
+        else { showMessage("✅ Na-save na ang impormasyon!", "#00ff00"); clearForm(); loadMembers(); }
     }
 
-    // ==========================================
-    // ✏️ EDIT MEMBER
-    // ==========================================
     function editMember(id) {
         const member = allMembers.find(m => String(m.id).trim() === String(id).trim());
         if (member) {
-            document.getElementById('id').value = member.id || '';
-            document.getElementById('full_name').value = member.full_name || '';
-            document.getElementById('aka').value = member.aka || '';
-            document.getElementById('dob').value = member.dob || '';
-            document.getElementById('address').value = member.address || '';
-            document.getElementById('status').value = member.status || '';
-            document.getElementById('sex').value = member.sex || 'Male';
-            document.getElementById('height').value = member.height || '';
-            document.getElementById('weight').value = member.weight || '';
-            document.getElementById('occupation').value = member.occupation || '';
-            document.getElementById('contact_no').value = member.contact_no || '';
-            document.getElementById('gsis').value = member.gsis || '';
-            document.getElementById('sss').value = member.sss || '';
-            document.getElementById('licno').value = member.licno || '';
-            document.getElementById('tin').value = member.tin || '';
-            document.getElementById('joined').value = member.joined || '';
-            document.getElementById('blood_type').value = member.blood_type || '';
-            document.getElementById('motor_class').value = member.motor_class || '';
-            document.getElementById('motor_make').value = member.motor_make || '';
-            document.getElementById('ms').value = member.ms || '';
-            document.getElementById('reason').value = member.reason || '';
-            document.getElementById('commitment').value = member.commitment || '';
-            
+            document.getElementById('id').value = member.id || ''; document.getElementById('full_name').value = member.full_name || '';
+            document.getElementById('aka').value = member.aka || ''; document.getElementById('dob').value = member.dob || '';
+            document.getElementById('address').value = member.address || ''; document.getElementById('status').value = member.status || '';
+            document.getElementById('sex').value = member.sex || 'Male'; document.getElementById('height').value = member.height || '';
+            document.getElementById('weight').value = member.weight || ''; document.getElementById('occupation').value = member.occupation || '';
+            document.getElementById('contact_no').value = member.contact_no || ''; document.getElementById('gsis').value = member.gsis || '';
+            document.getElementById('sss').value = member.sss || ''; document.getElementById('licno').value = member.licno || '';
+            document.getElementById('tin').value = member.tin || ''; document.getElementById('joined').value = member.joined || '';
+            document.getElementById('blood_type').value = member.blood_type || ''; document.getElementById('motor_class').value = member.motor_class || '';
+            document.getElementById('motor_make').value = member.motor_make || ''; document.getElementById('ms').value = member.ms || '';
+            document.getElementById('reason').value = member.reason || ''; document.getElementById('commitment').value = member.commitment || '';
             window.scrollTo({ top: 0, behavior: 'smooth' });
             showMessage("📝 Ga-edit ka karon. I-click ang Save inig human.", "#e9c46a");
         }
     }
 
-    // ==========================================
-    // 🧹 CLEAR FORM
-    // ==========================================
     function clearForm() {
-        document.getElementById('id').value = '';
-        document.getElementById('full_name').value = '';
-        document.getElementById('aka').value = '';
-        document.getElementById('dob').value = '';
-        document.getElementById('address').value = '';
-        document.getElementById('status').value = '';
+        document.querySelectorAll('input:not(#adminIdNum, #adminPin, #searchBox), textarea').forEach(el => el.value = '');
         document.getElementById('sex').value = 'Male';
-        document.getElementById('height').value = '';
-        document.getElementById('weight').value = '';
-        document.getElementById('occupation').value = '';
-        document.getElementById('contact_no').value = '';
-        document.getElementById('gsis').value = '';
-        document.getElementById('sss').value = '';
-        document.getElementById('licno').value = '';
-        document.getElementById('tin').value = '';
-        document.getElementById('joined').value = '';
-        document.getElementById('blood_type').value = '';
-        document.getElementById('motor_class').value = '';
-        document.getElementById('motor_make').value = '';
-        document.getElementById('ms').value = '';
-        document.getElementById('reason').value = '';
-        document.getElementById('commitment').value = '';
         showMessage("", "");
     }
 
-    // ==========================================
-    // 🔍 SEARCH / FILTER TABLE
-    // ==========================================
     function filterTable() {
         const query = document.getElementById('searchBox').value.toLowerCase().trim();
-        if (!query) {
-            displayTable(allMembers);
-            return;
-        }
-
+        if (!query) { displayTable(allMembers); return; }
         const filtered = allMembers.filter(m => 
             (m.full_name && String(m.full_name).toLowerCase().includes(query)) ||
             (m.id && String(m.id).toLowerCase().includes(query)) ||
@@ -363,12 +339,8 @@
 
     function showMessage(msg, color) {
         const msgEl = document.getElementById('systemMessage');
-        msgEl.innerText = msg;
-        msgEl.style.color = color;
+        msgEl.innerText = msg; msgEl.style.color = color;
     }
-
-    // I-load ang tanang miyembro inig abli sa panid
-    loadMembers();
 </script>
 
 </body>
