@@ -8,7 +8,7 @@
         body {
             background-color: #121212; color: #f5f5f5;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0; padding: 10px; /* Gipagamyan ang padding para sa CP */
+            margin: 0; padding: 10px;
         }
         .container { 
             max-width: 900px; margin: auto; background: #1e1e1e; 
@@ -53,7 +53,7 @@
             .container { padding: 15px; }
             .form-grid { display: flex; flex-direction: column; gap: 12px; }
             .form-section-title, .full-width, .two-columns, textarea, .btn-submit-container {
-                grid-column: span 1; /* Himuon silang 1 column tanan sa CP */
+                grid-column: span 1;
             }
         }
 
@@ -87,7 +87,7 @@
 <body>
 
 <div class="container">
-    <h2>🏍️ TOURinc Club - Membership Application Form</h2>
+    <h2>🏍️ TOUR Inc. - Membership Application Form</h2>
     <p style="text-align: center; color: #aaa; font-size: 12px; margin-bottom: 20px;">I-fill out kining porma. I-review kini sa dili pa i-save.</p>
     
     <div class="form-grid">
@@ -183,21 +183,52 @@
         <div class="form-section-title">3. Motorcycle, Commitment & Date</div>
 
         <div class="form-group">
-            <label>MC Type (Motor Class)</label>
-            <input type="text" id="mc_type" placeholder="Touring, Underbone...">
+            <label>Type of Motorcycle *</label>
+            <select id="mc_type" onchange="toggleOther('mc_type', 'mc_type_other_group')">
+                <option value="Underbone">Underbone</option>
+                <option value="Touring">Touring</option>
+                <option value="Sports">Sports</option>
+                <option value="Dirt Bike">Dirt Bike</option>
+                <option value="Cruiser">Cruiser</option>
+                <option value="Others">Others</option>
+            </select>
         </div>
+        <div class="form-group" id="mc_type_other_group" style="display: none;">
+            <label>Specify MC Type *</label>
+            <input type="text" id="mc_type_other" placeholder="Ibutang ang klase sa motor...">
+        </div>
+
         <div class="form-group">
-            <label>MC Brand (Motor Make)</label>
-            <input type="text" id="mc_brand" placeholder="Kawasaki, Honda, Yamaha...">
+            <label>Brand of Motorcycle *</label>
+            <select id="mc_brand" onchange="toggleOther('mc_brand', 'mc_brand_other_group')">
+                <option value="Honda">Honda</option>
+                <option value="Suzuki">Suzuki</option>
+                <option value="Yamaha">Yamaha</option>
+                <option value="Kawasaki">Kawasaki</option>
+                <option value="BMW">BMW</option>
+                <option value="Ducati">Ducati</option>
+                <option value="KTM">KTM</option>
+                <option value="VOGE">VOGE</option>
+                <option value="Others">Others</option>
+            </select>
         </div>
+        <div class="form-group" id="mc_brand_other_group" style="display: none;">
+            <label>Specify MC Brand *</label>
+            <input type="text" id="mc_brand_other" placeholder="Ibutang ang brand sa motor...">
+        </div>
+
         <div class="form-group">
             <label>Date Joined / Applied *</label>
             <input type="text" id="date_joined" placeholder="Month Day, Year" required>
         </div>
 
         <div class="form-group full-width">
-            <label>Commitment (%)</label>
-            <input type="text" id="commitment" placeholder="e.g. 99%">
+            <label>Percentage of Commitment *</label>
+            <select id="commitment" required>
+                <option value="40-50%">40-50%</option>
+                <option value="61-80%">61-80%</option>
+                <option value="81-99%">81-99%</option>
+            </select>
         </div>
 
         <div class="form-group full-width">
@@ -242,7 +273,29 @@
     const _supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpbGZrbHF1enl4bWRlcmd3YXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MTkzMDcsImV4cCI6MjEwMzI5NTMwN30.jMctz666CGfTdODLqNr24O3dQ5SDM6K5GkmihCtDdBQ';
     const dbClient = window.supabase.createClient(_supabaseUrl, _supabaseKey);
 
+    // Toggle custom input when "Others" is selected
+    function toggleOther(selectId, groupId) {
+        const selectVal = document.getElementById(selectId).value;
+        const groupEl = document.getElementById(groupId);
+        if (selectVal === 'Others') {
+            groupEl.style.display = 'flex';
+        } else {
+            groupEl.style.display = 'none';
+            document.getElementById(selectId + '_other').value = '';
+        }
+    }
+
     function getFormData() {
+        let mcType = document.getElementById('mc_type').value;
+        if (mcType === 'Others') {
+            mcType = document.getElementById('mc_type_other').value.trim();
+        }
+
+        let mcBrand = document.getElementById('mc_brand').value;
+        if (mcBrand === 'Others') {
+            mcBrand = document.getElementById('mc_brand_other').value.trim();
+        }
+
         return {
             membership_type: document.getElementById('membership_type').value,
             first_name: document.getElementById('first_name').value.trim(),
@@ -262,18 +315,18 @@
             license_no: document.getElementById('license_no').value.trim(),
             tin: document.getElementById('tin').value.trim(),
             date_joined: document.getElementById('date_joined').value.trim(),
-            mc_type: document.getElementById('mc_type').value.trim(),
-            mc_brand: document.getElementById('mc_brand').value.trim(),
+            mc_type: mcType,
+            mc_brand: mcBrand,
             reason_for_joining: document.getElementById('reason_for_joining').value.trim(),
-            commitment: document.getElementById('commitment').value.trim()
+            commitment: document.getElementById('commitment').value
         };
     }
 
     function openReviewModal() {
         const data = getFormData();
 
-        if (!data.first_name || !data.family_name || !data.contact_no || !data.date_joined) {
-            showMsg("❌ Palihug butangi ang First Name, Family Name, Contact Number, ug Date Joined!", "#ff4444");
+        if (!data.first_name || !data.family_name || !data.contact_no || !data.date_joined || !data.mc_type || !data.mc_brand) {
+            showMsg("❌ Palihug butangi ang tanang kinahanglanon (First Name, Family Name, Contact, Date Joined, ug Motorcycle details)!", "#ff4444");
             return;
         }
         showMsg("", "");
@@ -292,8 +345,8 @@
             <div class="review-item"><span class="review-label">GSIS / SSS / TIN</span><span class="review-value">${data.gsis || '-'} / ${data.sss || '-'} / ${data.tin || '-'}</span></div>
             <div class="review-item"><span class="review-label">License Number</span><span class="review-value">${data.license_no || 'N/A'}</span></div>
             <div class="review-item"><span class="review-label">Date Joined</span><span class="review-value">${data.date_joined}</span></div>
-            <div class="review-item"><span class="review-label">Motorcycle</span><span class="review-value">${data.mc_brand || 'N/A'} (${data.mc_type || 'N/A'})</span></div>
-            <div class="review-item"><span class="review-label">Commitment</span><span class="review-value">${data.commitment || 'N/A'}</span></div>
+            <div class="review-item"><span class="review-label">Motorcycle</span><span class="review-value">${data.mc_brand} (${data.mc_type})</span></div>
+            <div class="review-item"><span class="review-label">Commitment</span><span class="review-value">${data.commitment}</span></div>
             <div class="review-item" style="grid-column: span 2;"><span class="review-label">Reason for Joining</span><span class="review-value">${data.reason_for_joining || 'N/A'}</span></div>
         `;
 
@@ -323,6 +376,11 @@
         document.querySelectorAll('input, textarea').forEach(el => el.value = '');
         document.getElementById('membership_type').value = 'Rider';
         document.getElementById('gender').value = 'Male';
+        document.getElementById('mc_type').value = 'Underbone';
+        document.getElementById('mc_brand').value = 'Honda';
+        document.getElementById('commitment').value = '40-50%';
+        document.getElementById('mc_type_other_group').style.display = 'none';
+        document.getElementById('mc_brand_other_group').style.display = 'none';
     }
 
     function showMsg(text, color) {
