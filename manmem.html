@@ -35,10 +35,10 @@
         .btn-clear:hover { background-color: #777; }
         
         /* TABLE STYLES */
-        .table-container { overflow-x: auto; margin-top: 30px; }
+        .table-container { overflow-x: auto; margin-top: 30px; max-height: 500px; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; }
         th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #333; white-space: nowrap; }
-        th { background-color: #1e1e1e; color: #cc0000; }
+        th { background-color: #1e1e1e; color: #cc0000; position: sticky; top: 0; z-index: 10; }
         tr:hover { background-color: #2a2a2a; }
         .btn-edit { background-color: #e9c46a; color: #000; padding: 4px 8px; font-size: 11px; border-radius: 3px; cursor: pointer; border: none; font-weight: bold; }
         
@@ -152,7 +152,7 @@
     </div>
 
     <!-- LISTAHAN SA MGA MEMBERS -->
-    <h3 style="margin-top: 30px; color: #aaa;">Listahan sa mga Na-save nga Members</h3>
+    <h3 style="margin-top: 30px; color: #aaa;">Listahan sa mga Na-save nga Members (<span id="memberCount">0</span>)</h3>
     <input type="text" id="searchBox" class="search-box" placeholder="🔍 Pangitaa ang ngalan, ID o aka (e.g. Marcenito o 13-08)..." onkeyup="filterTable()">
     
     <div class="table-container">
@@ -187,17 +187,22 @@
     let allMembers = [];
 
     // ==========================================
-    // 📥 FETCH MEMBERS GIKAN SA SUPABASE
+    // 📥 FETCH MEMBERS GIKAN SA SUPABASE (GI-LIMIT ANG RANGE NGADTO SA 300)
     // ==========================================
     async function loadMembers() {
-        const { data, error } = await supabase.from('tour_members').select('*');
+        const { data, error } = await supabase
+            .from('tour_members')
+            .select('*')
+            .range(0, 300); // Aron makuha ang tanang 263+ ka miyembro
         
         if (error) {
             console.error("Error loading members:", error);
+            alert("Error sa pagkuha sa data: " + error.message);
             return;
         }
 
         allMembers = data || [];
+        document.getElementById('memberCount').innerText = allMembers.length;
         displayTable(allMembers);
     }
 
@@ -206,7 +211,7 @@
         tbody.innerHTML = '';
 
         if (members.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #777;">Walay nakuha nga data o walay nakit-an.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #777;">Walay nakit-an nga miyembro.</td></tr>`;
             return;
         }
 
@@ -229,8 +234,8 @@
     // 💾 SAVE O UPDATE SA MEMBER
     // ==========================================
     async function saveMember() {
-        const memberId = document.getElementById('id').value;
-        const full_name = document.getElementById('full_name').value;
+        const memberId = document.getElementById('id').value.trim();
+        const full_name = document.getElementById('full_name').value.trim();
         
         if (!memberId || !full_name) {
             alert("Kinahanglan butangan ang ID ug Full Name!");
@@ -277,7 +282,7 @@
     // ✏️ EDIT MEMBER (Ibutang sa Form)
     // ==========================================
     function editMember(id) {
-        const member = allMembers.find(m => m.id === id);
+        const member = allMembers.find(m => String(m.id).trim() === String(id).trim());
         if (member) {
             document.getElementById('id').value = member.id || '';
             document.getElementById('full_name').value = member.full_name || '';
@@ -340,11 +345,16 @@
     // 🔍 SEARCH / FILTER TABLE
     // ==========================================
     function filterTable() {
-        const query = document.getElementById('searchBox').value.toLowerCase();
+        const query = document.getElementById('searchBox').value.toLowerCase().trim();
+        if (!query) {
+            displayTable(allMembers);
+            return;
+        }
+
         const filtered = allMembers.filter(m => 
-            (m.full_name && m.full_name.toLowerCase().includes(query)) ||
-            (m.id && m.id.toLowerCase().includes(query)) ||
-            (m.aka && m.aka.toLowerCase().includes(query))
+            (m.full_name && String(m.full_name).toLowerCase().includes(query)) ||
+            (m.id && String(m.id).toLowerCase().includes(query)) ||
+            (m.aka && String(m.aka).toLowerCase().includes(query))
         );
         displayTable(filtered);
     }
@@ -355,6 +365,7 @@
         msgEl.style.color = color;
     }
 
+    // I-load ang tanang miyembro inig abli sa panid
     loadMembers();
 </script>
 
