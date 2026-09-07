@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOUR Inc. - Member Management Dashboard</title>
+    <style>
+        body {
+            background-color: #121212; color: #f5f5f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding: 20px;
+        }
+        .container { max-width: 1100px; margin: auto; }
+        h2 { border-bottom: 2px solid #cc0000; padding-bottom: 10px; color: #fff; }
+        
+        /* FORM STYLES */
+        .form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+        .form-group { display: flex; flex-direction: column; }
+        label { font-size: 11px; color: #aaa; margin-bottom: 5px; text-transform: uppercase; }
+        input, select, textarea {
+            padding: 8px 10px; background-color: #2b2b2b; color: #fff;
+            border: 1px solid #444; border-radius: 4px; font-size: 13px;
+        }
+        input:focus, select:focus, textarea:focus { border-color: #cc0000; outline: none; }
+        textarea { resize: vertical; height: 60px; grid-column: span 3; }
+        
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; grid-column: span 3; }
+        button {
+            padding: 10px 20px; border: none; border-radius: 4px;
+            font-weight: bold; cursor: pointer; transition: 0.2s; color: white;
+        }
+        .btn-save { background-color: #0066cc; }
+        .btn-save:hover { background-color: #004c99; }
+        .btn-clear { background-color: #555; }
+        .btn-clear:hover { background-color: #777; }
+        
+        /* TABLE STYLES */
+        .table-container { overflow-x: auto; margin-top: 30px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #333; white-space: nowrap; }
+        th { background-color: #1e1e1e; color: #cc0000; }
+        tr:hover { background-color: #2a2a2a; }
+        .btn-edit { background-color: #e9c46a; color: #000; padding: 4px 8px; font-size: 11px; border-radius: 3px; cursor: pointer; border: none; font-weight: bold; }
+        
+        .search-box { width: 100%; padding: 10px; margin-bottom: 15px; background: #1e1e1e; border: 1px solid #444; color: #fff; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🏍️ TOUR Inc. - Member Entry & Edit Dashboard</h2>
+    
+    <!-- ENTRY / EDIT FORM -->
+    <div class="form-grid">
+        <input type="hidden" id="record_id"> <!-- Para mailhan kung Entry ba o Edit -->
+        
+        <div class="form-group">
+            <label>Ref ID *</label>
+            <input type="text" id="ref_id" placeholder="e.g. 25-08-T-256" required>
+        </div>
+        <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" id="full_name" placeholder="Tinuod nga Pangalan" required>
+        </div>
+        <div class="form-group">
+            <label>A.K.A. / Pitik</label>
+            <input type="text" id="aka" placeholder="Alyas">
+        </div>
+        <div class="form-group">
+            <label>Date of Birth (DOB)</label>
+            <input type="text" id="dob" placeholder="Month Day, Year">
+        </div>
+        <div class="form-group" style="grid-column: span 2;">
+            <label>Address</label>
+            <input type="text" id="address" placeholder="Purok, Brgy, City">
+        </div>
+        <div class="form-group">
+            <label>Sex</label>
+            <select id="sex">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Height</label>
+            <input type="text" id="height" placeholder="e.g. 175 cm">
+        </div>
+        <div class="form-group">
+            <label>Weight</label>
+            <input type="text" id="weight" placeholder="e.g. 70 kg">
+        </div>
+        <div class="form-group">
+            <label>Occupation</label>
+            <input type="text" id="occupation" placeholder="Trabaho">
+        </div>
+        <div class="form-group">
+            <label>Contact Number</label>
+            <input type="text" id="contact_no" placeholder="09...">
+        </div>
+        <div class="form-group">
+            <label>Blood Type</label>
+            <input type="text" id="blood_type" placeholder="e.g. O+, A">
+        </div>
+        <div class="form-group">
+            <label>GSIS No.</label>
+            <input type="text" id="gsis" placeholder="GSIS ID">
+        </div>
+        <div class="form-group">
+            <label>SSS No.</label>
+            <input type="text" id="sss" placeholder="SSS ID">
+        </div>
+        <div class="form-group">
+            <label>TIN No.</label>
+            <input type="text" id="tin" placeholder="TIN ID">
+        </div>
+        <div class="form-group">
+            <label>Lic No.</label>
+            <input type="text" id="licno" placeholder="Driver's License">
+        </div>
+        <div class="form-group">
+            <label>Date Joined</label>
+            <input type="text" id="joined" placeholder="Month Day, Year">
+        </div>
+        <div class="form-group">
+            <label>Motor Class</label>
+            <input type="text" id="motor_class" placeholder="Touring, Underbone, etc.">
+        </div>
+        <div class="form-group">
+            <label>Motor Make</label>
+            <input type="text" id="motor_make" placeholder="Kawasaki, Honda, Yamaha...">
+        </div>
+        <div class="form-group">
+            <label>Status</label>
+            <select id="status">
+                <option value="ACTIVE">ACTIVE</option>
+                <option value="INACTIVE">INACTIVE</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Reason for Joining</label>
+            <textarea id="reason" placeholder="Ngano niapil..."></textarea>
+        </div>
+        <div class="form-group">
+            <label>Commitment</label>
+            <textarea id="commitment" placeholder="Commitment sa grupo..."></textarea>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn-save" onclick="saveMember()">💾 I-SAVE ANG MEMBER</button>
+            <button class="btn-clear" onclick="clearForm()">🧹 Clear / Bag-ong Entry</button>
+            <span id="systemMessage" style="color: #00ff00; margin-left: 15px; align-self: center; font-weight: bold;"></span>
+        </div>
+    </div>
+
+    <!-- LISTAHAN SA MGA MEMBERS -->
+    <h3 style="margin-top: 30px; color: #aaa;">Listahan sa mga Na-save nga Members</h3>
+    <input type="text" id="searchBox" class="search-box" placeholder="🔍 Pangitaa ang ngalan, ID o aka..." onkeyup="filterTable()">
+    
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Ref ID</th>
+                    <th>Full Name</th>
+                    <th>A.K.A</th>
+                    <th>Contact</th>
+                    <th>Motor Make</th>
+                    <th>Status</th>
+                    <th>Aksyon</th>
+                </tr>
+            </thead>
+            <tbody id="membersTableBody">
+                <!-- Diri mugawas ang mga members gikan sa Supabase -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    // ==========================================
+    // 🔌 SUPABASE CONNECTION
+    // ==========================================
+    const _supabaseUrl = 'https://iilfklquzyxmdergwawh.supabase.co';
+    const _supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpbGZrbHF1enl4bWRlcmd3YXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MTkzMDcsImV4cCI6MjEwMzI5NTMwN30.jMctz666CGfTdODLqNr24O3dQ5SDM6K5GkmihCtDdBQ';
+    const supabase = window.supabase.createClient(_supabaseUrl, _supabaseKey);
+
+    let allMembers = [];
+
+    // ==========================================
+    // 📥 FETCH MEMBERS GIKAN SA SUPABASE
+    // ==========================================
+    async function loadMembers() {
+        const { data, error } = await supabase.from('tour_members').select('*').order('created_at', { ascending: false });
+        
+        if (error) {
+            console.error("Error loading members:", error);
+            return;
+        }
+
+        allMembers = data;
+        displayTable(allMembers);
+    }
+
+    function displayTable(members) {
+        const tbody = document.getElementById('membersTableBody');
+        tbody.innerHTML = '';
+
+        members.forEach(member => {
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><b>${member.ref_id || ''}</b></td>
+                <td>${member.full_name || ''}</td>
+                <td>${member.aka || ''}</td>
+                <td>${member.contact_no || ''}</td>
+                <td>${member.motor_make || ''}</td>
+                <td><span style="color: ${member.status === 'ACTIVE' ? '#00ff00' : '#ff0000'};">${member.status || 'ACTIVE'}</span></td>
+                <td><button class="btn-edit" onclick="editMember('${member.id}')">✏️ Edit</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // ==========================================
+    // 💾 SAVE O UPDATE SA MEMBER
+    // ==========================================
+    async function saveMember() {
+        const id = document.getElementById('record_id').value;
+        const ref_id = document.getElementById('ref_id').value;
+        const full_name = document.getElementById('full_name').value;
+        
+        if (!ref_id || !full_name) {
+            alert("Kinahanglan butangan ang Ref ID ug Full Name!");
+            return;
+        }
+
+        const memberData = {
+            ref_id: ref_id,
+            full_name: full_name,
+            aka: document.getElementById('aka').value,
+            dob: document.getElementById('dob').value,
+            address: document.getElementById('address').value,
+            sex: document.getElementById('sex').value,
+            height: document.getElementById('height').value,
+            weight: document.getElementById('weight').value,
+            occupation: document.getElementById('occupation').value,
+            gsis: document.getElementById('gsis').value,
+            sss: document.getElementById('sss').value,
+            tin: document.getElementById('tin').value,
+            licno: document.getElementById('licno').value,
+            contact_no: document.getElementById('contact_no').value,
+            joined: document.getElementById('joined').value,
+            blood_type: document.getElementById('blood_type').value,
+            motor_class: document.getElementById('motor_class').value,
+            motor_make: document.getElementById('motor_make').value,
+            reason: document.getElementById('reason').value,
+            commitment: document.getElementById('commitment').value,
+            status: document.getElementById('status').value
+        };
+
+        let response;
+        if (id) {
+            response = await supabase.from('tour_members').update(memberData).eq('id', id);
+        } else {
+            response = await supabase.from('tour_members').insert([memberData]);
+        }
+
+        if (response.error) {
+            showMessage("❌ Error: " + response.error.message, "#ff0000");
+        } else {
+            showMessage("✅ Na-save na ang impormasyon!", "#00ff00");
+            clearForm();
+            loadMembers();
+        }
+    }
+
+    // ==========================================
+    // ✏️ EDIT MEMBER (Ibutang sa Form)
+    // ==========================================
+    function editMember(id) {
+        const member = allMembers.find(m => m.id === id);
+        if (member) {
+            document.getElementById('record_id').value = member.id;
+            document.getElementById('ref_id').value = member.ref_id || '';
+            document.getElementById('full_name').value = member.full_name || '';
+            document.getElementById('aka').value = member.aka || '';
+            document.getElementById('dob').value = member.dob || '';
+            document.getElementById('address').value = member.address || '';
+            document.getElementById('sex').value = member.sex || 'Male';
+            document.getElementById('height').value = member.height || '';
+            document.getElementById('weight').value = member.weight || '';
+            document.getElementById('occupation').value = member.occupation || '';
+            document.getElementById('gsis').value = member.gsis || '';
+            document.getElementById('sss').value = member.sss || '';
+            document.getElementById('tin').value = member.tin || '';
+            document.getElementById('licno').value = member.licno || '';
+            document.getElementById('contact_no').value = member.contact_no || '';
+            document.getElementById('joined').value = member.joined || '';
+            document.getElementById('blood_type').value = member.blood_type || '';
+            document.getElementById('motor_class').value = member.motor_class || '';
+            document.getElementById('motor_make').value = member.motor_make || '';
+            document.getElementById('reason').value = member.reason || '';
+            document.getElementById('commitment').value = member.commitment || '';
+            document.getElementById('status').value = member.status || 'ACTIVE';
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            showMessage("📝 Ga-edit ka karon. I-click ang Save inig human.", "#e9c46a");
+        }
+    }
+
+    // ==========================================
+    // 🧹 CLEAR FORM
+    // ==========================================
+    function clearForm() {
+        document.getElementById('record_id').value = '';
+        document.getElementById('ref_id').value = '';
+        document.getElementById('full_name').value = '';
+        document.getElementById('aka').value = '';
+        document.getElementById('dob').value = '';
+        document.getElementById('address').value = '';
+        document.getElementById('sex').value = 'Male';
+        document.getElementById('height').value = '';
+        document.getElementById('weight').value = '';
+        document.getElementById('occupation').value = '';
+        document.getElementById('gsis').value = '';
+        document.getElementById('sss').value = '';
+        document.getElementById('tin').value = '';
+        document.getElementById('licno').value = '';
+        document.getElementById('contact_no').value = '';
+        document.getElementById('joined').value = '';
+        document.getElementById('blood_type').value = '';
+        document.getElementById('motor_class').value = '';
+        document.getElementById('motor_make').value = '';
+        document.getElementById('reason').value = '';
+        document.getElementById('commitment').value = '';
+        document.getElementById('status').value = 'ACTIVE';
+        showMessage("", "");
+    }
+
+    // ==========================================
+    // 🔍 SEARCH / FILTER TABLE
+    // ==========================================
+    function filterTable() {
+        const query = document.getElementById('searchBox').value.toLowerCase();
+        const filtered = allMembers.filter(m => 
+            (m.full_name && m.full_name.toLowerCase().includes(query)) ||
+            (m.ref_id && m.ref_id.toLowerCase().includes(query)) ||
+            (m.aka && m.aka.toLowerCase().includes(query))
+        );
+        displayTable(filtered);
+    }
+
+    function showMessage(msg, color) {
+        const msgEl = document.getElementById('systemMessage');
+        msgEl.innerText = msg;
+        msgEl.style.color = color;
+    }
+
+    loadMembers();
+</script>
+
+</body>
+</html>
