@@ -701,54 +701,49 @@
                             canvas.height = img.height * scaleSize;
                             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                            const logoImg = new Image();
-                            logoImg.src = 'mmc.png';
-                            logoImg.onload = function() {
-                                const logoWidth = canvas.width * 0.28; 
-                                const logoHeight = (logoImg.height / logoImg.width) * logoWidth;
-                                ctx.drawImage(logoImg, 10, canvas.height - logoHeight - 10, logoWidth, logoHeight);
+                            // Helper para sa DMS format
+                            function convertToDMS(decimal, isLat) {
+                                if (decimal === "N/A") return "N/A";
+                                const val = parseFloat(decimal);
+                                const absVal = Math.abs(val);
+                                const d = Math.floor(absVal);
+                                const m = Math.floor((absVal - d) * 60);
+                                const s = ((absVal - d - m / 60) * 3600).toFixed(0);
+                                const dir = isLat ? (val >= 0 ? "N" : "S") : (val >= 0 ? "E" : "W");
+                                return `${d}° ${m}' ${s}" ${dir}`;
+                            }
 
-                                function convertToDMS(decimal, isLat) {
-                                    if (decimal === "N/A") return "N/A";
-                                    const val = parseFloat(decimal);
-                                    const absVal = Math.abs(val);
-                                    const d = Math.floor(absVal);
-                                    const m = Math.floor((absVal - d) * 60);
-                                    const s = ((absVal - d - m / 60) * 3600).toFixed(0);
-                                    const dir = isLat ? (val >= 0 ? "N" : "S") : (val >= 0 ? "E" : "W");
-                                    return `${d}° ${m}' ${s}" ${dir}`;
-                                }
-                            
-                                ctx.fillStyle = "white";
-                                ctx.strokeStyle = "black"; 
-                                ctx.lineWidth = 3;
-                                ctx.font = "bold 16px Arial"; 
-                                ctx.textAlign = "right";
+                            // Ibutang ang text timestamp ug coordinates sa ubos sa litrato
+                            ctx.fillStyle = "white";
+                            ctx.strokeStyle = "black"; 
+                            ctx.lineWidth = 3;
+                            ctx.font = "bold 16px Arial"; 
+                            ctx.textAlign = "right";
 
-                                const idElem = document.getElementById('idNum');
-                                const nameElem = document.getElementById('name');
-                                const riderID = idElem && idElem.value ? idElem.value : "WALA I-SCAN";
-                                const riderName = nameElem && nameElem.value ? nameElem.value : "Wala Kaila";
-                            
-                                const now = new Date();
-                                const militaryDateTime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+                            const idElem = document.getElementById('idNum');
+                            const nameElem = document.getElementById('name');
+                            const riderID = idElem && idElem.value ? idElem.value : "WALA I-SCAN";
+                            const riderName = nameElem && nameElem.value ? nameElem.value : "Wala Kaila";
+                        
+                            const now = new Date();
+                            const militaryDateTime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
 
-                                ctx.strokeText(`ID: ${riderID} (${riderName})`, canvas.width - 10, canvas.height - 55);
-                                ctx.fillText(`ID: ${riderID} (${riderName})`, canvas.width - 10, canvas.height - 55);
+                            ctx.strokeText(`ID: ${riderID} (${riderName})`, canvas.width - 10, canvas.height - 55);
+                            ctx.fillText(`ID: ${riderID} (${riderName})`, canvas.width - 10, canvas.height - 55);
 
-                                ctx.strokeText(`Date/Time: ${militaryDateTime}`, canvas.width - 10, canvas.height - 35);
-                                ctx.fillText(`Date/Time: ${militaryDateTime}`, canvas.width - 10, canvas.height - 35);
+                            ctx.strokeText(`Date/Time: ${militaryDateTime}`, canvas.width - 10, canvas.height - 35);
+                            ctx.fillText(`Date/Time: ${militaryDateTime}`, canvas.width - 10, canvas.height - 35);
 
-                                ctx.strokeText(`${convertToDMS(globalLat, true)}, ${convertToDMS(globalLon, false)}`, canvas.width - 10, canvas.height - 15);
-                                ctx.fillText(`${convertToDMS(globalLat, true)}, ${convertToDMS(globalLon, false)}`, canvas.width - 10, canvas.height - 15);
+                            ctx.strokeText(`${convertToDMS(globalLat, true)}, ${convertToDMS(globalLon, false)}`, canvas.width - 10, canvas.height - 15);
+                            ctx.fillText(`${convertToDMS(globalLat, true)}, ${convertToDMS(globalLon, false)}`, canvas.width - 10, canvas.height - 15);
 
-                                compressedPhotoBase64 = canvas.toDataURL("image/jpeg", 0.5);
-                                const photoPreview = document.getElementById('photoPreview');
-                                if (photoPreview) {
-                                    photoPreview.src = compressedPhotoBase64;
-                                    photoPreview.style.display = "block";
-                                }
-                            };
+                            // Gihimo na natong diretsong kuha ang base64 aron dili ma-stock sa logo loading
+                            compressedPhotoBase64 = canvas.toDataURL("image/jpeg", 0.5);
+                            const photoPreview = document.getElementById('photoPreview');
+                            if (photoPreview) {
+                                photoPreview.src = compressedPhotoBase64;
+                                photoPreview.style.display = "block";
+                            }
                         };
                         img.src = e.target.result;
                     };
