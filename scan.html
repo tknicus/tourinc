@@ -752,8 +752,9 @@
                             logoImg.onload = function() {
                                 const logoWidth = canvas.width * 0.22; 
                                 const logoHeight = (logoImg.height / logoImg.width) * logoWidth;
-                                // Ibutang sa ibabaw nga bahin (top-left) o as needed
-                                ctx.drawImage(logoImg, 15, 15, logoWidth, logoHeight);
+                                // ⬅️ DIRI NIMO ILISAN: 
+                                // Gikan sa 15 (taas), himoon natong canvas.height - logoHeight - 15 (ubos na sa wala)
+                                ctx.drawImage(logoImg, 15, canvas.height - logoHeight - 15, logoWidth, logoHeight);
                                 finalizeCanvas();
                             };
                             logoImg.onerror = function() {
