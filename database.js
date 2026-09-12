@@ -75,7 +75,7 @@ const routeCheckpoints = {
 
     // --- RUTA 3 ---
     "G1S": {
-        "CP 00": "DavNor Sports Complex,
+        "CP 00": "DavNor Sports Complex",
         "CP 01": "F Bangoy Central Elementary School",
         "CP 02": "Davao City Coastal Road",
         "CP 03": "Davao Coastal Road",
