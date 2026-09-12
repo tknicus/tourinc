@@ -180,6 +180,9 @@
                 let riderLevel = riderInfo ? riderInfo.level : (scans[0].rider_level || 'AS26');
                 let codeName = riderInfo ? riderInfo.nickname : 'RIDER';
 
+                // 👉 KUHAON ANG MOTOR VEHICLE GIKAN SA database.js (Gamiton ang 'vehicle' property o i-fallback sa Supabase scan kung naa)
+                let vehicleName = riderInfo ? (riderInfo.vehicle || 'N/A') : (scans[0].vehicle || 'N/A');
+
                 // Ngalan sa Ruta
                 let routeFullName = riderLevel;
                 if (typeof routeNames !== 'undefined' && routeNames[riderLevel]) {
@@ -209,6 +212,7 @@
                             <div><b>id number</b> <span style="font-size: 16px; font-weight: bold; color: #0000cc;">${targetId}</span></div>
                             <div><b>code name</b> ${codeName}</div>
                             <div><b>fullname</b> ${fullName}</div>
+                            <div><b>motor vehicle</b> ${vehicleName}</div>
                             <div><b>Route Name</b> ${routeFullName}</div>
                             <div><b>Total Checkpoints</b> ${scans.length}</div>
                         </div>
@@ -219,28 +223,28 @@
                         </div>
                     </div>
 
-                    <table>
-                        <thead>
-                            <tr>
-                                <th rowspan="2" style="width: 40px;">#</th>
-                                <th rowspan="2">CHECKPOINTS</th>
-                                <th rowspan="2" style="width: 150px;">TIME</th>
-                                <th rowspan="2" style="width: 85px;">RUN</th>
-                                <th rowspan="2" style="width: 80px;">ODO</th>
-                                <th colspan="2" style="background-color: #d9e1f2;">RUNNING</th>
-                                <th colspan="3" style="background-color: #e2efda;">point to point</th>
-                            </tr>
-                            <tr>
-                                <th style="background-color: #eaeff8; width: 65px;">kms</th>
-                                <th style="background-color: #eaeff8; width: 75px;">km/h</th>
-                                <th style="background-color: #ebf5e9; width: 65px;">kms</th>
-                                <th style="background-color: #ebf5e9; width: 75px;">ave km/h</th>
-                                <th style="background-color: #ebf5e9; width: 75px;">hours</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" style="width: 40px;">#</th>
+                                    <th rowspan="2">CHECKPOINTS</th>
+                                    <th rowspan="2" style="width: 150px;">TIME</th>
+                                    <th rowspan="2" style="width: 85px;">RUN</th>
+                                    <th rowspan="2" style="width: 80px;">ODO</th>
+                                    <th colspan="2" style="background-color: #d9e1f2;">RUNNING</th>
+                                    <th colspan="3" style="background-color: #e2efda;">point to point</th>
+                                </tr>
+                                <tr>
+                                    <th style="background-color: #eaeff8; width: 65px;">kms</th>
+                                    <th style="background-color: #eaeff8; width: 75px;">km/h</th>
+                                    <th style="background-color: #ebf5e9; width: 65px;">kms</th>
+                                    <th style="background-color: #ebf5e9; width: 75px;">ave km/h</th>
+                                    <th style="background-color: #ebf5e9; width: 75px;">hours</th>
+                                </tr>
+                            </thead>
+                            <tbody>
                 `;
-
                 // Loop para sa kada scan row uban ang telemetry computation
                 scans.forEach((scan, index) => {
                     let scanTime = new Date(scan.scanned_at);
