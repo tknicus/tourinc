@@ -34,19 +34,19 @@
         .profile-side { 
             width: 100%; 
             font-size: 13px; 
-            font-family: Arial, sans-serif; /* Gihimo natong Arial aron mas klaro ug hapsay sa cellphone */
+            font-family: Arial, sans-serif; 
             color: #000000;
-            -webkit-font-smoothing: antialiased; /* Para mahimong hait ug hayag sa mobile */
+            -webkit-font-smoothing: antialiased; 
         }
         .profile-side div { 
             margin-bottom: 6px; 
             word-break: break-word; 
-            font-weight: bold; /* Gilagikmakan (bold) aron dili na hanap */
+            font-weight: bold; 
             color: #000000;
         }
         .profile-side b { 
             display: inline-block; 
-            width: 120px; 
+            width: 150px; /* Gi-lapdan nato gamay aronigo ang Total Checkpoints */
             color: #333; 
         }
         
@@ -192,10 +192,8 @@
                             <div><b>id number</b> <span style="font-size: 16px; font-weight: bold; color: #0000cc;">${targetId}</span></div>
                             <div><b>code name</b> ${codeName}</div>
                             <div><b>fullname</b> ${fullName}</div>
-                            <div style="margin-top: 10px; font-size: 12px; color: #555; display: flex; flex-wrap: wrap; gap: 15px;">
-                                <div><b>Route Name:</b> ${routeFullName}</div>
-                                <div><b>Total Checkpoints:</b> ${scans.length}</div>
-                            </div>
+                            <div><b>Route Name</b> ${routeFullName}</div>
+                            <div><b>Total Checkpoints</b> ${scans.length}</div>
                         </div>
                         <div class="summary-side">
                             <div class="summary-row"><span>running time</span><b>${runningTimeFormatted}</b></div>
