@@ -1,29 +1,33 @@
-const CACHE_NAME = 'mmc-scanner-v3.44'; // ⬅️ GI-UPDATE NATO ANG VERSION ARON MO-DOWNLOAD OG BAG-O
+const CACHE_NAME = 'mmc-scanner-v3.45'; // ⬅️ GI-UPDATE NATO ANG VERSION
 
-// KINI ANG MGA FILES NGA I-DOWNLOAD UG I-SAVE SA SELPON INIG UNANG ABLI
+// KINI ANG MGA FILES NGA I-DOWNLOAD UG I-SAVE SA SELPON
 const assetsToCache = [
     './',
     './index.html',
-    './database.js', // ⬅️ IDUGANG: Ang imong masterlist
-    './mmc.png', // ⬅️ IDUGANG: Ang watermark logo para sa picture
+    './database.js',
+    './mmc.png',
     './scan.html',
     './scan.json',
     './scan.png',
     './map.html',
     './logo.png',
     './tour-bg.jpg',
-    './never_say_never.mp3', // ⬅️ IDUGANG: Ang para tugtog inig mag SEND sa DATA
-    'https://unpkg.com/html5-qrcode', // ⬅️ IDUGANG: Ang utok sa QR Scanner
-    'https://lh3.googleusercontent.com/d/1m1NrFKOMKh4YjoUdXD0KvxcpySM5RuwU', // Ang imong banner image
+    './never_say_never.mp3',
+    'https://unpkg.com/html5-qrcode',
+    'https://lh3.googleusercontent.com/d/1m1NrFKOMKh4YjoUdXD0KvxcpySM5RuwU',
     'https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css',
     'https://cdn.jsdelivr.net/npm/sweetalert2@8',
 ];
 
-// 1. I-install ug i-cache ang mga files
+// 1. I-install ug i-cache ang mga files (Gamit ang Promise.allSettled aron dili mag-crash ang SW kung naay external link nga mapakyas)
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(assetsToCache);
+            return Promise.allSettled(
+                assetsToCache.map(url => 
+                    cache.add(url).catch(err => console.log('Skipped/Failed to cache external asset:', url))
+                )
+            );
         })
     );
     self.skipWaiting();
@@ -50,7 +54,6 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
         caches.match(event.request).then((cachedResponse) => {
             return cachedResponse || fetch(event.request).catch(() => {
-                // Kon walay internet ug gi-request ang scan.html, i-serve kini offline
                 if (event.request.mode === 'navigate') {
                     return caches.match('./scan.html');
                 }
