@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MasterMinds'CUP - DTR Summary Grid</title>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 15px; color: #111; }
+        .report-wrapper { max-width: 100%; margin: 0 auto; background: #ffffff; padding: 15px; border: 1px solid #b5b5b5; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
+        
+        /* 📱 SEARCH CONTROL PANEL */
+        .control-panel { background: #1e1e1e; padding: 15px; border-radius: 6px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; color: white; }
+        .control-panel label { font-weight: bold; }
+        .control-panel select { padding: 10px; font-size: 16px; border: 1px solid #444; border-radius: 4px; background: #2a2a2a; color: white; min-width: 200px; }
+        .control-panel button { padding: 10px 20px; background: #cc0000; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        .control-panel button:hover { background: #990000; }
+
+        /* 📊 DTR TABLE & STICKY COLUMNS */
+        .table-container { width: 100%; max-height: 80vh; overflow: auto; border: 1px solid #000; position: relative; }
+        table { border-collapse: separate; border-spacing: 0; font-size: 11px; font-family: Arial, sans-serif; min-width: 100%; }
+        
+        th, td { border-right: 1px solid #ccc; border-bottom: 1px solid #ccc; padding: 6px; text-align: center; white-space: nowrap; }
+        th { background-color: #d9d9d9; font-weight: bold; color: #000; position: sticky; top: 0; z-index: 10; border-bottom: 2px solid #000; }
+        
+        /* STICKY FOOTER */
+        tfoot td { position: sticky; bottom: 0; background-color: #f2f2f2; font-weight: bold; color: #cc0000; z-index: 10; border-top: 2px solid #000; border-bottom: 2px solid #000; }
+        tfoot .sticky-col-3 { text-align: right; padding-right: 10px; color: #000; }
+
+        /* STICKY COLUMNS */
+        .sticky-col-1 { position: sticky; left: 0; background-color: #f3f3f3; z-index: 5; width: 35px; font-weight: bold; border-right: 1px solid #999; text-align: center; }
+        .sticky-col-2 { position: sticky; left: 36px; background-color: #f3f3f3; z-index: 5; width: 55px; font-weight: bold; border-right: 1px solid #999; color: #cc0000; text-align: center; }
+        .sticky-col-3 { position: sticky; left: 92px; background-color: #f3f3f3; z-index: 5; min-width: 160px; text-align: left; font-weight: bold; border-right: 2px solid #000; padding-left: 8px; }
+        
+        th.sticky-col-1 { z-index: 15; background-color: #d9d9d9; }
+        th.sticky-col-2 { z-index: 15; background-color: #d9d9d9; }
+        th.sticky-col-3 { z-index: 15; background-color: #d9d9d9; }
+        tfoot td.sticky-col-1, tfoot td.sticky-col-2, tfoot td.sticky-col-3 { z-index: 12; background-color: #e6e6e6; }
+
+        /* COLORS & CENTERED */
+        .col-duration { background-color: #f9f9f9; text-align: center; font-family: 'Courier New', Courier, monospace; font-weight: bold; }
+        .col-distance { background-color: #e2efda; text-align: center; }
+        .col-t { background-color: #fce4d6; font-weight: bold; color: #c00000; text-align: center; }
+        .col-x { background-color: #f8cbad; font-weight: bold; color: #c00000; border-right: 2px solid #000; text-align: center; }
+
+        .cell-scan { color: #0000cc; font-weight: bold; text-align: center; }
+        .cell-miss { color: #cc0000; text-align: center; }
+        .no-data { text-align: center; padding: 40px; font-size: 16px; color: #666; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <div class="report-wrapper">
+        <!-- 🔍 CONTROL PANEL -->
+        <div class="control-panel">
+            <label>ROUTE LEVEL:</label>
+            <select id="routeSelect">
+                <!-- Awtomatikong sudlan ni base sa database.js -->
+            </select>
+            <button onclick="generateDTR()">I-GENERATE DTR</button>
+        </div>
+
+        <!-- 📊 REPORT OUTPUT AREA -->
+        <div id="dtrContent">
+            <div class="no-data">Pili og rota ug i-klik ang button aron kuhaon ang DTR Leaderboard gikan sa Supabase.</div>
+        </div>
+    </div>
+
+    <script src="database.js"></script>
+    <script>
+        const _supabaseUrl = 'https://iilfklquzyxmdergwawh.supabase.co';
+        const _supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpbGZrbHF1enl4bWRlcmd3YXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MTkzMDcsImV4cCI6MjEwMzI5NTMwN30.jMctz666CGfTdODLqNr24O3dQ5SDM6K5GkmihCtDdBQ';
+        let supabaseClient = null;
+
+        window.onload = () => {
+            try {
+                supabaseClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
+                let select = document.getElementById('routeSelect');
+                if (typeof routeNames !== 'undefined') {
+                    for (let key in routeNames) {
+                        let option = document.createElement('option');
+                        option.value = key;
+                        option.text = `${key} - ${routeNames[key]}`;
+                        if(key === "AS26") option.selected = true;
+                        select.add(option);
+                    }
+                }
+            } catch (e) {
+                console.error("Init error:", e);
+            }
+        };
+
+        async function generateDTR() {
+            const selectedRoute = document.getElementById('routeSelect').value;
+            const container = document.getElementById('dtrContent');
+
+            if (!supabaseClient) {
+                container.innerHTML = `<div class="no-data" style="color: #cc0000;">❌ Error: Wala na-initialize ang Supabase.</div>`;
+                return;
+            }
+
+            container.innerHTML = `<div class="no-data">🔄 Gikuha ang tanang data para sa rutang <b>${selectedRoute}</b>...</div>`;
+
+            try {
+                let expectedCPs = [];
+                if (typeof routeCheckpoints !== 'undefined' && routeCheckpoints[selectedRoute]) {
+                    expectedCPs = Object.keys(routeCheckpoints[selectedRoute]);
+                } else {
+                    throw new Error(`Wala makit-i ang checkpoint list para sa rota nga ${selectedRoute}`);
+                }
+                const totalCheckpointsCount = expectedCPs.length;
+
+                let routeRiders = [];
+                if (typeof riderDatabase !== 'undefined') {
+                    routeRiders = riderDatabase.filter(r => r.level === selectedRoute);
+                }
+
+                if (routeRiders.length === 0) {
+                    container.innerHTML = `<div class="no-data" style="color: #cc0000;">❌ Walay rider nga nakarehistro para sa rutang ${selectedRoute}.</div>`;
+                    return;
+                }
+
+                let { data: allScans, error } = await supabaseClient
+                    .from('rally_scans')
+                    .select('*')
+                    .order('scanned_at', { ascending: true });
+
+                if (error) throw new Error(error.message);
+
+                let html = `
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th class="sticky-col-1">#</th>
+                                    <th class="sticky-col-2">QR</th>
+                                    <th class="sticky-col-3">VEST NAME</th>
+                                    <th class="col-duration">DURATION</th>
+                                    <th class="col-distance">DISTANCE</th>
+                                    <th class="col-t">T</th>
+                                    <th class="col-x">X</th>
+                `;
+
+                expectedCPs.forEach(cp => {
+                    let shortName = cp.replace("CP ", "");
+                    html += `<th>${shortName}</th>`;
+                });
+
+                html += `
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                let activeRidersCountT = 0; // Pila kabuok riders ang naay T
+                let cpFooterCounts = {};
+                expectedCPs.forEach(cp => cpFooterCounts[cp] = 0);
+
+                routeRiders.forEach((rider, index) => {
+                    let riderScans = allScans.filter(s => String(s.qr_code) === String(rider.idNum));
+                    
+                    let durationText = "";
+                    let distanceText = "";
+                    let totalScannedUnique = 0;
+                    let hasStarted = false;
+                    
+                    let cpCounts = {};
+                    expectedCPs.forEach(cp => cpCounts[cp] = 0);
+
+                    if (riderScans.length > 0) {
+                        hasStarted = true;
+                        let firstScan = new Date(riderScans[0].scanned_at);
+                        let lastScan = new Date(riderScans[riderScans.length - 1].scanned_at);
+                        let diffMs = lastScan - firstScan;
+                        let tH = Math.floor(diffMs / (1000 * 60 * 60));
+                        let tM = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                        let tS = Math.floor((diffMs % (1000 * 60)) / 1000);
+                        durationText = `${String(tH).padStart(2, '0')}:${String(tM).padStart(2, '0')}:${String(tS).padStart(2, '0')}`;
+
+                        let startOdo = parseFloat(riderScans[0].odometer) || 0;
+                        let endOdo = parseFloat(riderScans[riderScans.length - 1].odometer) || startOdo;
+                        let dist = endOdo >= startOdo ? (endOdo - startOdo) : endOdo;
+                        distanceText = dist > 0 ? dist : "";
+
+                        riderScans.forEach(scan => {
+                            let cpCode = String(scan.checkpoint || '').trim();
+                            if (cpCounts[cpCode] !== undefined) {
+                                cpCounts[cpCode]++;
+                            } else if (cpCounts[`CP ${cpCode}`] !== undefined) {
+                                cpCounts[`CP ${cpCode}`]++;
+                            }
+                        });
+
+                        expectedCPs.forEach(cp => {
+                            if (cpCounts[cp] > 0) totalScannedUnique++;
+                        });
+                    }
+
+                    let tDisplay = "";
+                    let xDisplay = "";
+
+                    if (hasStarted) {
+                        tDisplay = totalScannedUnique;
+                        xDisplay = totalCheckpointsCount - totalScannedUnique;
+                        activeRidersCountT++; // Ihapon ang aktibong rider para sa T footer
+
+                        expectedCPs.forEach(cp => {
+                            if (cpCounts[cp] > 0) {
+                                cpFooterCounts[cp]++;
+                            }
+                        });
+                    } else {
+                        // Kung wala pa ni-dagan, X kay equal sa tibuok total checkpoints sa rota (e.g., 40)
+                        xDisplay = totalCheckpointsCount;
+                    }
+
+                    html += `
+                        <tr>
+                            <td class="sticky-col-1">${index + 1}</td>
+                            <td class="sticky-col-2">${rider.idNum}</td>
+                            <td class="sticky-col-3">${rider.fullname || rider.nickname}</td>
+                            <td class="col-duration" style="text-align: center;">${durationText}</td>
+                            <td class="col-distance" style="text-align: center;">${distanceText}</td>
+                            <td class="col-t" style="text-align: center;">${tDisplay}</td>
+                            <td class="col-x" style="text-align: center;">${xDisplay}</td>
+                    `;
+
+                    expectedCPs.forEach(cp => {
+                        let count = cpCounts[cp];
+                        if (count > 0) {
+                            html += `<td class="cell-scan" style="text-align: center;">${count}</td>`;
+                        } else {
+                            html += `<td class="cell-miss" style="text-align: center;"></td>`;
+                        }
+                    });
+
+                    html += `</tr>`;
+                });
+
+                // 👉 FOOTER TOTALS (T = pila ka aktibong riders, X = kinatibuk-ang ihap sa riders sa rota e.g., 7)
+                let grandTotalX = routeRiders.length; 
+
+                html += `
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td class="sticky-col-1" colspan="3">TOTAL</td>
+                                    <td class="col-duration"></td>
+                                    <td class="col-distance"></td>
+                                    <td class="col-t" style="text-align: center;">${activeRidersCountT > 0 ? activeRidersCountT : ''}</td>
+                                    <td class="col-x" style="text-align: center;">${grandTotalX}</td>
+                `;
+
+                expectedCPs.forEach(cp => {
+                    let totalRidersAtCP = cpFooterCounts[cp];
+                    html += `<td style="text-align: center;">${totalRidersAtCP > 0 ? totalRidersAtCP : ''}</td>`;
+                });
+
+                html += `
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                `;
+
+                container.innerHTML = html;
+
+            } catch (err) {
+                console.error("DTR Generation Error:", err);
+                container.innerHTML = `<div class="no-data" style="color: #cc0000;">❌ Naay error nga nahitabo: <b>${err.message}</b></div>`;
+            }
+        }
+    </script>
+</body>
+</html>
