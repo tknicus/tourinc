@@ -114,7 +114,8 @@
                 // Kuhaon ang mga detalye
                 let fullName = riderInfo ? (riderInfo.fullname || riderInfo.name) : (scans[0].rider_name || 'Wala sa Masterlist');
                 let riderLevel = riderInfo ? riderInfo.level : (scans[0].rider_level || 'G5');
-                let codeName = riderInfo ? (riderInfo.codename || 'RIDER') : 'RIDER';
+                //let codeName = riderInfo ? (riderInfo.codename || 'RIDER') : 'RIDER';
+                let codeName = riderInfo ? (riderInfo.nickname || 'N/A') : 'N/A';
 
                 // 👉 KUHAON ANG NGALAN SA RUTA GIKAN SA database.js (routeNames)
                 let routeFullName = riderLevel; // Fallback kung walay makit-an
