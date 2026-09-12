@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mmc-scanner-v3.39'; // ⬅️ GI-UPDATE NATO ANG VERSION ARON MO-DOWNLOAD OG BAG-O
+const CACHE_NAME = 'mmc-scanner-v3.40'; // ⬅️ GI-UPDATE NATO ANG VERSION ARON MO-DOWNLOAD OG BAG-O
 
 // KINI ANG MGA FILES NGA I-DOWNLOAD UG I-SAVE SA SELPON INIG UNANG ABLI
 const urlsToCache = [
@@ -20,56 +20,42 @@ const urlsToCache = [
 ];
 
 
-// 1. INSTALL EVENT: I-download ug i-save ang mga files sa celfon cache
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Opened cache');
-        return cache.addAll(urlsToCache);
-      })
-  );
-  self.skipWaiting();
-});
-
-// 2. FETCH EVENT: I-serve ang files gikan sa cache kung offline na
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Kung naa sa cache, ihatag dayon bisan walay internet
-        if (response) {
-          return response;
-        }
-        // Kung wala, kuhaa sa network kung online
-        return fetch(event.request);
-      })
-  );
-});
-
-// 3. ACTIVATE EVENT: Limpyohi ang mga karaan nga cache
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-  );
-  self.clients.claim();
-});
-
-// 1. Paspas nga i-activate ang bag-ong Service Worker nga walay hulat-hulat
+// 1. I-install ug i-cache ang mga files
 self.addEventListener('install', (event) => {
+    event.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => {
+            return cache.addAll(assetsToCache);
+        })
+    );
     self.skipWaiting();
 });
 
-// 2. Kuhaon dayon ang kontrol sa mga bukas nga tabs sa app
+// 2. I-activate ug limpyohi ang mga daan nga cache
 self.addEventListener('activate', (event) => {
-    event.waitUntil(clients.claim());
+    event.waitUntil(
+        caches.keys().then((keys) => {
+            return Promise.all(
+                keys.map((key) => {
+                    if (key !== CACHE_NAME) {
+                        return caches.delete(key);
+                    }
+                })
+            );
+        })
+    );
+    self.clientsClaim();
+});
+
+// 3. Intercept ang mga request: kuhaa sa cache kon offline
+self.addEventListener('fetch', (event) => {
+    event.respondWith(
+        caches.match(event.request).then((cachedResponse) => {
+            return cachedResponse || fetch(event.request).catch(() => {
+                // Kon walay internet ug gi-request ang scan.html, i-serve kini offline
+                if (event.request.mode === 'navigate') {
+                    return caches.match('./scan.html');
+                }
+            });
+        })
+    );
 });
