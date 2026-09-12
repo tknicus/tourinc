@@ -10,7 +10,7 @@
         body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 10px; color: #111; }
         .report-wrapper { max-width: 1250px; margin: 0 auto; background: #ffffff; padding: 15px; border: 1px solid #b5b5b5; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
         
-        /* 📱 SEARCH CONTROL PANEL (Button ra ang mo-adjust sa celpon) */
+        /* SEARCH CONTROL PANEL */
         .control-panel { background: #1e1e1e; padding: 15px; border-radius: 6px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; color: white; }
         .control-panel label { font-weight: bold; }
         .control-panel input { padding: 10px 12px; font-size: 16px; border: 1px solid #444; border-radius: 4px; flex: 1; min-width: 180px; background: #2a2a2a; color: white; }
@@ -21,19 +21,62 @@
         }
         .control-panel button:hover { background: #990000; }
 
-        /* 🖥️ EXCEL HEADER (Gihimo natong parehas sa desktop: nagtupad gyud permi) */
-        .excel-header { display: flex; flex-direction: row; justify-content: space-between; align-items: stretch; border: 2px solid #000; padding: 12px; background: #fdfdfd; margin-bottom: 15px; gap: 15px; }
-        .profile-side { flex: 1; font-size: 13px; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
-        .profile-side div { margin-bottom: 6px; white-space: nowrap; }
-        .profile-side b { display: inline-block; width: 110px; color: #333; }
+        /* 📱 RESPONSIVE EXCEL HEADER */
+        .excel-header { 
+            display: flex; 
+            flex-direction: column; /* Default sa cellphone: Stacking para hayahay ug walay maputol */
+            gap: 12px; 
+            border: 2px solid #000; 
+            padding: 12px; 
+            background: #fdfdfd; 
+            margin-bottom: 15px; 
+        }
+        .profile-side { 
+            width: 100%; 
+            font-size: 13px; 
+            font-family: 'Courier New', Courier, monospace; 
+        }
+        .profile-side div { 
+            margin-bottom: 6px; 
+            word-break: break-word; 
+        }
+        .profile-side b { 
+            display: inline-block; 
+            width: 120px; 
+            color: #333; 
+        }
         
-        /* Summary Box (Pirme pud nagtupad sa tuo) */
-        .summary-side { border: 2px solid #000; width: 260px; min-width: 240px; background: #fff; display: flex; flex-direction: column; justify-content: space-between; font-size: 13px; font-family: Arial, sans-serif; }
+        /* Summary Box */
+        .summary-side { 
+            border: 2px solid #000; 
+            width: 100%; 
+            background: #fff; 
+            display: flex; 
+            flex-direction: column; 
+            font-size: 13px; 
+            font-family: Arial, sans-serif; 
+        }
         .summary-row { display: flex; justify-content: space-between; border-bottom: 1px solid #000; padding: 6px 10px; }
         .summary-row:last-child { border-bottom: none; }
         .summary-row b { text-align: right; }
 
-        /* 📊 TABLE RESPONSIVE WRAPPER (Para ma-scroll ang data sa ubos) */
+        /* 🖥️ DESKTOP VIEW (Kung dako ang screen, magtupad sila side-by-side) */
+        @media (min-width: 768px) {
+            .excel-header { 
+                flex-direction: row; 
+                justify-content: space-between; 
+                align-items: stretch; 
+            }
+            .profile-side { 
+                flex: 1; 
+            }
+            .summary-side { 
+                width: 260px; 
+                min-width: 240px; 
+            }
+        }
+
+        /* TABLE RESPONSIVE WRAPPER */
         .table-container { width: 100%; overflow-x: auto; margin-top: 10px; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; font-family: Arial, sans-serif; min-width: 750px; }
         th, td { border: 1px solid #000; padding: 6px 8px; text-align: left; }
