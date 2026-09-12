@@ -130,7 +130,8 @@
         // 🛰️ SUPABASE CONFIGURATION
         // ==========================================
         const _supabaseUrl = 'https://iilfklquzyxmdergwawh.supabase.co';
-        const _supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6lpbGZrbHF1enl4bWRlcmd3YXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MTkzMDcsImV4cCI6MjEwMzI5NTMwN30.jMctz666CGfTdODLqNr24O3dQ5SDM6K5GkmihCtDdBQ';
+        const _supabaseAnonKey = 'sb_publishable_xO3twPzyDBLhdltnkwoS3w_xswYLyf_';
+        //const _supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6lpbGZrbHF1enl4bWRlcmd3YXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MTkzMDcsImV4cCI6MjEwMzI5NTMwN30.jMctz666CGfTdODLqNr24O3dQ5SDM6K5GkmihCtDdBQ';
         
         const supabaseLiveClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
 
@@ -140,7 +141,7 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
+        }).addTo(map);`
 
         let markerLayer = L.layerGroup().addTo(map);
         let routePolylineLayer = L.layerGroup().addTo(map);
@@ -757,34 +758,44 @@
             if (selectedRoute === "none") return;
 
             try {
-                // Kuhaon ang mga scans gikan sa Supabase table
-                let query = supabaseLiveClient.from('rally_scans').select('*');
-
-                // Kung dili "all" ang gipili, i-filter nato base sa rider_level o route
-                if (selectedRoute !== "all") {
-                    query = query.eq('rider_level', selectedRoute);
-                }
-
-                let { data, error } = await query;
+                // Kuhaon ang tanang scans gikan sa Supabase table nga walay pabor-pabor
+                let { data, error } = await supabaseLiveClient
+                    .from('rally_scans')
+                    .select('*');
 
                 if (error) {
                     console.error("Error sa pagkuha gikan sa Supabase:", error.message);
                     return;
                 }
 
-                if (!data || data.length === 0) return;
+                if (!data || data.length === 0) {
+                    console.log("Walay nakit-an nga data sa rally_scans table.");
+                    return;
+                }
 
-                // Aron makuha nato ang pinakabag-o nga log sa matag rider (kung daghan na sila og nasubudan nga checkpoints)
+                // Aron makuha nato ang pinakabag-o nga log sa matag rider
                 let latestRidersMap = {};
                 data.forEach(rider => {
-                    latestRidersMap[rider.qr_code] = rider; // Overwrite aron ang pinakabag-o ang mabilin
+                    // Siguruhon nga sakto ang pagbasa sa QR / ID
+                    let rId = rider.qr_code || rider.idNum;
+                    if (rId) {
+                        latestRidersMap[rId] = rider; // Overwrite aron ang pinakabag-o ang mabilin
+                    }
                 });
 
                 Object.values(latestRidersMap).forEach(rider => {
                     let lat = parseFloat(rider.latitude);
                     let lon = parseFloat(rider.longitude);
                     let routeKey = rider.rider_level || "G5";
-                    let pinColor = routeColors[routeKey] || "#ffffff";
+                    
+                    // Kung ang gipili sa dropdown dili "all", i-filter nato (gi-handle ang case-insensitive)
+                    if (selectedRoute !== "all") {
+                        if (routeKey.toUpperCase() !== selectedRoute.toUpperCase()) {
+                            return; // Laktawan kung dili parehas ang rota
+                        }
+                    }
+
+                    let pinColor = routeColors[routeKey] || "#ff9900"; // Default orange kung walay color
 
                     if (!isNaN(lat) && !isNaN(lon) && lat !== 0 && lon !== 0) {
                         let formattedTime = "Wala";
@@ -801,14 +812,14 @@
                         
                         marker.bindPopup(`
                             <div style="color: black; font-family: Arial; font-size: 13px;">
-                                <b>🏍️ ID: ${rider.qr_code}</b><br>
-                                👤 Pangalan: <b>${rider.rider_name}</b><br>
+                                <b>🏍️ ID: ${rider.qr_code || rider.idNum}</b><br>
+                                👤 Pangalan: <b>${rider.rider_name || "Rider"}</b><br>
                                 📍 Checkpoint: <b>${rider.checkpoint}</b><br>
-                                🛣️ Rota: <b style="color: ${pinColor}; background: #222; padding: 2px 5px; border-radius: 3px; color:white;">${routeKey}</b><br>
+                                🛣️ Rota: <b style="background: #222; padding: 2px 5px; border-radius: 3px; color:white;">${routeKey}</b><br>
                                 ⚙️ Odometer: ${rider.odometer} KM<br>
                                 🕒 Oras: ${formattedTime}<br>
                                 📝 Notes: <b>${rider.notes || 'Wala'}</b><br>
-                                📸 <a href="${rider.photo_url}" target="_blank">Tan-awa ang Ebidensya</a><br>
+                                📸 <a href="${rider.photo_url}" target="_blank" style="color:blue; font-weight:bold;">Tan-awa ang Ebidensya</a><br>
                                 <a href="${rider.location_address}" target="_blank">🗺️ Google Maps</a>
                             </div>
                         `);
