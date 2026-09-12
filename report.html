@@ -40,6 +40,7 @@
     </style>
 </head>
 <body>
+    <div style="margin-top: 10px; font-size: 12px; color: #555;"><b>Route Name:</b> ${routeFullName} &nbsp;|&nbsp; <b>Total Checkpoints:</b> ${scans.length}</div>
 
     <div class="report-wrapper">
         <!-- 🔍 SEARCH BAR -->
@@ -83,7 +84,6 @@
                 return;
             }
 
-            // Gihulipang tin-aw nga string aron dili ma-error ang backticks
             container.innerHTML = `<div class="no-data">🔄 Gipangita ang ID #${targetId} sa Supabase table (rally_scans)...</div>`;
 
             try {
@@ -111,13 +111,13 @@
                     return;
                 }
 
-                // Kuhaon ang mga detalye (gikan sa database.js kon naa, o sa Supabase scan data)
+                // Kuhaon ang mga detalye
                 let fullName = riderInfo ? (riderInfo.fullname || riderInfo.name) : (scans[0].rider_name || 'Wala sa Masterlist');
                 let riderLevel = riderInfo ? riderInfo.level : (scans[0].rider_level || 'G5');
                 let codeName = riderInfo ? (riderInfo.codename || 'RIDER') : 'RIDER';
 
-                // 👉 DIRI NATO TAWGON ANG NGALAN SA RUTA GIKAN SA database.js
-                let routeFullName = riderLevel; // Default kung walay makit-an
+                // 👉 KUHAON ANG NGALAN SA RUTA GIKAN SA database.js (routeNames)
+                let routeFullName = riderLevel; 
                 if (typeof routeNames !== 'undefined' && routeNames[riderLevel]) {
                     routeFullName = `${riderLevel} - ${routeNames[riderLevel]}`;
                 }
@@ -139,13 +139,6 @@
                 let speedVal = totalHours > 0 ? (totalDistance / (diffMs / (1000 * 60 * 60))).toFixed(2) : "0.00";
 
                 // Himoon ang Excel-like table HTML
-                // 👉 1. KUHAON ANG NGALAN SA RUTA GIKAN SA database.js
-                let routeFullName = riderLevel; // Default kung walay makit-an
-                if (typeof routeNames !== 'undefined' && routeNames[riderLevel]) {
-                    routeFullName = `${riderLevel} - ${routeNames[riderLevel]}`;
-                }
-
-                // 👉 2. EXCEL-LIKE HEADER HTML BLOCK
                 let html = `
                     <div class="excel-header">
                         <div class="profile-side">
@@ -175,28 +168,23 @@
                         <tbody>
                 `;
 
-                
                 scans.forEach((scan, index) => {
                     let formattedDate = new Date(scan.scanned_at).toLocaleString();
                     
-                    // Siguraduha nga limpyo ang pagkuha sa level ug checkpoint code
                     let rLevel = riderInfo ? riderInfo.level : (scan.rider_level || 'AS26');
                     let cpCode = String(scan.checkpoint || '').trim();
                     
                     let locationName = '';
 
-                    // Pagsulay og pangita sa routeCheckpoints gikan sa database.js
                     if (typeof routeCheckpoints !== 'undefined') {
                         if (routeCheckpoints[rLevel] && routeCheckpoints[rLevel][cpCode]) {
                             locationName = routeCheckpoints[rLevel][cpCode];
                         } 
-                        // Fallback: Kung naay sipyat sa level, suwayi og direct basa sa "AS26"
                         else if (routeCheckpoints["AS26"] && routeCheckpoints["AS26"][cpCode]) {
                             locationName = routeCheckpoints["AS26"][cpCode];
                         }
                     }
 
-                    // Kung wala gyud sa database.js, gamita ang notes gikan sa Supabase
                     if (!locationName) {
                         locationName = scan.notes || '';
                     }
