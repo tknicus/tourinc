@@ -286,6 +286,63 @@
             }
         }
 
+
+        // Pundok sa mga Rota ug Checkpoints (Gi-declare kausa ra gyud)
+        const routeNames = {
+            "AS26": "628 ALL STAR", "G5": "MAN OF STEEL", "G4": "4W RIDERS",
+            "G3": "Mindanao Coastal Gaming", "G1N": "NORTH - MaKahulogan",
+            "G1E": "EASTT - LoCoCaMaMa", "G1W": "WEST - DaDiPaPi", "G1S": "SOUTH - JAS-T'Boli"
+        };
+        
+        const routeTotalKm = { "G1N": 777, "G1E": 777, "G1W": 777, "G1S": 777, "G3": 3333, "G4": 444, "G5": 5555, "AS26": 628 };
+        
+        const routeConfigs = {
+            "G1N": [
+                { val: "CP 00", name: "#00 Starting Grid" }, 
+                { val: "CP 01", name: "#01 San Fernando Municipal Plaza" }, 
+                { val: "CP 02", name: "#02 Iba Central Elementary School 25km" }, 
+                { val: "CP FL", name: "#FL Ending Grid" }
+            ],
+            "G1E": [
+                { val: "CP 00", name: "#00 Starting Grid" }, 
+                { val: "CP 01", name: "#01 Carmen Cannon" }, 
+                { val: "CP FL", name: "#18 Ending Grid" }
+            ],
+            "G1W": [
+                { val: "CP 00", name: "#00 DavNor Sports Complex (Starting Grid)" }, 
+                { val: "CP 01", name: "#01 Davao City Coastal Road" }, 
+                { val: "CP FL", name: "#17 DavNor Sports Complex (End Grid)" }
+            ],
+            "G1S": [
+                { val: "CP 00", name: "#00 Starting Grid" }, 
+                { val: "CP 01", name: "#01 Davao City Coastal Road" }, 
+                { val: "CP FL", name: "#22 Clossing Grid" }
+            ],
+            "G3": [
+                { val: "CP 00", name: "#00 Start G3" }, 
+                { val: "CP 01", name: "#07 Bukidnon Route - A" },
+                { val: "CP 02", name: "#08 Bukidnon Route - B" }, 
+                { val: "CP 03", name: "#09 Finish Line G3" }
+            ],
+            "G4": [
+                { val: "CP 00", name: "#00 Start G4 tark-tarak Riddes" }, 
+                { val: "CP FL", name: "#04 Finish Line G4" }
+            ],
+            "G5": [
+                { val: "CP 000", name: "#00 DavNor Sports Complex" }, 
+                { val: "CP 001", name: "#00 Davao City Coastal Road" },
+                { val: "CP FL", name: "#00 Finish Line G5" }
+            ],
+            "AS26": [
+                { val: "CP 00", name: "#00 Glorious Gate" }, 
+                { val: "CP 01", name: "#01 Mr. DIY" }, 
+                { val: "CP FL", name: "#48 ELKAPITAN's Headstone" }
+            ]
+        };
+
+
+
+
         async function verifyAndLogin() {
             function checkOwnTracksRequirement() {
                 let isOwnTracksInstalled = localStorage.getItem("mmc_owntracks_ready");
