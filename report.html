@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #111; }
-        .report-wrapper { max-width: 1100px; margin: 0 auto; background: #ffffff; padding: 25px; border: 1px solid #b5b5b5; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
+        .report-wrapper { max-width: 1250px; margin: 0 auto; background: #ffffff; padding: 25px; border: 1px solid #b5b5b5; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
         
         /* Search Control Panel */
         .control-panel { background: #1e1e1e; padding: 15px; border-radius: 6px; margin-bottom: 20px; display: flex; gap: 12px; align-items: center; color: white; }
@@ -35,12 +35,9 @@
         .right { text-align: right; }
         
         .no-data { text-align: center; padding: 40px; font-size: 16px; color: #666; font-style: italic; }
-        .photo-link { color: #0066cc; text-decoration: none; font-weight: bold; }
-        .photo-link:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
-    <div style="margin-top: 10px; font-size: 12px; color: #555;"><b>Route Name:</b> ${routeFullName} &nbsp;|&nbsp; <b>Total Checkpoints:</b> ${scans.length}</div>
 
     <div class="report-wrapper">
         <!-- 🔍 SEARCH BAR -->
@@ -62,7 +59,6 @@
         const _supabaseUrl = 'https://iilfklquzyxmdergwawh.supabase.co';
         const _supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpbGZrbHF1enl4bWRlcmd3YXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MTkzMDcsImV4cCI6MjEwMzI5NTMwN30.jMctz666CGfTdODLqNr24O3dQ5SDM6K5GkmihCtDdBQ';
         
-        // Siguraduha nga na-load ang Supabase client
         let supabaseClient = null;
         try {
             supabaseClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
@@ -80,7 +76,7 @@
             }
 
             if (!supabaseClient) {
-                container.innerHTML = `<div class="no-data" style="color: #cc0000;">❌ Error: Wala na-initialize ang Supabase client. Susiha ang imong internet o CDN script.</div>`;
+                container.innerHTML = `<div class="no-data" style="color: #cc0000;">❌ Error: Wala na-initialize ang Supabase client.</div>`;
                 return;
             }
 
@@ -102,9 +98,7 @@
                     .or(`qr_code.eq.${targetId},qr_code.eq.${targetNum}`)
                     .order('scanned_at', { ascending: true });
 
-                if (error) {
-                    throw new Error(error.message);
-                }
+                if (error) throw new Error(error.message);
 
                 if (!scans || scans.length === 0) {
                     container.innerHTML = `<div class="no-data" style="color: #cc0000;">❌ Walay nakit-an nga record sa rally_scans para sa Rider ID #${targetId}.</div>`;
@@ -112,21 +106,17 @@
                 }
 
                 // Kuhaon ang mga detalye
-                let fullName = riderInfo ? (riderInfo.fullname || riderInfo.name) : (scans[0].rider_name || 'Wala sa Masterlist');
-                let riderLevel = riderInfo ? riderInfo.level : (scans[0].rider_level || 'G5');
-                //let codeName = riderInfo ? (riderInfo.codename || 'RIDER') : 'RIDER';
-                let codeName = riderInfo ? (riderInfo.nickname || 'N/A') : 'N/A';
+                let fullName = riderInfo ? riderInfo.fullname : (scans[0].rider_name || 'Wala sa Masterlist');
+                let riderLevel = riderInfo ? riderInfo.level : (scans[0].rider_level || 'AS26');
+                let codeName = riderInfo ? riderInfo.nickname : 'RIDER';
 
-                // 👉 KUHAON ANG NGALAN SA RUTA GIKAN SA database.js (routeNames)
-                let routeFullName = riderLevel; // Fallback kung walay makit-an
+                // Ngalan sa Ruta
+                let routeFullName = riderLevel;
                 if (typeof routeNames !== 'undefined' && routeNames[riderLevel]) {
-                    routeFullName = routeNames[riderLevel]; // Ngalan ra gyud ang kuhaon!
+                    routeFullName = routeNames[riderLevel];
                 }
 
-
-
-
-                // Pag-compute sa oras ug distansya
+                // Pag-compute sa kabinete sa oras ug distansya (Summary)
                 let firstScanTime = new Date(scans[0].scanned_at);
                 let lastScanTime = new Date(scans[scans.length - 1].scanned_at);
                 let diffMs = lastScanTime - firstScanTime;
@@ -142,7 +132,7 @@
 
                 let speedVal = totalHours > 0 ? (totalDistance / (diffMs / (1000 * 60 * 60))).toFixed(2) : "0.00";
 
-                // Himoon ang Excel-like table HTML
+                // Himoon ang Excel-like professional table HTML nga naay RUNNING ug point-to-point headers
                 let html = `
                     <div class="excel-header">
                         <div class="profile-side">
@@ -161,50 +151,92 @@
                     <table>
                         <thead>
                             <tr>
-                                <th style="width: 40px;">#</th>
-                                <th>CHECKPOINTS</th>
-                                <th style="width: 150px;">TIME (SCANNED AT)</th>
-                                <th style="width: 80px;">ODO</th>
-                                <th style="width: 110px;">EBIDENSYA</th>
-                                <th>REMARKS / NOTES</th>
+                                <th rowspan="2" style="width: 40px;">#</th>
+                                <th rowspan="2">CHECKPOINTS</th>
+                                <th rowspan="2" style="width: 150px;">TIME</th>
+                                <th rowspan="2" style="width: 85px;">RUN</th>
+                                <th rowspan="2" style="width: 80px;">ODO</th>
+                                <th colspan="2" style="background-color: #d9e1f2;">RUNNING</th>
+                                <th colspan="3" style="background-color: #e2efda;">point to point</th>
+                            </tr>
+                            <tr>
+                                <th style="background-color: #eaeff8; width: 65px;">kms</th>
+                                <th style="background-color: #eaeff8; width: 75px;">km/h</th>
+                                <th style="background-color: #ebf5e9; width: 65px;">kms</th>
+                                <th style="background-color: #ebf5e9; width: 75px;">ave km/h</th>
+                                <th style="background-color: #ebf5e9; width: 75px;">hours</th>
                             </tr>
                         </thead>
                         <tbody>
                 `;
 
+                // Loop para sa kada scan row uban ang telemetry computation
                 scans.forEach((scan, index) => {
-                    let formattedDate = new Date(scan.scanned_at).toLocaleString();
+                    let scanTime = new Date(scan.scanned_at);
+                    let formattedDate = `${String(scanTime.getMonth() + 1).padStart(2,'0')}/${String(scanTime.getDate()).padStart(2,'0')}/${scanTime.getFullYear()} ${String(scanTime.getHours()).padStart(2,'0')}:${String(scanTime.getMinutes()).padStart(2,'0')}:${String(scanTime.getSeconds()).padStart(2,'0')}`;
                     
+                    // 1. RUN (Elapsed time gikan sa CP 00)
+                    let runDiffMs = scanTime - firstScanTime;
+                    let rH = Math.floor(runDiffMs / (1000 * 60 * 60));
+                    let rM = Math.floor((runDiffMs % (1000 * 60 * 60)) / (1000 * 60));
+                    let rS = Math.floor((runDiffMs % (1000 * 60)) / 1000);
+                    let runStr = `${rH}:${String(rM).padStart(2,'0')}:${String(rS).padStart(2,'0')}`;
+
+                    // 2. ODO & RUNNING (Cumulative)
+                    let currentOdo = parseFloat(scan.odometer) || 0;
+                    let runningKms = index === 0 ? 0 : Math.max(0, currentOdo - startOdo);
+                    let runningHoursTotal = runDiffMs / (1000 * 60 * 60);
+                    let runningKmh = runningHoursTotal > 0 ? (runningKms / runningHoursTotal).toFixed(2) : "0.00";
+
+                    // 3. POINT TO POINT (Segment gikan sa miaging checkpoint)
+                    let p2pKms = 0;
+                    let p2pKmh = "0.00";
+                    let p2pHoursStr = "00:00";
+
+                    if (index > 0) {
+                        let prevScan = scans[index - 1];
+                        let prevOdo = parseFloat(prevScan.odometer) || startOdo;
+                        p2pKms = Math.max(0, currentOdo - prevOdo);
+
+                        let prevTime = new Date(prevScan.scanned_at);
+                        let segMs = scanTime - prevTime;
+                        let segHours = segMs / (1000 * 60 * 60);
+                        
+                        let sH = Math.floor(segMs / (1000 * 60 * 60));
+                        let sM = Math.floor((segMs % (1000 * 60 * 60)) / (1000 * 60));
+                        p2pHoursStr = `${String(sH).padStart(2,'0')}:${String(sM).padStart(2,'0')}`;
+
+                        p2pKmh = segHours > 0 ? (p2pKms / segHours).toFixed(2) : "0.00";
+                    }
+
+                    // Kuhaon ang ngalan sa checkpoint gikan sa database.js
                     let rLevel = riderInfo ? riderInfo.level : (scan.rider_level || 'AS26');
                     let cpCode = String(scan.checkpoint || '').trim();
-                    
                     let locationName = '';
 
                     if (typeof routeCheckpoints !== 'undefined') {
                         if (routeCheckpoints[rLevel] && routeCheckpoints[rLevel][cpCode]) {
                             locationName = routeCheckpoints[rLevel][cpCode];
-                        } 
-                        else if (routeCheckpoints["AS26"] && routeCheckpoints["AS26"][cpCode]) {
+                        } else if (routeCheckpoints["AS26"] && routeCheckpoints["AS26"][cpCode]) {
                             locationName = routeCheckpoints["AS26"][cpCode];
                         }
                     }
-
                     if (!locationName) {
                         locationName = scan.notes || '';
                     }
 
-                    let photoLinkText = (scan.photo_url && scan.photo_url.startsWith('http')) 
-                        ? `<a href="${scan.photo_url}" target="_blank" class="photo-link">📷 Tan-awa ang Pic</a>` 
-                        : `<span style="color:#888;">${scan.photo_url || 'Walay Ebidensya'}</span>`;
-
                     html += `
                         <tr>
-                            <td class="center">${index + 1}</td>
+                            <td class="center">${String(index + 1).padStart(2, '0')}</td>
                             <td><b>${scan.checkpoint}</b> - ${locationName}</td>
                             <td class="center">${formattedDate}</td>
-                            <td class="center">${scan.odometer || 0}</td>
-                            <td class="center">${photoLinkText}</td>
-                            <td>${scan.notes || '-'}</td>
+                            <td class="center">${runStr}</td>
+                            <td class="center">${currentOdo}</td>
+                            <td class="center">${runningKms}</td>
+                            <td class="center">${runningKmh}</td>
+                            <td class="center">${p2pKms}</td>
+                            <td class="center">${p2pKmh}</td>
+                            <td class="center">${p2pHoursStr}</td>
                         </tr>
                     `;
                 });
