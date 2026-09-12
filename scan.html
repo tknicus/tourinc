@@ -75,8 +75,7 @@
     </style>
 </head>
 <body>
-    <!-- ================= 0. GATEKEEPER SCREEN (OWNTRACKS CHECKBOX BARRIER) ================= -->
-    <!-- ================= 0. GATEKEEPER SCREEN (OWNTRACKS CHECKBOX BARRIER) ================= -->
+    <!-- ================= 0. GATEKEEPER SCREEN ================= -->
     <div id="gatekeeperContainer" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000000; z-index: 999999; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
         <div style="width: 100%; max-width: 380px; background: #111; padding: 25px; border-radius: 12px; border: 1px solid #333; color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.8); text-align: center; max-height: 90vh; overflow-y: auto;">
             
@@ -86,13 +85,11 @@
                 Para sa safety ug live monitoring sa MasterMinds'CUP, kinahanglan naay <b>OwnTracks</b> app ang imong selpon.
             </p>
             
-            <!-- Download Links para sa Android ug iPhone -->
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                 <a href="https://play.google.com/store/apps/details?id=org.owntracks.android" target="_blank" style="flex:1; background:#222; border:1px solid #444; color:#fff; padding:8px; text-decoration:none; border-radius:6px; font-size:11px; font-weight:bold; display:block;">🤖 Play Store<br><span style="font-size:9px; color:#aaa;">(Android)</span></a>
                 <a href="https://apps.apple.com/us/app/owntracks/id692987167" target="_blank" style="flex:1; background:#222; border:1px solid #444; color:#fff; padding:8px; text-decoration:none; border-radius:6px; font-size:11px; font-weight:bold; display:block;">🍏 App Store<br><span style="font-size:9px; color:#aaa;">(iPhone)</span></a>
             </div>
 
-            <!-- ⚠️ IMPORTANTENG PAHINUMDOM SA BATTERY UG LOCATION -->
             <div style="background: #2a1a00; border: 1px solid #ff9900; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 11px; color: #ffcc00; text-align: left; line-height: 1.4;">
                 <b>⚠️ PAHINUMDOM SA RIDER:</b><br>
                 Human ma-install, palihug siguruha nga:
@@ -102,7 +99,6 @@
                 </ul>
             </div>
 
-            <!-- Checkbox Barrier -->
             <div style="background: #1a1a1a; padding: 12px; border-radius: 8px; border: 1px dashed #555; text-align: left; margin-bottom: 15px;">
                 <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 12px; color: #fff;">
                     <input type="checkbox" id="owntracksCheck" style="width: 18px; height: 18px; margin-top: 2px; accent-color: #cc0000; cursor: pointer;">
@@ -118,7 +114,6 @@
     <div id="loginScreenContainer" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000000; z-index: 999999; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
         <div style="width: 100%; max-width: 380px; background: #111; padding: 25px; border-radius: 12px; border: 1px solid #333; color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.8);">
             
-            <!-- LOGO NGA NAAY LONG-PRESS PARA SA ADMIN MENU -->
             <img src="mmc.png" alt="MasterMinds CUP Logo" id="loginLogo" style="width: 150px; display: block; margin: 0 auto 15px auto; cursor: pointer; -webkit-touch-callout: none; user-select: none;">
             
             <h2 style="text-align: center; margin-bottom: 5px; font-size: 20px;">MMC SCANNER LOGIN</h2>
@@ -148,7 +143,6 @@
 
             <div id="liveLocation">📍 Nangita sa imong location...</div>
 
-            <!-- ⚙️ OWNTRACKS 1-TAP CONFIG BUTTON (Mawala human i-click) -->
             <div id="setupOwntracksContainer" style="display:none; text-align:center; margin-bottom:15px; background:#1a1a1a; padding:12px; border-radius:8px; border:1px solid #28a745;">
                 <p style="color: #ff9900; font-size: 12px; margin-top:0; margin-bottom:8px; font-weight:bold;">LAKBANG 2: IKONEKTA ANG OWNTRACKS</p>
                 <a id="oneTapConfigBtn" href="#" style="background: #28a745; color: white; padding: 10px 15px; text-decoration: none; border-radius: 6px; font-weight: bold; display: block; font-size: 14px;">
@@ -156,7 +150,6 @@
                 </a>
             </div>
 
-            <!-- 📊 HEADS-UP DASHBOARD (SIGNAL TRIPLE TAP PARA SA MARSHAL OVERRIDE) -->
             <div id="dashboard" style="background: #222; border: 2px solid #444; border-radius: 8px; padding: 12px; margin-bottom: 15px; color: white; display: flex; justify-content: space-between; align-items: center; font-family: Arial, sans-serif;">
                 <div style="text-align: center; width: 33%; cursor: pointer;" id="signalStatusWrapper" title="Triple tap here for Marshal Override">
                     <span style="color: #aaa; font-size: 11px; font-weight: bold; letter-spacing: 1px;">SIGNAL</span><br>
@@ -224,7 +217,7 @@
 
             <div style="text-align: center; margin-top: 25px; padding-bottom: 20px; font-size: 12px; color: #aaa; border-top: 1px solid #333; padding-top: 15px;">
                 <p style="margin: 0; font-weight: bold; color: #ffcc00;">&copy; 2026 MasterMinds'CUP. All Rights Reserved.</p>
-                <p style="margin: 5px 0 0 0;">Build Version: <span id="appVersionText" style="color: #00ff00; font-family: monospace;">v3.4-technicus-secure</span></p>
+                <p style="margin: 5px 0 0 0;">Build Version: <span id="appVersionText" style="color: #00ff00; font-family: monospace;">v3.5-supabase-secure</span></p>
                 <p style="margin: 3px 0 0 0; font-size: 10px; color: #666;">Status: Active & Secure 🛡️</p>
             </div>
         </div>
@@ -236,7 +229,7 @@
     <script src="database.js"></script>
     <script>
         // ==========================================
-        // 🛰️ LIFE360-STYLE LIVE GPS BACKGROUND TRACKER
+        // 🛰️ SUPABASE CONFIGURATION
         // ==========================================
         const _supabaseUrl = 'https://iilfklquzyxmdergwawh.supabase.co';
         const _supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpbGZrbHF1enl4bWRlcmd3YXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MTkzMDcsImV4cCI6MjEwMzI5NTMwN30.jMctz666CGfTdODLqNr24O3dQ5SDM6K5GkmihCtDdBQ';
@@ -244,7 +237,7 @@
         const supabaseLiveClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
         
         // ==========================================
-        // 🛠️ CUSTOM PIN PROMPT HELPER (MODAL DIALOG)
+        // 🛠️ CUSTOM PIN PROMPT HELPER
         // ==========================================
         function customPinPrompt(title, message) {
             return new Promise((resolve) => {
@@ -281,9 +274,6 @@
             });
         }
 
-        // ==========================================
-        // 🔐 SECURITY & AUTHENTICATION
-        // ==========================================
         async function sha256Hash(str) {
             try {
                 const encoder = new TextEncoder();
@@ -299,9 +289,7 @@
         async function verifyAndLogin() {
             function checkOwnTracksRequirement() {
                 let isOwnTracksInstalled = localStorage.getItem("mmc_owntracks_ready");
-                if (isOwnTracksInstalled === "true") {
-                    return true;
-                }
+                if (isOwnTracksInstalled === "true") return true;
 
                 let confirmInstall = confirm("⚠️ MAHINUNGDANONG PAHIBALO:\n\nPara sa Life360-style Live Tracking sa MasterMinds'CUP, kinahanglan una nimo i-install ang 'OwnTracks' app.\n\nNa-install na ba nimo ang OwnTracks?");
                 
@@ -310,7 +298,6 @@
                     return true;
                 } else {
                     let userAgent = navigator.userAgent || navigator.vendor || window.opera;
-                    
                     if (/android/i.test(userAgent)) {
                         alert("I-redirect ka namo sa Google Play Store aron i-download ang OwnTracks.");
                         window.location.href = "https://play.google.com/store/apps/details?id=org.owntracks.android";
@@ -325,9 +312,7 @@
                 }
             }
 
-            if (!checkOwnTracksRequirement()) {
-                return;
-            }
+            if (!checkOwnTracksRequirement()) return;
 
             let inputtedID = document.getElementById("riderIdInput").value.trim();
             let inputtedPass = document.getElementById("riderPassInput").value.trim();
@@ -346,7 +331,6 @@
 
             if (rider) {
                 let isPasscodeValid = false;
-                
                 if (rider.passcode) {
                     let hashedInputPass = await sha256Hash(inputtedPass);
                     if (hashedInputPass === rider.passcode) {
@@ -364,7 +348,6 @@
                     localStorage.setItem("defaultRiderID", rider.idNum);
                     localStorage.setItem("tourRiderName", rider.fullname);
                     localStorage.setItem("tourIsLoggedIn", "true");
-
                     setupOwnTracksOneTapButton(rider.idNum);
                     
                     if (rider.isMarshal === true) {
@@ -392,9 +375,6 @@
             }
         }
 
-        // ==========================================
-        // 👑 ADMIN LONG-PRESS & 🕵️‍♂️ MARSHAL TRIPLE-TAP (GLOBAL BINDERS)
-        // ==========================================
         function setupLogoLongPress(logoElement) {
             if (!logoElement) return;
             let pressTimer;
@@ -407,25 +387,17 @@
                 pressTimer = setTimeout(async () => {
                     let passcode = await customPinPrompt("👑 ADMIN PANEL", "Pagsulod og Admin Passcode:");
                     if (!passcode) return;
-
-                    if (typeof riderDatabase === 'undefined') {
-                        alert("⚠️ Error: Wala nabasa ang database.");
-                        return;
-                    }
+                    if (typeof riderDatabase === 'undefined') return;
 
                     const hashedInput = await sha256Hash(passcode);
                     let validAdmin = riderDatabase.find(r => r.passcode === hashedInput && (r.idNum === "0000" || r.idNum === "0001" || r.idNum === "0003"));
 
-                    if (validAdmin) {
-                        window.location.href = 'menu.html';
-                    } else {
-                        alert("❌ Sayop nga Passcode o dili ka awtorisado nga Admin!");
-                    }
+                    if (validAdmin) window.location.href = 'menu.html';
+                    else alert("❌ Sayop nga Passcode o dili ka awtorisado nga Admin!");
                 }, 2500);
             };
 
             const cancelPress = () => clearTimeout(pressTimer);
-
             logoElement.addEventListener('pointerdown', startPress);
             logoElement.addEventListener('pointerup', cancelPress);
             logoElement.addEventListener('pointercancel', cancelPress);
@@ -461,9 +433,7 @@
                                     localStorage.setItem('tourIsMarshal', 'true');
                                     if (scanQrBtn) scanQrBtn.style.display = "block"; 
                                     alert(`🔓 MARSHAL OVERRIDE ON! Welcome, Master ${validMarshal.fullname}! Naabli na ang QR Scanner.`);
-                                } else { 
-                                    alert("❌ Sayop nga Passcode!"); 
-                                }
+                                } else { alert("❌ Sayop nga Passcode!"); }
                             }
                         } else {
                             if (confirm("🔒 Gusto nimo i-lock ug ibalik sa Regular Rider Mode?")) {
@@ -478,11 +448,7 @@
             }
         }
 
-        // ==========================================
-        // 🚀 DOM INITIALIZATION & GATEKEEPER
-        // ==========================================
         document.addEventListener("DOMContentLoaded", function() {
-            // I-bind dayon ang admin long-press ug signal triple-tap bisan unsa pa ang screen state
             setupLogoLongPress(document.getElementById('loginLogo'));
             setupLogoLongPress(document.getElementById('masterMindsLogo'));
             setupSignalTripleTap();
@@ -511,13 +477,10 @@
                 
                 checkEventStatus(savedRiderID);
                 initScannerApp(savedRiderID);
-
                 setupOwnTracksOneTapButton(savedRiderID);
 
                 const scanQrBtn = document.getElementById('scanQrBtn');
-                if (scanQrBtn) {
-                    scanQrBtn.style.display = isMarshal ? "block" : "none";
-                }
+                if (scanQrBtn) scanQrBtn.style.display = isMarshal ? "block" : "none";
             } else {
                 loginContainer.style.display = "flex";
                 scannerContainer.style.display = "none";
@@ -555,9 +518,6 @@
             }
         });
 
-        // ==========================================
-        // ⚙️ 1-TAP OWNTRACKS CONFIG GENERATOR HELPER
-        // ==========================================
         function setupOwnTracksOneTapButton(riderId) {
             if (localStorage.getItem("mmc_owntracks_configured_" + riderId) === "true") {
                 const setupContainer = document.getElementById("setupOwntracksContainer");
@@ -566,282 +526,48 @@
             }
 
             const configJson = {
-                "_type": "configuration",
-                "mode": 3,
+                "_type": "configuration", "mode": 3,
                 "url": "https://iilfklquzyxmdergwawh.supabase.co/functions/v1/owntracks-webhook?rider_id=" + riderId,
-                "username": "rider_" + riderId,
-                "deviceId": "phone",
-                "tid": riderId.slice(-2),
-                "locatorDisplacement": 1000, // Mo-update matag 1 kilometro nga biyahe
-                "locatorInterval": 180       // Mo-update matag 3 minutos kon naghunong
-            }
+                "username": "rider_" + riderId, "deviceId": "phone", "tid": riderId.slice(-2),
+                "locatorDisplacement": 100, "locatorInterval": 120
+            };
 
             const base64Config = btoa(JSON.stringify(configJson));
             const oneTapConfigUrl = `owntracks:///config?inline=${base64Config}`;
-
             const oneTapBtn = document.getElementById("oneTapConfigBtn");
             const setupContainer = document.getElementById("setupOwntracksContainer");
             
             if (oneTapBtn && setupContainer) {
                 oneTapBtn.href = oneTapConfigUrl;
                 setupContainer.style.display = "block";
-
                 oneTapBtn.onclick = function() {
                     localStorage.setItem("mmc_owntracks_configured_" + riderId, "true");
-                    setTimeout(() => {
-                        setupContainer.style.display = "none";
-                    }, 500);
+                    setTimeout(() => { setupContainer.style.display = "none"; }, 500);
                 };
             }
-            console.log("OwnTracks One-Tap Link Created for Rider #" + riderId);
         }
 
-        // ==========================================
-        // 🗺️ GLOBAL DATA (ROUTES & API)
-        // ==========================================
         const routeNames = {
-            "AS26": "628 ALL STAR",
-            "G5": "MAN OF STEEL",
-            "G4": "4W RIDERS",
-            "G3": "Mindanao Coastal Gaming",
-            "G1N": "NORTH - MaKahulogan",
-            "G1E": "EASTT - LoCoCaMaMa",
-            "G1W": "WEST - DaDiPaPi",
-            "G1S": "SOUTH - JAS-T'Boli"
+            "AS26": "628 ALL STAR", "G5": "MAN OF STEEL", "G4": "4W RIDERS",
+            "G3": "Mindanao Coastal Gaming", "G1N": "NORTH - MaKahulogan",
+            "G1E": "EASTT - LoCoCaMaMa", "G1W": "WEST - DaDiPaPi", "G1S": "SOUTH - JAS-T'Boli"
         };
         const routeTotalKm = { "G1N": 777, "G1E": 777, "G1W": 777, "G1S": 777, "G3": 3333, "G4": 444, "G5": 5555, "AS26": 628 };
         
-        const routeScriptURLs = {
-            "AS26": "https://script.google.com/macros/s/AKfycbxTau-qcMyRPmu753acuF4c6Pgm8jy3llrLSAzrzlS-0z-k_xmQoE_9-sl2yIXeMjJF/exec",
-            "G5": "https://script.google.com/macros/s/AKfycb3wEteB4HL7gy3t3dS-lon5kY4MwKn8XTh-7I-RpK7IT3EISSf-9WUr0XxKsUB1rc8/exec",
-            "G4": "https://script.google.com/macros/s/AKfycby8eFI-lHgB71fiDWBVy_Jm9U2SPlvHw2hfDr_2NQr5YZkzpbAQmO8DspSvT6XAtxbz/exec",
-            "G3": "https://script.google.com/macros/s/AKfycbygg_k9reS3scefqvP_UKXxwCTihIBL0l2T5P1NgAaxMaXv_RBIP7sVfdNf3TXOnAmqyg/exec",
-            "G1N": "https://script.google.com/macros/s/AKfycbzQFK6-oBnlLOKPk8_mvJST_ai__oAupaDSfjOKA3SK75CQ2vjl1_qadDsIDk8nbMIKCw/exec",
-            "G1E": "https://script.google.com/macros/s/AKfycbzt_sabiNcZ5aJ0hu8CZYWLZ691Yz_skvk5QjjVloNxSK7NVSkEcRCBue_9tqZqPAtw5w/exec",
-            "G1W": "https://script.google.com/macros/s/AKfycbxYIxvC_tZ1UOavjHrQdMMAsOyVjaX8Tn8AmczoAHkEUVLqnq_Nys5XJm22VGJ9ZbbdIQ/exec",
-            "G1S": "https://script.google.com/macros/s/AKfycbzauIovOX8mY8D1MgPq2op-AmnFrkrREupLy6cILDPRqtUx1UqaE7P3hCYKNvITgGhX/exec",
-            "DEFAULT": "https://script.google.com/macros/s/AKfycbxTau-qcMyRPmu753acuF4c6Pgm8jy3llrLSAzrzlS-0z-k_xmQoE_9-sl2yIXeMjJF/exec"
-        };
-
         const routeConfigs = {
-            "G1N": [
-                { val: "CP 00", name: "#00 Starting Grid" }, { val: "CP 01", name: "#01 San Fernando Municipal Plaza" },
-                { val: "CP 02", name: "#02 Iba Central Elementary School  25km" }, { val: "CP 03", name: "#03 Busdi Integrated School" },
-                { val: "CP 04", name: "#04 Magawa Bridge (Mandatory PO)" }, { val: "CP 05", name: "#05 turn right to Gingoog" },
-                { val: "CP 06", name: "#06 Gingoog Butuan Fork (turn left to Gingoog)" }, { val: "CP 07", name: "#07 Kahulogan (turn left to Claveria)" },
-                { val: "CP 08", name: "#08 Claveria View Deck" }, { val: "CP 09", name: "#09 Municipal Hall of Claveria" },
-                { val: "CP 10", name: "#10 Villanueva Municipal Hall" }, { val: "CP 11", name: "#11 Balingoan Municipal Hall" },
-                { val: "CP 12", name: "#12 Gahub Bridge" }, { val: "CP 13", name: "#13 Magsaysay BUS Terminal" },
-                { val: "CP 14", name: "#14 Vinapor White Beach Park" }, { val: "CP 15", name: "#15 Bancasi Rotunda" },
-                { val: "CP 16", name: "#16 turn right to San Vicente" }, { val: "CP 17", name: "#17 Daktan Central Elementary School" },
-                { val: "CP 18", name: "#18 Crossing Luna turn right" }, { val: "CP 19", name: "#19 Talacogon Municipal Hall" },
-                { val: "CP 20", name: "#20 Loreto Municipal Hall" }, { val: "CP 21", name: "#21 Sampaguita Junction Park" },
-                { val: "CP 22", name: "#22 Sta Emilia" }, { val: "CP 23", name: "#23 LS Sarmiento Bridge  (Mandatory PO)" },
-                { val: "CP 24", name: "#24 San Antonio" }, { val: "CP 25", name: "#25 Longanapan" },
-                { val: "CP 26", name: "#26 Sonlon" }, { val: "CP 27", name: "#27 Suawon" },
-                { val: "CP 28", name: "#28 New Corella Plaza" }, { val: "CP 29", name: "#29 New Bohol Landmark" },
-                { val: "CP 30", name: "#30 San Agustin Elementary School" }, { val: "CP 31", name: "#31 Fe Misa Ayala Seniors Park" },
-                { val: "CP 32", name: "#32 ELKAPITAN 's Burial Ground " }, { val: "CP FL", name: "#FL Ending Grid" },
-                { val: "CP xx", name: "#xx Stand By Me" }
-            ],
-            "G1E": [
-                { val: "CP 00", name: "#00 Starting Grid" }, { val: "CP 01", name: "#01 Carmen Cannon" },
-                { val: "CP 02", name: "#02 Sto. Tomas Park" }, { val: "CP 03", name: "#03 Asuncion-San Isidro-Laak-Veruela Rd (junction)" },
-                { val: "CP 04", name: "#04 711 Laak" }, { val: "CP 05", name: "#05 Loreto Municipal / Petron" },
-                { val: "CP 06", name: "#06 Trento Roundball/SeaOil" }, { val: "CP 07", name: "#07 Tabon Junction" },
-                { val: "CP 08", name: "#08 Caatijan, Boston (junction)" }, { val: "CP 09", name: "#09 Parkway Monkayo" },
-                { val: "CP 10", name: "#10 SMJR Montevista" }, { val: "CP 11", name: "#11 Cateel Taytayan" },
-                { val: "CP 12", name: "#12 Pusan Point Caraga" }, { val: "CP 13", name: "#13 WOW Manay Landmark" },
-                { val: "CP 14", name: "#14 Mati Baywalk" }, { val: "CP 15", name: "#15 Maragusan Landmark" },
-                { val: "CP 16", name: "#16 Fe Misa Ayala Seniors Park" }, { val: "CP 17", name: "#17 ELKAPITAN 's Burial Ground " },
-                { val: "CP FL", name: "#18 Ending Grid" }, { val: "CP xx", name: "#xx Stand By Me" }
-            ],
-            "G1W": [
-                { val: "CP 00", name: "#00 DavNor Sports Complex (Starting Grid)" }, { val: "CP 01", name: "#01 Davao City Coastal Road" },
-                { val: "CP 02", name: "#02 McDo Cogon Digos" }, { val: "CP 03", name: "#03 Esso Gasoline Station, Paco, Kidapawan" },
-                { val: "CP 04", name: "#04 crash site" }, { val: "CP 05", name: "#05 DASH Gasoline Station" },
-                { val: "CP 06", name: "#06 Brgy. Sarmiento Signage" }, { val: "CP 07", name: "#07 Picong Tunnel (Mandatory Photo Op)" },
-                { val: "CP 08", name: "#08 KM0 Warawi" }, { val: "CP 09", name: "#09 i love Kalilangan" },
-                { val: "CP 10", name: "#10 Maramag Municipal Hall" }, { val: "CP 11", name: "#11 Jollibee Valencia" },
-                { val: "CP 12", name: "#12 San Fernando Municipal Plaza" }, { val: "CP 13", name: "#13 Lantawan ni Jade" },
-                { val: "CP 14", name: "#14 w0w Assuncion" }, { val: "CP 15", name: "#15 Fe Misa Ayala Seniors Park" },
-                { val: "CP 16", name: "#16 ELKAPITAN 's Burial Ground " }, { val: "CP FL", name: "#17 DavNor Sports Complex (End Grid)" },
-                { val: "CP xx", name: "#xx Stand By Me" }
-            ],
-            "G1S": [
-                { val: "CP 00", name: "#00 Starting Grid" }, { val: "CP 01", name: "#01 Davao City Coastal Road" },
-                { val: "CP 02", name: "#02 Petron/McDo Cogon Digos" }, { val: "CP 03", name: "#03 Flying V, Junction DavOc & GSC" },
-                { val: "CP 04", name: "#04 Malita Municipal Hall" }, { val: "CP 05", name: "#05 Joyce Paradise" },
-                { val: "CP 06", name: "#06 Baños Point Lighthouse" }, { val: "CP 07", name: "#07 JAS Municipal Hall" },
-                { val: "CP 08", name: "#08 TOUR Town Glan" }, { val: "CP 09", name: "#09 Plaza Heneral Santos" },
-                { val: "CP 10", name: "#10 GSC IA Welcome Arch" }, { val: "CP 11", name: "#11 T'Boli" },
-                { val: "CP 12", name: "#12 711 Surallah" }, { val: "CP 13", name: "#13 Isulan Roundball" },
-                { val: "CP 14", name: "#14 Tacurong Roundball" }, { val: "CP 15", name: "#15 Marbel Roundball" },
-                { val: "CP 16", name: "#16 Columbio Municipal Hall" }, { val: "CP 17", name: "#17 Viacrucis Park Bansalan" },
-                { val: "CP 18", name: "#18 Shell Cogon Digos" }, { val: "CP 19", name: "#19 Petron Diversion Road Buhangin" },
-                { val: "CP 20", name: "#20 Fe Misa Ayala Seniors Park" }, { val: "CP 21", name: "#21 ELKAPITAN 's Burial Ground " },
-                { val: "CP FL", name: "#22 Clossing Grid" }, { val: "CP xx", name: "#xx Stand By Me" }
-            ],
-            "G3": [
-                { val: "CP 00", name: "#00 Start G3" }, { val: "CP 01", name: "#07 Bukidnon Route - A" },
-                { val: "CP 02", name: "#08 Bukidnon Route - B" }, { val: "CP 03", name: "#09 Finish Line G3" },
-                { val: "CP 04", name: "DavNor Sports Complex" }, { val: "CP 05", name: "Davao Coastal Road" },
-                { val: "CP 06", name: "McDo Petron Cogon Digos" }, { val: "CP 07", name: "Flying V Otsenta" },
-                { val: "CP 08", name: "Malita Municipal Plaza" }, { val: "CP 09", name: "Joyce Paradise (Mandatory Photo Ops)" },
-                { val: "CP 10", name: "Baños Point Lighthouse" }, { val: "CP 11", name: "JAS Municipal Hall" },
-                { val: "CP 12", name: "TOUR Town Glan" }, { val: "CP 13", name: "Plaza Heneral Santos" },
-                { val: "CP 14", name: "Maitum Municipal Hall" }, { val: "CP 15", name: "Baywalk Palimbang (Mandatory Photo Ops)" },
-                { val: "CP 16", name: "Lebak Roundball" }, { val: "CP 17", name: "Grand Mosque of Cotabato" },
-                { val: "CP 18", name: "Picung Tunnel (Mandatory Photo Ops)" }, { val: "CP 19", name: "Rotunda Park Pagadian" },
-                { val: "CP 20", name: "Ipil Rotunda Obelisk" }, { val: "CP 21", name: "Zamboanga City Signage (Mandatory Photo Ops)" },
-                { val: "CP 22", name: "Boyscout of the Philippines" }, { val: "CP 23", name: "Limpana TRUSS Bridge (Mandatory Photo Ops)" },
-                { val: "CP 24", name: "Pangian Bridge" }, { val: "CP 25", name: "Sibuco Municipality" },
-                { val: "CP 26", name: "Siocon Rotonda Plaza" }, { val: "CP 27", name: "Baliguian Eadle Landmark (Mandatory Photo Ops)" },
-                { val: "CP 28", name: "I Love Gutalac Landmard (Mandatory Photo Ops)" }, { val: "CP 29", name: "Liloy Municipal Hall" },
-                { val: "CP 30", name: "Giant Chicken Statue" }, { val: "CP 31", name: "Dipolog Rotonda" },
-                { val: "CP 32", name: "Dapitan Park" }, { val: "CP 33", name: "I Love Oroquieta" },
-                { val: "CP 34", name: "Panguil Bay Bridge" }, { val: "CP 35", name: "Iligan City (711/Petron)" },
-                { val: "CP 36", name: "MV Beach & Pool Resort" }, { val: "CP 37", name: "El Salvador City Hall" },
-                { val: "CP 38", name: "Divine Mercy Statue" }, { val: "CP 39", name: "Bugo CDO Shell Gasoline Station" },
-                { val: "CP 40", name: "Sugbongcogon Municipal Hall" }, { val: "CP 41", name: "The Bay Gingoog" },
-                { val: "CP 42", name: "Magsaysay Munipal Park" }, { val: "CP 43", name: "Cervantina Elementary School" },
-                { val: "CP 44", name: "Vinapor Beach Park" }, { val: "CP 45", name: "Rotunda Bancasi" },
-                { val: "CP 46", name: "Jollibee Cabadbaran" }, { val: "CP 47", name: "Jabonga People's Park" },
-                { val: "CP 48", name: "Hanagdong Project" }, { val: "CP 49", name: "Looc Landmark" },
-                { val: "CP 50", name: "Punta Bilar Lighthouse" }, { val: "CP 51", name: "I Love Surigao" },
-                { val: "CP 52", name: "Nabago Elementary School" }, { val: "CP 53", name: "Noventa View Deck" },
-                { val: "CP 54", name: "Tandag City Baywalk Boulevard" }, { val: "CP 55", name: "Hinatuan Signage" },
-                { val: "CP 56", name: "Petron Cateel" }, { val: "CP 57", name: "Baganga Sunrise Boulevard" },
-                { val: "CP 58", name: "Pusan Point Caraga" }, { val: "CP 59", name: "WOW Manay Landmark" },
-                { val: "CP 60", name: "Dahican Rotunda" }, { val: "CP 61", name: "Mati Baywalk Park" },
-                { val: "CP 62", name: "711/SeaOil Governor Generoso" }, { val: "CP 63", name: "Centennial Tree (dedo na :-( )" },
-                { val: "CP 64", name: "Cape San Agustin (Mandatory Photo Op)" }, { val: "CP 65", name: "Manikling Rotonda" },
-                { val: "CP 66", name: "Davao Oriental Welcome Park" }, { val: "CP 67", name: "Diocesan Shrine of Our Mother of Pertual Help" },
-                { val: "CP 68", name: "Fe Misa Ayala Seniors Park" }, { val: "CP 69", name: "ELKAPITAN 's Burial Ground " },
-                { val: "CP FL", name: "DavNor Sports Complex" }, { val: "CP xx", name: "#xx Stand By Me" }
-            ],
-            "G4": [
-                { val: "CP 00", name: "#00 Start G4 tark-tarak Riddes" },
-                { val: "CP 01", name: "#01 Talaingod Route - A" },
-                { val: "CP 02", name: "#03 Talaingod Route - B" },
-                { val: "CP FL", name: "#04 Finish Line G4" },
-                { val: "CP xx", name: "#xx Stand By Me" }
-            ],
-            "G5": [
-                { val: "CP 000", name: "#00 DavNor Sports Complex" }, { val: "CP 001", name: "#00 Davao City Coastal Road" },
-                { val: "CP 002", name: "#00 McDo Cogon Digos" }, { val: "CP 003", name: "#00 Esso Gasoline Station, Paco, Kidapawan" },
-                { val: "CP 004", name: "#00 White Hills View, Sitio Dao Road, Arakan" }, { val: "CP 005", name: "#00 Philippine Eagle Monument" },
-                { val: "CP 006", name: "#00 Greek Hills" }, { val: "CP 007", name: "#00 OverView Nature & Culture Park" },
-                { val: "CP 008", name: "#00 3J Gazz, Quezon, Bukidnon" }, { val: "CP 009", name: "#00 Aglayan Roundball" },
-                { val: "CP 010", name: "#00 Lantaw 360 Camp & Cafe" }, { val: "CP 011", name: "#00 junction Tikalaan (Mandatory Photo Op) turn left" },
-                { val: "CP 012", name: "#00 711 Pangantukan" }, { val: "CP 013", name: "#00 Discovery Hotel Dangcagan" },
-                { val: "CP 014", name: "#00 Buagas Machine Shop, Carmen" }, { val: "CP 015", name: "#00 crash site (Mandatory Photo Op) atbang sa menteryo" },
-                { val: "CP 016", name: "#00 Bagontapay Roundball" }, { val: "CP 017", name: "#00 turn RIGHT to Magsaysay" },
-                { val: "CP 018", name: "#00 Tacul Elementary School" }, { val: "CP 019", name: "#00 Magsaysay Municipality" },
-                { val: "CP 020", name: "#00 Matanao, turn right to Savoy" }, { val: "CP 021", name: "#00 Columbio Municipal Hall" },
-                { val: "CP 022", name: "#00 Isulan Roundball" }, { val: "CP 023", name: "#00 711 Surallah" },
-                { val: "CP 024", name: "#00 Marbel Roundball" }, { val: "CP 025", name: "#00 BK's Kitchen @ Ondeng’s Food Park" },
-                { val: "CP 026", name: "#00 Bangkapayapaan Monument" }, { val: "CP 027", name: "#00 Flying V Otsenta Junction" },
-                { val: "CP 028", name: "#00 Malita Municipal Plaza" }, { val: "CP 029", name: "#00 Joyce Paradise" },
-                { val: "CP 030", name: "#00 Baños Point Lighthouse" }, { val: "CP 031", name: "#00 JAS Municipal Hall" },
-                { val: "CP 032", name: "#00 TOUR Town Glan" }, { val: "CP 033", name: "#00 Maasim Town Plaza" },
-                { val: "CP 034", name: "#00 Maitum Municipal Hall" }, { val: "CP 035", name: "#00 Baywalk Palimbang" },
-                { val: "CP 036", name: "#00 Kalamansig Municipal" }, { val: "CP 037", name: "#00 Lebak Municipal Portal / Lebak " },
-                { val: "CP 038", name: "#00 The Grand Mosque of Cotabato" }, { val: "CP 039", name: "#00 People's Palace Cotabato City" },
-                { val: "CP 040", name: "#00 Alamada Municipal Hall" }, { val: "CP 041", name: "#00 Tent City" },
-                { val: "CP 042", name: "#00 WOWWAO" }, { val: "CP 043", name: "#00 KM0 Warawi" },
-                { val: "CP 044", name: "#00 Picong Tunnel (Mandatory Photo Op)" }, { val: "CP 045", name: "#00 Pagadian Rotonda Park" },
-                { val: "CP 046", name: "#00 Ipil Rotunda Obelisk" }, { val: "CP 047", name: "#00 Pasonanca Park" },
-                { val: "CP 048", name: "#00 Zamboanga City Signage" }, { val: "CP 049", name: "#00 Historic BSP Monument (Mandatory Photo Ops)" },
-                { val: "CP 050", name: "#00 Limpana TRUSS Bridge (Mandatory Photo Ops)" }, { val: "CP 051", name: "#00 Pangian Bridge" },
-                { val: "CP 052", name: "#00 Sibuco Municipal Hall" }, { val: "CP 053", name: "#00 Siocon Municipal Hall" },
-                { val: "CP 054", name: "#00 Liloy Municipal Hall" }, { val: "CP 055", name: "#00 Manukan Town Hall" },
-                { val: "CP 056", name: "#00 Dipolog City Hall" }, { val: "CP 057", name: "#00 New Dapitan City Hallv" },
-                { val: "CP 058", name: "#00 I Love Oroquieta" }, { val: "CP 059", name: "#00 Hoyohoy View Deeck" },
-                { val: "CP 060", name: "#00 Petron Tangub" }, { val: "CP 061", name: "#00 Panguil Bay Bridge" },
-                { val: "CP 062", name: "#00 Dapit Alim Shrine" }, { val: "CP 063", name: "#00 Maria Christina Falls" },
-                { val: "CP 064", name: "#00 Iligan City (711/Petron)" }, { val: "CP 065", name: "#00 El Salvador City Hall" },
-                { val: "CP 066", name: "#00 Devine Mercy Statue" }, { val: "CP 067", name: "#00 Shell CDO" },
-                { val: "CP 068", name: "#00 Atugan Nature Farm" }, { val: "CP 069", name: "#00 Valencia Jollibee" },
-                { val: "CP 070", name: "#00 San Fernando Cabanglasan Junction" }, { val: "CP 071", name: "#00 Manggaod" },
-                { val: "CP 072", name: "#00 Iba" }, { val: "CP 073", name: "#00 Kulaman" },
-                { val: "CP 074", name: "#00 Busdi" }, { val: "CP 075", name: "#00 Bulonay" },
-                { val: "CP 076", name: "#00 Magawa" }, { val: "CP 077", name: "#00 Magawa Bridge (Mandatory Photo Op)" },
-                { val: "CP 078", name: "#00 Lamingan" }, { val: "CP 079", name: "#00 Mintapud" },
-                { val: "CP 080", name: "#00 Gingoog Butuan Fork (turn left to Gingoog) " }, { val: "CP 081", name: "#00 Bal-ason" },
-                { val: "CP 082", name: "#00 Kahulogan" }, { val: "CP 083", name: "#00 Claveria View Deck" },
-                { val: "CP 084", name: "#00 Municipal Hall of Claveria" }, { val: "CP 085", name: "#00 Balingasag Light House" },
-                { val: "CP 086", name: "#00 Balingoan" }, { val: "CP 087", name: "#00 The Bay Gingoog" },
-                { val: "CP 088", name: "#00 Vin4 (Jurassic) Blue Waters" }, { val: "CP 089", name: "#00 Bancasi " },
-                { val: "CP 090", name: "#00 right to Amparo" }, { val: "CP 091", name: "#00 Tungao Lauan Eco Park" },
-                { val: "CP 092", name: "#00 Ezperanza Bridge" }, { val: "CP 093", name: "#00 right to Guadalupe" },
-                { val: "CP 094", name: "#00 Talacogon" }, { val: "CP 095", name: "#00 La Paz Signage" },
-                { val: "CP 096", name: "#00 Petron Loreto" }, { val: "CP 097", name: "#00 Loreto Municipal Hall" },
-                { val: "CP 098", name: "#00 Trento Rotonda" }, { val: "CP 099", name: "#00 Rotonda/711 San Francisco" },
-                { val: "CP 100", name: "#00 Bayugan Park" }, { val: "CP 101", name: "#00 Jollibee Cabadbaran" },
-                { val: "CP 102", name: "#00 Jabonga People's Park" }, { val: "CP 103", name: "#00 Hanagdong Project" },
-                { val: "CP 104", name: "#00 Looc Landmark" }, { val: "CP 105", name: "#00 Punta Bilar Lighthouse" },
-                { val: "CP 106", name: "#00 I Love Surigao" }, { val: "CP 107", name: "#00 Nabago Elementary School" },
-                { val: "CP 108", name: "#00 Claver 711" }, { val: "CP 109", name: "#00 Noventa View Deck" },
-                { val: "CP 110", name: "#00 Tandag Boulevard" }, { val: "CP 111", name: "#00 Lianga Signage" },
-                { val: "CP 112", name: "#00 Harip Beach" }, { val: "CP 113", name: "#00 Enchanted River" },
-                { val: "CP 114", name: "#00 Hinatuan Signage" }, { val: "CP 115", name: "#00 iLoveBislig" },
-                { val: "CP 116", name: "#00 Cuevas" }, { val: "CP 117", name: "#00 Monkayo" },
-                { val: "CP 118", name: "#00 Mt. Diwata" }, { val: "CP 119", name: "#00 Poblacion Boston" },
-                { val: "CP 120", name: "#00 Baganga Sunrise" }, { val: "CP 121", name: "#00 Pusan Point Caraga" },
-                { val: "CP 122", name: "#00 WOW Manay Landmark" }, { val: "CP 123", name: "#00 Dahican Rotunda" },
-                { val: "CP 124", name: "#00 DavOr Provincial Museum" }, { val: "CP 125", name: "#00 Mati Baywalk Park" },
-                { val: "CP 126", name: "#00  Mt. Hamiguitan World Heritage Park" }, { val: "CP 127", name: "#00 711/SeaOil Governor Generoso" },
-                { val: "CP 128", name: "#00 Centennial Tree General Generoso" }, { val: "CP 129", name: "#00 Cape San Agustin (Mandatory Photo Op)" },
-                { val: "CP 130", name: "#00 Manikling Rotonda" }, { val: "CP 131", name: "#00 Diocesan Shrine of Our Mother of Pertual Help" },
-                { val: "CP 132", name: "#00 711 Mawab" }, { val: "CP 133", name: "#00 Bilawa Mainit Falls (Mandatory Photo Op)" },
-                { val: "CP 134", name: "#00 Tambo View Deck" }, { val: "CP 135", name: "#00 Maragusan Landmark" },
-                { val: "CP 136", name: "#00 Saddle Road (Mandatory Photo Op)" }, { val: "CP 137", name: "#00 Nabunturan" },
-                { val: "CP 138", name: "#00 Montevista Rotonda" }, { val: "CP 139", name: "#00 Monkayo (turn left to LS Sarmiento)" },
-                { val: "CP 140", name: "#00 Casoon National HighSchool" }, { val: "CP 141", name: "#00 S Sarmiento Bridge (Mandatory Photo Op)" },
-                { val: "CP 142", name: "#00 Conception Elementary School" }, { val: "CP 143", name: "#00 Laak Municipal Hall" },
-                { val: "CP 144", name: "#00 w0w Assuncion" }, { val: "CP 145", name: "#00 Fe Misa Ayala Seniors Park" },
-                { val: "CP 146", name: "#00 ELKAPITAN 's Burial Ground " }, { val: "CP 147", name: "#00 DavNor Sports Complex" },
-                { val: "CP xx", name: "#xx Stand By Me" }
-            ],
-            "AS26": [
-                { val: "CP 00", name: "#00 Glorious Gate" }, { val: "CP 01", name: "#01 Mr. DIY" },
-                { val: "CP 02", name: "#02 Junction Paquibato - Kalagangan Rd / Calinan Rd." }, { val: "CP 03", name: "#03 New Paquibato District Hall" },
-                { val: "CP 04", name: "#04 Pungco Hill" }, { val: "CP 05", name: "#05 Junction Panaga - Tapak Road / Paquibato - Kalagangan Rd" },
-                { val: "CP 06", name: "#06 Junction Kalagangan - Talaingod Rd" }, { val: "CP 07", name: "#07 💪 Junction Bukidnon - Laak Road" },
-                { val: "CP 08", name: "#08 💪 Sitio Bulo, Brgy Namnam, San Fernando, Bukidnon" }, { val: "CP 09", name: "#09 💪 Pipisan Bridge, Sitio Pipisan, Brgy. Gupitan, Kapalong" },
-                { val: "CP 10", name: "#10 💪 Lumondong Bridge / Falls, Sitio Lumondong" }, { val: "CP 11", name: "#11 👌 Uraya's Peak Adventure Park" },
-                { val: "CP 12", name: "#12 👌 Ridge View Mountainview" }, { val: "CP 13", name: "#13 👌 Talaingod View Deck" },
-                { val: "CP 14", name: "#14 👌 Florida" }, { val: "CP 15", name: "#15 👌 Sua-on" },
-                { val: "CP 16", name: "#16 👌 Gupitan" }, { val: "CP 17", name: "#17 Junction Kili-Kili, Sitio Kili-Kili, Brgy Gupitan, Kapalong" },
-                { val: "CP 18", name: "#18 Gatnaon Road, Sitio Butoy, Gupitan, Kapalong" }, { val: "CP 19", name: "#19 Junction Imelda, Brgy. Imelda, Laak" },
-                { val: "CP 20", name: "#20 Laak ta Bai" }, { val: "CP 21", name: "#21 Sampaguita Junction Park" },
-                { val: "CP 22", name: "#22 Sta Josefa Petron" }, { val: "CP 23", name: "#23 Crossing Brgy. Angas & Brgy. Awao" },
-                { val: "CP 24", name: "#24 Awao River Crossing (A)" }, { val: "CP 25", name: "#25 Awao River Crossing (B)" },
-                { val: "CP 26", name: "#26 Awao Ticket Booth" }, { val: "CP 27", name: "#27 Awao Falls" },
-                { val: "CP 28", name: "#28 Crossing Brgy. Angas & Brgy. Awao" }, { val: "CP 29", name: "#29 INC, Monkayo" },
-                { val: "CP 30", name: "#30 JESREL STORE, Mount Diwata" }, { val: "CP 31", name: "#31 GKK Santo Niño" },
-                { val: "CP 32", name: "#32 Goldie Mark Store, Purok 1-A, Mount Diwata" }, { val: "CP 33", name: "#33 Libunao Store" },
-                { val: "CP 34", name: "#34 Tru-Cut, Diwalwal" }, { val: "CP 35", name: "#35 Petron" },
-                { val: "CP 36", name: "#36 Aliwagwag Falls Ecopark" }, { val: "CP 37", name: "#37 Manurigao Highlands 5650ft above sea level" },
-                { val: "CP 38", name: "#38 Shadol's Coffee Paste" }, { val: "CP 39", name: "#39 Maragusan Rotunda" },
-                { val: "CP 40", name: "#40 👌 Lake Leonard Eco Tourism Park" }, { val: "CP 41", name: "#41 👌 Bilawa Falls" },
-                { val: "CP 42", name: "#42 👌 711 Mawab" }, { val: "CP 43", name: "#43 💪 Araibo, Pantukan, Davao de Oro" },
-                { val: "CP 44", name: "#44 💪 Special Village, Las Arenas, Pantukan" }, { val: "CP 45", name: "#45 💪 Motor Parts, Brgy. Tagugpo, Pantukan" },
-                { val: "CP 46", name: "#46 💪 Napnapan" }, { val: "CP 47", name: "#47 💪 Jolibee Pantukan" },
-                { val: "CP FL", name: "#48 ELKAPITAN's Headstone" }, { val: "CP xx", name: "#xx Stand By Me" }
-            ]
+            "G1N": [{ val: "CP 00", name: "#00 Starting Grid" }, { val: "CP 01", name: "#01 San Fernando Municipal Plaza" }, { val: "CP 02", name: "#02 Iba Central Elementary School  25km" }, { val: "CP FL", name: "#FL Ending Grid" }],
+            "G1E": [{ val: "CP 00", name: "#00 Starting Grid" }, { val: "CP 01", name: "#01 Carmen Cannon" }, { val: "CP FL", name: "#18 Ending Grid" }],
+            "G1W": [{ val: "CP 00", name: "#00 DavNor Sports Complex (Starting Grid)" }, { val: "CP 01", name: "#01 Davao City Coastal Road" }, { val: "CP FL", name: "#17 DavNor Sports Complex (End Grid)" }],
+            "G1S": [{ val: "CP 00", name: "#00 Starting Grid" }, { val: "CP 01", name: "#01 Davao City Coastal Road" }, { val: "CP FL", name: "#22 Clossing Grid" }],
+            "G3": [{ val: "CP 00", name: "#00 Start G3" }, { val: "CP 01", name: "#07 Bukidnon Route - A" }, { val: "CP FL", name: "DavNor Sports Complex" }],
+            "G4": [{ val: "CP 00", name: "#00 Start G4 tark-tarak Riddes" }, { val: "CP FL", name: "#04 Finish Line G4" }],
+            "G5": [{ val: "CP 000", name: "#00 DavNor Sports Complex" }, { val: "CP 001", name: "#00 Davao City Coastal Road" }, { val: "CP 147", name: "#00 DavNor Sports Complex" }],
+            "AS26": [{ val: "CP 00", name: "#00 Glorious Gate" }, { val: "CP 01", name: "#01 Mr. DIY" }, { val: "CP FL", name: "#48 ELKAPITAN's Headstone" }]
         };
 
-        // ==========================================
-        // 🌟 CHECK FINISHER / EVENT STATUS & APP LOGIC
-        // ==========================================
         function checkEventStatus(riderID) {
             let appStatus = localStorage.getItem('mmc_app_status');
-            if (!appStatus) {
-                localStorage.setItem('mmc_app_status', 'T');
-                appStatus = 'T';
-            }
+            if (!appStatus) { localStorage.setItem('mmc_app_status', 'T'); appStatus = 'T'; }
 
             const eventExpiryDate = new Date('2026-10-01T00:00:00'); 
             const today = new Date();
@@ -888,7 +614,6 @@
             const idElem = document.getElementById('idNum');
             const nameElem = document.getElementById('name');
             const levelElem = document.getElementById('level');
-
             if (!idElem) return;
 
             idElem.value = savedRiderID;
@@ -917,25 +642,6 @@
 
             updateCheckpointCheckmarks(savedRiderID);
             updateRiderProgress();
-
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('./sw.js').then(registration => {
-                    registration.addEventListener('updatefound', () => {
-                        const newWorker = registration.installing;
-                        newWorker.addEventListener('statechange', () => {
-                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                let updateMsg = confirm("📢 Naay bag-ong update sa Masterlist (Database)! I-refresh nato ang app aron makuha ang bag-ong listahan?\n\n(Ayaw kabalaka, DILI mawala ang imong na-scan ug offline data.)");
-                                if (updateMsg) {
-                                    window.location.reload(true);
-                                }
-                            }
-                        });
-                    });
-                }).catch(error => {
-                    console.log("Service Worker Registration Failed:", error);
-                });
-            }
-
             initBatteryMonitor();
             showLiveLocationOnLoad();
         }
@@ -1114,19 +820,75 @@
         window.addEventListener('offline', checkRealInternet);
         setInterval(checkRealInternet, 5000);
 
+        // ==========================================
+        // 🚀 SUPABASE DATA SENDER & PHOTO UPLOADER
+        // ==========================================
+        
+        // Helper: I-convert ang Base64 Picture padulong Blob para ma-upload sa Supabase
+        function b64toBlob(b64Data, contentType='', sliceSize=512) {
+            const byteCharacters = atob(b64Data.split(',')[1]);
+            const byteArrays = [];
+            for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+                const slice = byteCharacters.slice(offset, offset + sliceSize);
+                const byteNumbers = new Array(slice.length);
+                for (let i = 0; i < slice.length; i++) {
+                    byteNumbers[i] = slice.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                byteArrays.push(byteArray);
+            }
+            return new Blob(byteArrays, {type: contentType});
+        }
+
+        // Gipulihan nato ang daan nga fetch paingon sa Google Sheet og Supabase client call
         async function sendDataToServer(dataPayload) {
             try {
-                let riderLevel = dataPayload.level ? dataPayload.level.trim() : "DEFAULT";
-                let activeScriptURL = routeScriptURLs[riderLevel] || routeScriptURLs["DEFAULT"];
+                let finalPhotoUrl = "Walay Ebidensya";
 
-                await fetch(activeScriptURL, { 
-                    method: 'POST', 
-                    mode: 'no-cors', 
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
-                    body: JSON.stringify(dataPayload) 
-                });
+                // 1. Upload Photo sa Supabase Storage (kon naay photo)
+                if (dataPayload.photo && dataPayload.photo.includes('base64')) {
+                    const blob = b64toBlob(dataPayload.photo, 'image/jpeg');
+                    const cleanCp = dataPayload.checkpoint.replace(/\s+/g, '');
+                    const fileName = `${dataPayload.idNum}_${cleanCp}_${new Date().getTime()}.jpg`;
+
+                    const { data: uploadData, error: uploadError } = await supabaseLiveClient
+                        .storage
+                        .from('photos')
+                        .upload(fileName, blob, { contentType: 'image/jpeg' });
+
+                    if (!uploadError) {
+                        const { data: publicUrlData } = supabaseLiveClient
+                            .storage
+                            .from('photos')
+                            .getPublicUrl(fileName);
+                        finalPhotoUrl = publicUrlData.publicUrl;
+                    }
+                }
+
+                // 2. Isalibay ang data sa rally_scans table
+                const { error: dbError } = await supabaseLiveClient.from('rally_scans').insert([{
+                    qr_code: dataPayload.idNum,
+                    rider_name: dataPayload.name,
+                    rider_level: dataPayload.level,
+                    checkpoint: dataPayload.checkpoint,
+                    odometer: dataPayload.odometer || 0,
+                    notes: dataPayload.notes || "",
+                    latitude: dataPayload.latitude || 0,
+                    longitude: dataPayload.longitude || 0,
+                    location_address: dataPayload.location || "",
+                    photo_url: finalPhotoUrl
+                }]);
+
+                if (dbError) {
+                    console.error("Sipyat sa database insert:", dbError.message);
+                    return false;
+                }
+
                 return true; 
-            } catch (error) { return false; }
+            } catch (error) {
+                console.error("Critical error sa pag-send:", error);
+                return false;
+            }
         }
 
         async function syncOfflineData() {
@@ -1149,7 +911,7 @@
             if (failedData.length > 0) { localStorage.setItem('offlineData', JSON.stringify(failedData)); } 
             else {
                 localStorage.removeItem('offlineData');
-                alert("✅ Naka-Sync na ang tanang Offline Data padulong sa Database!");
+                alert("✅ Naka-Sync na ang tanang Offline Data padulong sa Supabase!");
             }
             if(submitBtn) { submitBtn.textContent = "I-Submit ang Data"; submitBtn.disabled = false; }
             isSyncing = false; 
@@ -1174,7 +936,7 @@
         setInterval(updateDashboardCounters, 2000);
 
         const submitAudio = document.getElementById('submitMusic');
-        document.addEventListener("DOMContentLoaded", function() {
+        if (myForm) {
             const mainSubmitBtn = document.getElementById('mainSubmitBtn');
             if (mainSubmitBtn && submitAudio) {
                 mainSubmitBtn.addEventListener('click', function() {
@@ -1183,10 +945,7 @@
                     if (playPromise !== undefined) { playPromise.catch(e => {}); }
                 });
             }
-        });
 
-        let isSubmitting = false; 
-        if (myForm) {
             myForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 const submitBtn = myForm.querySelector('button[type="submit"]');
@@ -1236,9 +995,9 @@
                 let isDataSaved = false;
 
                 if (isStable) {
-                    if (submitBtn) submitBtn.textContent = "📍 Gipadala sa Server...";
+                    if (submitBtn) submitBtn.textContent = "📍 Gipadala sa Supabase...";
                     if (await sendDataToServer(data)) {
-                        alert("✅ Success! Check imong Google Sheet, nisulod na!");
+                        alert("✅ Success! Na-save na sa Supabase!");
                         isDataSaved = true; 
                     } else {
                         saveToOfflineStorage(data);
@@ -1275,6 +1034,8 @@
                 isSubmitting = false; 
             });
         }
+
+        let isSubmitting = false;
 
         function updateCheckpointCheckmarks(riderId) {
             const checklistDiv = document.getElementById('checklistItems');
