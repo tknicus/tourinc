@@ -21,40 +21,42 @@
         }
         .control-panel button:hover { background: #990000; }
 
-        /* 📱 RESPONSIVE EXCEL HEADER */
+        /* EXCEL HEADER (Nagtupad na gyud side-by-side sa desktop) */
         .excel-header { 
             display: flex; 
-            flex-direction: column; /* Default sa cellphone: Stacking para hayahay ug walay maputol */
-            gap: 12px; 
+            flex-direction: row; 
+            justify-content: space-between; 
+            align-items: stretch; 
             border: 2px solid #000; 
             padding: 12px; 
             background: #fdfdfd; 
             margin-bottom: 15px; 
+            gap: 15px;
         }
         .profile-side { 
-            width: 100%; 
+            flex: 1; 
             font-size: 13px; 
             font-family: Arial, sans-serif; 
-            color: #000000;
-            -webkit-font-smoothing: antialiased; 
         }
         .profile-side div { 
             margin-bottom: 6px; 
             word-break: break-word; 
-            font-weight: normal; /* Gi-normal na ang tibuok text */
+            font-weight: normal; 
             color: #000000;
         }
         .profile-side b { 
             display: inline-block; 
             width: 150px; 
-            font-weight: normal; /* Gi-panipsi o gitangtang ang bold sa mga labels sa wala */
-            color: #555555;      /* Gihimo natong medyo humok ang kolor sa label */
-        }}
+            font-weight: normal; 
+            color: #555555; 
+        }
         
-        /* Summary Box (Gi-klaro ang box ug borders) */
+        /* Summary Box (Gi-lock ang sukol aron dili ma-drop sa ilalom) */
         .summary-side { 
             border: 2px solid #000000; 
             width: 280px; 
+            min-width: 280px;
+            flex-shrink: 0;
             background: #ffffff; 
             display: flex; 
             flex-direction: column; 
@@ -72,11 +74,12 @@
             border-bottom: none; 
         }
         .summary-row span {
-            color: #555555; /* Gipatin-aw ang label */
+            color: #555555;
         }
         .summary-row b { 
             text-align: right; 
             color: #000000;
+        }
 
         /* 🖥️ DESKTOP VIEW (Kung dako ang screen, magtupad sila side-by-side) */
         @media (min-width: 768px) {
