@@ -217,7 +217,7 @@
 
             <div style="text-align: center; margin-top: 25px; padding-bottom: 20px; font-size: 12px; color: #aaa; border-top: 1px solid #333; padding-top: 15px;">
                 <p style="margin: 0; font-weight: bold; color: #ffcc00;">&copy; 2026 MasterMinds'CUP. All Rights Reserved.</p>
-                <p style="margin: 5px 0 0 0;">Build Version: <span id="appVersionText" style="color: #00ff00; font-family: monospace;">v3.6-technicus-secure</span></p>
+                <p style="margin: 5px 0 0 0;">Build Version: <span id="appVersionText" style="color: #00ff00; font-family: monospace;">v3.7-technicus-secure</span></p>
                 <p style="margin: 3px 0 0 0; font-size: 10px; color: #666;">Status: Active & Secure 🛡️</p>
             </div>
         </div>
@@ -968,13 +968,14 @@
                     isSubmitting = false; return; 
                 }
 
-                if (compressedPhotoBase64 === "") {
+                // 🛑 DIRE NIMO ISINGIT ANG PHOTO VALIDATION CHECK:
+                if (!compressedPhotoBase64 || compressedPhotoBase64 === "" || !compressedPhotoBase64.includes('base64')) {
                     if (submitAudio) { submitAudio.pause(); submitAudio.currentTime = 0; }
-                    alert("📸 DILI MA-SAVE! Palihug pagkuha og Ebidensya/Picture.");
+                    alert("📸 DILI MA-SAVE! Palihug pagkuha una og Ebidensya/Picture.");
                     if(submitBtn) { submitBtn.textContent = "I-Submit ang Data"; submitBtn.disabled = false; submitBtn.style.opacity = "1"; }
                     isSubmitting = false; return; 
                 }
-
+                
                 const data = {
                     idNum: checkId, name: checkName, checkpoint: currentCheckpoint, 
                     odometer: document.getElementById('odometer') ? document.getElementById('odometer').value : "", 
