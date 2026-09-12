@@ -7,32 +7,37 @@
     <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #111; }
-        .report-wrapper { max-width: 1250px; margin: 0 auto; background: #ffffff; padding: 25px; border: 1px solid #b5b5b5; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 10px; color: #111; }
+        .report-wrapper { max-width: 1250px; margin: 0 auto; background: #ffffff; padding: 15px; border: 1px solid #b5b5b5; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
         
-        /* Search Control Panel */
-        .control-panel { background: #1e1e1e; padding: 15px; border-radius: 6px; margin-bottom: 20px; display: flex; gap: 12px; align-items: center; color: white; }
-        .control-panel input { padding: 10px 12px; font-size: 16px; border: 1px solid #444; border-radius: 4px; width: 220px; background: #2a2a2a; color: white; }
-        .control-panel button { padding: 10px 20px; background: #cc0000; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        /* 📱 RESPONSIVE SEARCH CONTROL PANEL */
+        .control-panel { background: #1e1e1e; padding: 15px; border-radius: 6px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; color: white; }
+        .control-panel label { font-weight: bold; }
+        .control-panel input { padding: 10px 12px; font-size: 16px; border: 1px solid #444; border-radius: 4px; flex: 1; min-width: 180px; background: #2a2a2a; color: white; }
+        .control-panel button { padding: 10px 20px; background: #cc0000; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; text-transform: uppercase; width: 100%; }
+        
+        @media (min-width: 600px) {
+            .control-panel button { width: auto; } /* Mo-adjust sa desktop, mo-full width sa cellphone */
+        }
         .control-panel button:hover { background: #990000; }
 
         /* Excel-like Header Layout */
-        .excel-header { display: flex; justify-content: space-between; border: 2px solid #000; padding: 12px; background: #fdfdfd; margin-bottom: 15px; }
-        .profile-side div { margin-bottom: 6px; font-size: 14px; font-family: 'Courier New', Courier, monospace; }
+        .excel-header { display: flex; flex-wrap: wrap; justify-content: space-between; border: 2px solid #000; padding: 12px; background: #fdfdfd; margin-bottom: 15px; gap: 10px; }
+        .profile-side div { margin-bottom: 6px; font-size: 13px; font-family: 'Courier New', Courier, monospace; word-break: break-all; }
         .profile-side b { display: inline-block; width: 110px; color: #333; }
         
         /* Summary Box (Top Right) */
-        .summary-side { border: 2px solid #000; width: 280px; background: #fff; display: flex; flex-direction: column; justify-content: space-between; font-size: 13px; font-family: Arial, sans-serif; }
+        .summary-side { border: 2px solid #000; width: 100%; max-width: 280px; background: #fff; display: flex; flex-direction: column; justify-content: space-between; font-size: 13px; font-family: Arial, sans-serif; }
         .summary-row { display: flex; justify-content: space-between; border-bottom: 1px solid #000; padding: 6px 10px; }
         .summary-row:last-child { border-bottom: none; }
         .summary-row b { text-align: right; }
 
-        /* Excel Data Table */
-        table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: Arial, sans-serif; margin-top: 10px; }
+        /* 📊 TABLE RESPONSIVE WRAPPER (Para mo-scroll kung dako ra sa screen) */
+        .table-container { width: 100%; overflow-x: auto; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; font-family: Arial, sans-serif; min-width: 700px; }
         th, td { border: 1px solid #000; padding: 6px 8px; text-align: left; }
         th { background-color: #d9d9d9; text-align: center; font-weight: bold; color: #000; }
         .center { text-align: center; }
-        .right { text-align: right; }
         
         .no-data { text-align: center; padding: 40px; font-size: 16px; color: #666; font-style: italic; }
     </style>
