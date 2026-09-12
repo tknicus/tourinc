@@ -236,6 +236,10 @@
         
         const supabaseLiveClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
         
+        // 🛡️ COMPATIBILITY ALIAS: Gihimo namong pwedeng basahon ang routeConfigs gamit ang routeCheckpoints
+        const routeConfigs = typeof routeCheckpoints !== 'undefined' ? routeCheckpoints : {};
+        
+        
         // ==========================================
         // 🛠️ CUSTOM PIN PROMPT HELPER
         // ==========================================
@@ -346,10 +350,7 @@
             };
         }
 
-        // Global references para sa uban pang functions sa app
-        const routeNames = window.routeNames;
-        const routeTotalKm = window.routeTotalKm;
-        const routeConfigs = window.routeConfigs;
+
 
         async function verifyAndLogin() {
             function checkOwnTracksRequirement() {
@@ -704,14 +705,20 @@
             const dropdown = document.getElementById('checkpoint');
             if (!dropdown) return;
             dropdown.innerHTML = '<option value="" disabled selected>-- PILIA ANG CHECKPOINT --</option>';
-            let cpList = routeConfigs[riderLevel] || routeConfigs["G5"];
-            cpList.forEach(item => {
+            
+            // Kuhaon direkta gikan sa routeCheckpoints sa database.js gamit ang Object.entries
+            let cpData = (typeof routeCheckpoints !== 'undefined' && routeCheckpoints[riderLevel]) 
+                         ? routeCheckpoints[riderLevel] 
+                         : (routeCheckpoints["G5"] || {});
+
+            Object.entries(cpData).forEach(([val, name]) => {
                 let opt = document.createElement('option');
-                opt.value = item.val;
-                opt.textContent = item.name;
+                opt.value = val;
+                opt.textContent = `${val} - ${name}`;
                 dropdown.appendChild(opt);
             });
         }
+
 
         function initBatteryMonitor() {
             const batStatus = document.getElementById('batteryStatus');
@@ -1129,22 +1136,25 @@
             });
 
             let currentLevel = window.activeRiderLevel || "G5";
-            let cpList = routeConfigs[currentLevel] || routeConfigs["G5"];
+            let cpData = (typeof routeCheckpoints !== 'undefined' && routeCheckpoints[currentLevel]) 
+                         ? routeCheckpoints[currentLevel] 
+                         : (routeCheckpoints["G5"] || {});
 
             let htmlOutput = "";
             let countCompleted = 0;
             let firstUnfinishedCP = ""; 
 
-            cpList.forEach(item => {
-                let cpVal = item.val;
+            // Gigamit ang Object.entries aron hapsay makuha ang Key ug Name gikan sa object
+            Object.entries(cpData).forEach(([cpVal, cpName]) => {
                 if (completedCheckpoints.includes(cpVal)) {
-                    htmlOutput += `<span style="color: #00ff00; margin-right: 8px; display: inline-block; font-weight: bold;">✓ ${cpVal}</span>`;
+                    htmlOutput += `<span style="color: #00ff00; margin-right: 8px; display: inline-block; font-weight: bold;" title="${cpName}">✓ ${cpVal}</span>`;
                     countCompleted++;
                 } else {
-                    htmlOutput += `<span style="color: #555; margin-right: 8px; display: inline-block;">✗ ${cpVal}</span>`;
+                    htmlOutput += `<span style="color: #555; margin-right: 8px; display: inline-block;" title="${cpName}">✗ ${cpVal}</span>`;
                     if (firstUnfinishedCP === "") firstUnfinishedCP = cpVal;
                 }
             });
+            
             checklistDiv.innerHTML = countCompleted === 0 ? "<span style='color: #888;'>Wala pay na-submit nga Checkpoint.</span>" : htmlOutput;
 
             const dropdown = document.getElementById('checkpoint');
