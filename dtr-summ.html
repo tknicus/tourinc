@@ -19,33 +19,33 @@
 
         /* 📊 DTR TABLE & STICKY COLUMNS */
         .table-container { width: 100%; max-height: 80vh; overflow: auto; border: 1px solid #000; position: relative; }
-        table { border-collapse: separate; border-spacing: 0; font-size: 11px; font-family: Arial, sans-serif; min-width: 100%; }
         
-        th, td { border-right: 1px solid #ccc; border-bottom: 1px solid #ccc; padding: 6px; text-align: center; white-space: nowrap; }
+        /* SECRETO ARON DILI MA-SQUEEZE ANG TABLE */
+        table { border-collapse: separate; border-spacing: 0; font-size: 11px; font-family: Arial, sans-serif; width: max-content; min-width: 100%; }
+        
+        th, td { border-right: 1px solid #ccc; border-bottom: 1px solid #ccc; padding: 6px; text-align: center; white-space: nowrap; box-sizing: border-box; }
         th { background-color: #d9d9d9; font-weight: bold; color: #000; position: sticky; top: 0; z-index: 10; border-bottom: 2px solid #000; }
         
         /* STICKY FOOTER */
         tfoot td { position: sticky; bottom: 0; background-color: #f2f2f2; font-weight: bold; color: #cc0000; z-index: 10; border-top: 2px solid #000; border-bottom: 2px solid #000; }
         tfoot .sticky-col-3 { text-align: right; padding-right: 10px; color: #000; }
 
-        /* STICKY COLUMNS */
-        .sticky-col-1 { position: sticky; left: 0; background-color: #f3f3f3; z-index: 5; width: 35px; font-weight: bold; border-right: 1px solid #999; text-align: center; }
-        .sticky-col-2 { position: sticky; left: 36px; background-color: #f3f3f3; z-index: 5; width: 55px; font-weight: bold; border-right: 1px solid #999; color: #cc0000; text-align: center; }
-        .sticky-col-3 { position: sticky; left: 92px; background-color: #f3f3f3; z-index: 5; min-width: 160px; text-align: left; font-weight: bold; border-right: 2px solid #000; padding-left: 8px; }
+        /* EXACT WIDTHS PARA SA STICKY COLUMNS */
+        .sticky-col-1 { position: sticky; left: 0; width: 40px; min-width: 40px; max-width: 40px; background-color: #f3f3f3; z-index: 5; border-right: 1px solid #999; }
+        .sticky-col-2 { position: sticky; left: 40px; width: 60px; min-width: 60px; max-width: 60px; background-color: #f3f3f3; z-index: 5; border-right: 1px solid #999; color: #cc0000; }
+        .sticky-col-3 { position: sticky; left: 100px; width: 180px; min-width: 180px; max-width: 180px; background-color: #f3f3f3; z-index: 5; border-right: 2px solid #000; text-align: left; padding-left: 8px; overflow: hidden; text-overflow: ellipsis; }
         
-        th.sticky-col-1 { z-index: 15; background-color: #d9d9d9; }
-        th.sticky-col-2 { z-index: 15; background-color: #d9d9d9; }
-        th.sticky-col-3 { z-index: 15; background-color: #d9d9d9; }
+        th.sticky-col-1, th.sticky-col-2, th.sticky-col-3 { z-index: 15; background-color: #d9d9d9; }
         tfoot td.sticky-col-1, tfoot td.sticky-col-2, tfoot td.sticky-col-3 { z-index: 12; background-color: #e6e6e6; }
 
-        /* COLORS & CENTERED */
-        .col-duration { background-color: #f9f9f9; text-align: center; font-family: 'Courier New', Courier, monospace; font-weight: bold; }
-        .col-distance { background-color: #e2efda; text-align: center; }
-        .col-t { background-color: #fce4d6; font-weight: bold; color: #c00000; text-align: center; }
-        .col-x { background-color: #f8cbad; font-weight: bold; color: #c00000; border-right: 2px solid #000; text-align: center; }
+        /* NORMAL SCROLLING COLUMNS */
+        .col-duration { background-color: #f9f9f9; text-align: center; font-family: 'Courier New', Courier, monospace; font-weight: bold; min-width: 85px; }
+        .col-distance { background-color: #e2efda; text-align: center; min-width: 75px; }
+        .col-t { background-color: #fce4d6; font-weight: bold; color: #c00000; text-align: center; min-width: 40px; }
+        .col-x { background-color: #f8cbad; font-weight: bold; color: #c00000; border-right: 2px solid #000; text-align: center; min-width: 40px; }
 
-        .cell-scan { color: #0000cc; font-weight: bold; text-align: center; }
-        .cell-miss { color: #cc0000; text-align: center; }
+        .cell-scan { color: #0000cc; font-weight: bold; text-align: center; min-width: 35px; }
+        .cell-miss { color: #cc0000; text-align: center; min-width: 35px; }
         .no-data { text-align: center; padding: 40px; font-size: 16px; color: #666; font-style: italic; }
     </style>
 </head>
@@ -56,7 +56,7 @@
         <div class="control-panel">
             <label>ROUTE LEVEL:</label>
             <select id="routeSelect">
-                <!-- Awtomatikong sudlan ni base sa database.js -->
+                <!-- Awtomatikong sudlan sa JS -->
             </select>
             <button onclick="generateDTR()">I-GENERATE DTR</button>
         </div>
@@ -67,28 +67,62 @@
         </div>
     </div>
 
+    <!-- Tawgon ang database.js -->
     <script src="database.js"></script>
+    
     <script>
         const _supabaseUrl = 'https://iilfklquzyxmdergwawh.supabase.co';
         const _supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpbGZrbHF1enl4bWRlcmd3YXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MTkzMDcsImV4cCI6MjEwMzI5NTMwN30.jMctz666CGfTdODLqNr24O3dQ5SDM6K5GkmihCtDdBQ';
+        
         let supabaseClient = null;
+        try {
+            supabaseClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
+        } catch (e) {
+            console.error("Supabase init error:", e);
+        }
+
+        // KUMPLETONG FALLBACK GIKAN SA DATABASE.JS
+        const fallbackRouteNames = {
+            "G1N": "777 (North) MaKahulogan",
+            "G1E": "777 (East) LoCoCaMaMa",
+            "G1W": "777 (West) DaDiPaPi",
+            "G1S": "777 (South) JAS-T'Boli",
+            "G3": "3333 Conqueror's Coastal Gaming",
+            "G4": "4G IV-Wheelers Riders",
+            "G5": "5555 MAN OF STEEL",
+            "AS26": "628 ALL STAR EXTREME",
+            "G7": "7777 TOUR de FILIPINAS",
+            "G81": "888 Route 1",
+            "G82": "888 Route 2",
+            "G83": "888 Route 3"
+        };
+
+        const fallbackCheckpointsAS26 = ["CP 00","CP 01","CP 02","CP 03","CP 04","CP 05","CP 06","CP 07","CP 08","CP 09","CP 10","CP 11","CP 12","CP 13","CP 14","CP 15","CP 16","CP 17","CP 18","CP 19","CP 20","CP 21","CP 22","CP 23","CP 24","CP 25","CP 26","CP 27","CP 28","CP 29","CP 30","CP 31","CP 32","CP 33","CP 34","CP 35","CP 36","CP 37","CP 38","CP FL"];
+        
+        const fallbackRidersAS26 = [
+            { idNum: "0001", fullname: "technicus", nickname: "rayHARGG" },
+            { idNum: "0002", fullname: "Long Way Ph", nickname: "Elkapitan Jr" },
+            { idNum: "1605", fullname: "Jabla, Joshua", nickname: "JOSHUA" },
+            { idNum: "1609", fullname: "PADRONES, ROCKY", nickname: "RaKiE" },
+            { idNum: "1617", fullname: "REMOLLENO, ALEXANDER", nickname: "XRM SAKALAM" },
+            { idNum: "1634", fullname: "Galvadores, Riche Val", nickname: "Long Way PH" },
+            { idNum: "1635", fullname: "German, Henry Gulle", nickname: "technicus" }
+        ];
 
         window.onload = () => {
-            try {
-                supabaseClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
-                let select = document.getElementById('routeSelect');
-                if (typeof routeNames !== 'undefined') {
-                    for (let key in routeNames) {
-                        let option = document.createElement('option');
-                        option.value = key;
-                        option.text = `${key} - ${routeNames[key]}`;
-                        if(key === "AS26") option.selected = true;
-                        select.add(option);
-                    }
-                }
-            } catch (e) {
-                console.error("Init error:", e);
+            let select = document.getElementById('routeSelect');
+            
+            let activeRoutes = (typeof routeNames !== 'undefined') ? routeNames : fallbackRouteNames;
+
+            for (let key in activeRoutes) {
+                let option = document.createElement('option');
+                option.value = key;
+                option.text = `${key} - ${activeRoutes[key]}`;
+                if(key === "AS26") option.selected = true;
+                select.add(option);
             }
+            
+            // 👉 GITANGTANG NA ANG generateDTR() DINHI ARON DILI MO-ABLI DIRITSU
         };
 
         async function generateDTR() {
@@ -96,31 +130,14 @@
             const container = document.getElementById('dtrContent');
 
             if (!supabaseClient) {
-                container.innerHTML = `<div class="no-data" style="color: #cc0000;">❌ Error: Wala na-initialize ang Supabase.</div>`;
+                container.innerHTML = `<div class="no-data" style="color: #cc0000;">❌ Error: Wala na-initialize ang Supabase client.</div>`;
                 return;
             }
 
-            container.innerHTML = `<div class="no-data">🔄 Gikuha ang tanang data para sa rutang <b>${selectedRoute}</b>...</div>`;
+            container.innerHTML = `<div class="no-data">🔄 Gikuha ang data para sa rutang <b>${selectedRoute}</b> gikan sa Supabase...</div>`;
 
             try {
-                let expectedCPs = [];
-                if (typeof routeCheckpoints !== 'undefined' && routeCheckpoints[selectedRoute]) {
-                    expectedCPs = Object.keys(routeCheckpoints[selectedRoute]);
-                } else {
-                    throw new Error(`Wala makit-i ang checkpoint list para sa rota nga ${selectedRoute}`);
-                }
-                const totalCheckpointsCount = expectedCPs.length;
-
-                let routeRiders = [];
-                if (typeof riderDatabase !== 'undefined') {
-                    routeRiders = riderDatabase.filter(r => r.level === selectedRoute);
-                }
-
-                if (routeRiders.length === 0) {
-                    container.innerHTML = `<div class="no-data" style="color: #cc0000;">❌ Walay rider nga nakarehistro para sa rutang ${selectedRoute}.</div>`;
-                    return;
-                }
-
+                // 1. KUHAON ANG SCANS
                 let { data: allScans, error } = await supabaseClient
                     .from('rally_scans')
                     .select('*')
@@ -128,6 +145,41 @@
 
                 if (error) throw new Error(error.message);
 
+                // 2. KUHAON ANG CHECKPOINTS
+                let expectedCPs = [];
+                if (typeof routeCheckpoints !== 'undefined' && routeCheckpoints[selectedRoute]) {
+                    expectedCPs = Object.keys(routeCheckpoints[selectedRoute]);
+                } else if (selectedRoute === 'AS26') {
+                    expectedCPs = fallbackCheckpointsAS26;
+                } else if (allScans && allScans.length > 0) {
+                    let cpSet = new Set();
+                    allScans.forEach(s => { if(s.checkpoint) cpSet.add(String(s.checkpoint).trim()); });
+                    expectedCPs = Array.from(cpSet).sort();
+                }
+
+                if (expectedCPs.length === 0) {
+                    container.innerHTML = `<div class="no-data" style="color: #cc0000;">❌ Walay checkpoints nga nakita para sa ruta nga ${selectedRoute}.</div>`;
+                    return;
+                }
+
+                const totalCheckpointsCount = expectedCPs.length;
+
+                // 3. KUHAON ANG RIDERS
+                let routeRiders = [];
+                if (typeof riderDatabase !== 'undefined') {
+                    routeRiders = riderDatabase.filter(r => String(r.level).toUpperCase() === String(selectedRoute).toUpperCase());
+                } 
+                
+                if (routeRiders.length === 0 && selectedRoute === 'AS26') {
+                    routeRiders = fallbackRidersAS26;
+                }
+
+                if (routeRiders.length === 0) {
+                    container.innerHTML = `<div class="no-data" style="color: #cc0000;">❌ Walay rider nga nakarehistro para sa ruta nga ${selectedRoute}.</div>`;
+                    return;
+                }
+
+                // 4. I-GENERATE ANG HTML TABLE
                 let html = `
                     <div class="table-container">
                         <table>
@@ -153,7 +205,7 @@
                             <tbody>
                 `;
 
-                let activeRidersCountT = 0; // Pila kabuok riders ang naay T
+                let activeRidersCountT = 0;
                 let cpFooterCounts = {};
                 expectedCPs.forEach(cp => cpFooterCounts[cp] = 0);
 
@@ -203,7 +255,7 @@
                     if (hasStarted) {
                         tDisplay = totalScannedUnique;
                         xDisplay = totalCheckpointsCount - totalScannedUnique;
-                        activeRidersCountT++; // Ihapon ang aktibong rider para sa T footer
+                        activeRidersCountT++;
 
                         expectedCPs.forEach(cp => {
                             if (cpCounts[cp] > 0) {
@@ -211,8 +263,7 @@
                             }
                         });
                     } else {
-                        // Kung wala pa ni-dagan, X kay equal sa tibuok total checkpoints sa rota (e.g., 40)
-                        xDisplay = totalCheckpointsCount;
+                        xDisplay = totalCheckpointsCount; 
                     }
 
                     html += `
@@ -220,25 +271,24 @@
                             <td class="sticky-col-1">${index + 1}</td>
                             <td class="sticky-col-2">${rider.idNum}</td>
                             <td class="sticky-col-3">${rider.fullname || rider.nickname}</td>
-                            <td class="col-duration" style="text-align: center;">${durationText}</td>
-                            <td class="col-distance" style="text-align: center;">${distanceText}</td>
-                            <td class="col-t" style="text-align: center;">${tDisplay}</td>
-                            <td class="col-x" style="text-align: center;">${xDisplay}</td>
+                            <td class="col-duration">${durationText}</td>
+                            <td class="col-distance">${distanceText}</td>
+                            <td class="col-t">${tDisplay}</td>
+                            <td class="col-x">${xDisplay}</td>
                     `;
 
                     expectedCPs.forEach(cp => {
                         let count = cpCounts[cp];
                         if (count > 0) {
-                            html += `<td class="cell-scan" style="text-align: center;">${count}</td>`;
+                            html += `<td class="cell-scan">${count}</td>`;
                         } else {
-                            html += `<td class="cell-miss" style="text-align: center;"></td>`;
+                            html += `<td class="cell-miss"></td>`;
                         }
                     });
 
                     html += `</tr>`;
                 });
 
-                // 👉 FOOTER TOTALS (T = pila ka aktibong riders, X = kinatibuk-ang ihap sa riders sa rota e.g., 7)
                 let grandTotalX = routeRiders.length; 
 
                 html += `
@@ -248,8 +298,8 @@
                                     <td class="sticky-col-1" colspan="3">TOTAL</td>
                                     <td class="col-duration"></td>
                                     <td class="col-distance"></td>
-                                    <td class="col-t" style="text-align: center;">${activeRidersCountT > 0 ? activeRidersCountT : ''}</td>
-                                    <td class="col-x" style="text-align: center;">${grandTotalX}</td>
+                                    <td class="col-t">${activeRidersCountT > 0 ? activeRidersCountT : ''}</td>
+                                    <td class="col-x">${grandTotalX}</td>
                 `;
 
                 expectedCPs.forEach(cp => {
@@ -268,7 +318,7 @@
 
             } catch (err) {
                 console.error("DTR Generation Error:", err);
-                container.innerHTML = `<div class="no-data" style="color: #cc0000;">❌ Naay error nga nahitabo: <b>${err.message}</b></div>`;
+                container.innerHTML = `<div class="no-data" style="color: #cc0000; font-size: 16px;">❌ <b>Error:</b> ${err.message}</div>`;
             }
         }
     </script>
