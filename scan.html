@@ -798,16 +798,28 @@
 
         async function checkRealInternet() {
             const sigStatus = document.getElementById('signalStatus');
+            
+            // Kon ang browser mismo miingon nga offline
             if (!navigator.onLine) {
                 if (sigStatus) { sigStatus.innerHTML = "🔴 OFFLINE"; sigStatus.style.color = "#ff3333"; }
                 return;
             }
-            let isOnline = await checkInternetStability();
-            if (isOnline) {
-                if (sigStatus) { sigStatus.innerHTML = "🟢 ONLINE"; sigStatus.style.color = "#00ff00"; }
-                let offlineData = JSON.parse(localStorage.getItem('offlineData')) || [];
-                if (offlineData.length > 0) syncOfflineData(); 
-            } else {
+
+            // Sulayan nato pag-ping ang Supabase o usa ka gaan nga fetch aron masuta kung naa ba gyud tinuod nga internet
+            try {
+                let response = await fetch('https://iilfklquzyxmdergwawh.supabase.co/rest/v1/', { 
+                    method: 'HEAD', 
+                    cache: 'no-store',
+                    headers: { 'apikey': _supabaseAnonKey }
+                });
+                if (response.ok || response.status < 500) {
+                    if (sigStatus) { sigStatus.innerHTML = "🟢 ONLINE"; sigStatus.style.color = "#00ff00"; }
+                    let offlineData = JSON.parse(localStorage.getItem('offlineData')) || [];
+                    if (offlineData.length > 0) syncOfflineData(); 
+                } else {
+                    throw new Error("Server error");
+                }
+            } catch (error) {
                 if (sigStatus) { sigStatus.innerHTML = "🔴 OFFLINE"; sigStatus.style.color = "#ff3333"; }
             }
         }
