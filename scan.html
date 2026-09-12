@@ -750,11 +750,9 @@
                             const logoImg = new Image();
                             logoImg.src = 'mmc.png';
                             logoImg.onload = function() {
-                                const logoWidth = canvas.width * 0.22; 
+                                const logoWidth = canvas.width * 0.28; 
                                 const logoHeight = (logoImg.height / logoImg.width) * logoWidth;
-                                // ⬅️ DIRI NIMO ILISAN: 
-                                // Gikan sa 15 (taas), himoon natong canvas.height - logoHeight - 15 (ubos na sa wala)
-                                ctx.drawImage(logoImg, 15, canvas.height - logoHeight - 15, logoWidth, logoHeight);
+                                ctx.drawImage(logoImg, 10, canvas.height - logoHeight - 10, logoWidth, logoHeight);
                                 finalizeCanvas();
                             };
                             logoImg.onerror = function() {
