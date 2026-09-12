@@ -116,6 +116,12 @@
                 let riderLevel = riderInfo ? riderInfo.level : (scans[0].rider_level || 'G5');
                 let codeName = riderInfo ? (riderInfo.codename || 'RIDER') : 'RIDER';
 
+                // 👉 DIRI NATO TAWGON ANG NGALAN SA RUTA GIKAN SA database.js
+                let routeFullName = riderLevel; // Default kung walay makit-an
+                if (typeof routeNames !== 'undefined' && routeNames[riderLevel]) {
+                    routeFullName = `${riderLevel} - ${routeNames[riderLevel]}`;
+                }
+
                 // Pag-compute sa oras ug distansya
                 let firstScanTime = new Date(scans[0].scanned_at);
                 let lastScanTime = new Date(scans[scans.length - 1].scanned_at);
@@ -133,13 +139,20 @@
                 let speedVal = totalHours > 0 ? (totalDistance / (diffMs / (1000 * 60 * 60))).toFixed(2) : "0.00";
 
                 // Himoon ang Excel-like table HTML
+                // 👉 1. KUHAON ANG NGALAN SA RUTA GIKAN SA database.js
+                let routeFullName = riderLevel; // Default kung walay makit-an
+                if (typeof routeNames !== 'undefined' && routeNames[riderLevel]) {
+                    routeFullName = `${riderLevel} - ${routeNames[riderLevel]}`;
+                }
+
+                // 👉 2. EXCEL-LIKE HEADER HTML BLOCK
                 let html = `
                     <div class="excel-header">
                         <div class="profile-side">
                             <div><b>id number</b> <span style="font-size: 16px; font-weight: bold; color: #0000cc;">${targetId}</span></div>
                             <div><b>code name</b> ${codeName}</div>
                             <div><b>fullname</b> ${fullName}</div>
-                            <div style="margin-top: 10px; font-size: 12px; color: #555;"><b>Route Level:</b> ${riderLevel} &nbsp;|&nbsp; <b>Total Checkpoints:</b> ${scans.length}</div>
+                            <div style="margin-top: 10px; font-size: 12px; color: #555;"><b>Route Name:</b> ${routeFullName} &nbsp;|&nbsp; <b>Total Checkpoints:</b> ${scans.length}</div>
                         </div>
                         <div class="summary-side">
                             <div class="summary-row"><span>running time</span><b>${runningTimeFormatted}</b></div>
@@ -162,6 +175,7 @@
                         <tbody>
                 `;
 
+                
                 scans.forEach((scan, index) => {
                     let formattedDate = new Date(scan.scanned_at).toLocaleString();
                     

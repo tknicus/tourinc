@@ -17,6 +17,23 @@ const riderDatabase = [
 ];
 
 
+// --- ROUTE DESCRIPTIONS / FULL NAMES ---
+const routeNames = {
+    "G1N": "777 (North) MaKahulogan",
+    "G1E": "777 (East) LoCoCaMaMa",
+    "G1W": "777 (West) DaDiPaPi",
+    "G1S": "777 (South) JAS-T'Boli",
+    "G3": "3333 Conqueror's Coastal Gaming",
+    "G4": "4G IV-Wheelers Riders",
+    "G5": "5555 MAN OF STEEL",
+    "AS26": "628 ALL STAR EXTREME",
+    "G7": "7777 TOUR de FILIPINAS",
+    "G81": "888 Route 1",
+    "G82": "888 Route 2",
+    "G83": "888 Route 3"
+};
+
+
 // 2. CHECKPOINT & ROUTE DIRECTORY (Para sa 8 ka Ruta)
 // Pwede nimong usbon ang "AS26", "G5", "G1S" base sa saktong pangalan sa level/ruta sa imong riders.
 const routeCheckpoints = {
