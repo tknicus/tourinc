@@ -713,37 +713,53 @@
                                 return `${d}° ${m}' ${s}" ${dir}`;
                             }
 
-                            // Ibutang ang text timestamp ug coordinates sa ubos sa litrato
-                            ctx.fillStyle = "white";
-                            ctx.strokeStyle = "black"; 
-                            ctx.lineWidth = 3;
-                            ctx.font = "bold 16px Arial"; 
-                            ctx.textAlign = "right";
+                            // Function para i-render ang text ug optional logo
+                            const finalizeCanvas = () => {
+                                ctx.fillStyle = "white";
+                                ctx.strokeStyle = "black"; 
+                                ctx.lineWidth = 3;
+                                ctx.font = "bold 16px Arial"; 
+                                ctx.textAlign = "right";
 
-                            const idElem = document.getElementById('idNum');
-                            const nameElem = document.getElementById('name');
-                            const riderID = idElem && idElem.value ? idElem.value : "WALA I-SCAN";
-                            const riderName = nameElem && nameElem.value ? nameElem.value : "Wala Kaila";
-                        
-                            const now = new Date();
-                            const militaryDateTime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+                                const idElem = document.getElementById('idNum');
+                                const nameElem = document.getElementById('name');
+                                const riderID = idElem && idElem.value ? idElem.value : "WALA I-SCAN";
+                                const riderName = nameElem && nameElem.value ? nameElem.value : "Wala Kaila";
+                            
+                                const now = new Date();
+                                const militaryDateTime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
 
-                            ctx.strokeText(`ID: ${riderID} (${riderName})`, canvas.width - 10, canvas.height - 55);
-                            ctx.fillText(`ID: ${riderID} (${riderName})`, canvas.width - 10, canvas.height - 55);
+                                ctx.strokeText(`ID: ${riderID} (${riderName})`, canvas.width - 10, canvas.height - 55);
+                                ctx.fillText(`ID: ${riderID} (${riderName})`, canvas.width - 10, canvas.height - 55);
 
-                            ctx.strokeText(`Date/Time: ${militaryDateTime}`, canvas.width - 10, canvas.height - 35);
-                            ctx.fillText(`Date/Time: ${militaryDateTime}`, canvas.width - 10, canvas.height - 35);
+                                ctx.strokeText(`Date/Time: ${militaryDateTime}`, canvas.width - 10, canvas.height - 35);
+                                ctx.fillText(`Date/Time: ${militaryDateTime}`, canvas.width - 10, canvas.height - 35);
 
-                            ctx.strokeText(`${convertToDMS(globalLat, true)}, ${convertToDMS(globalLon, false)}`, canvas.width - 10, canvas.height - 15);
-                            ctx.fillText(`${convertToDMS(globalLat, true)}, ${convertToDMS(globalLon, false)}`, canvas.width - 10, canvas.height - 15);
+                                ctx.strokeText(`${convertToDMS(globalLat, true)}, ${convertToDMS(globalLon, false)}`, canvas.width - 10, canvas.height - 15);
+                                ctx.fillText(`${convertToDMS(globalLat, true)}, ${convertToDMS(globalLon, false)}`, canvas.width - 10, canvas.height - 15);
 
-                            // Gihimo na natong diretsong kuha ang base64 aron dili ma-stock sa logo loading
-                            compressedPhotoBase64 = canvas.toDataURL("image/jpeg", 0.5);
-                            const photoPreview = document.getElementById('photoPreview');
-                            if (photoPreview) {
-                                photoPreview.src = compressedPhotoBase64;
-                                photoPreview.style.display = "block";
-                            }
+                                compressedPhotoBase64 = canvas.toDataURL("image/jpeg", 0.5);
+                                const photoPreview = document.getElementById('photoPreview');
+                                if (photoPreview) {
+                                    photoPreview.src = compressedPhotoBase64;
+                                    photoPreview.style.display = "block";
+                                }
+                            };
+
+                            // Sulayan nato pag-load ang mmc.png logo sa ibabaw sa litrato
+                            const logoImg = new Image();
+                            logoImg.src = 'mmc.png';
+                            logoImg.onload = function() {
+                                const logoWidth = canvas.width * 0.22; 
+                                const logoHeight = (logoImg.height / logoImg.width) * logoWidth;
+                                // Ibutang sa ibabaw nga bahin (top-left) o as needed
+                                ctx.drawImage(logoImg, 15, 15, logoWidth, logoHeight);
+                                finalizeCanvas();
+                            };
+                            logoImg.onerror = function() {
+                                // Kung offline o walay makit-an nga logo, i-padayon gihapon ang pagbutang sa text!
+                                finalizeCanvas();
+                            };
                         };
                         img.src = e.target.result;
                     };
