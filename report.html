@@ -117,10 +117,13 @@
                 let codeName = riderInfo ? (riderInfo.codename || 'RIDER') : 'RIDER';
 
                 // 👉 KUHAON ANG NGALAN SA RUTA GIKAN SA database.js (routeNames)
-                let routeFullName = riderLevel; 
+                let routeFullName = riderLevel; // Fallback kung walay makit-an
                 if (typeof routeNames !== 'undefined' && routeNames[riderLevel]) {
-                    routeFullName = `${riderLevel} - ${routeNames[riderLevel]}`;
+                    routeFullName = routeNames[riderLevel]; // Ngalan ra gyud ang kuhaon!
                 }
+
+
+
 
                 // Pag-compute sa oras ug distansya
                 let firstScanTime = new Date(scans[0].scanned_at);
