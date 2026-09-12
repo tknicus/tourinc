@@ -87,6 +87,16 @@
         .back-btn:hover {
             background-color: #990000;
         }
+
+        .distance-badge {
+            background: #222;
+            color: #00ff00;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            border: 1px solid #444;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
@@ -116,7 +126,7 @@
             <div id="distanceBadge" class="distance-badge" style="display: none;">Total: 0 KM</div>
 
             <button class="action-btn" onclick="switchRoute()">🔄 Refresh Live Riders</button>
-            <button class="action-btn back-btn" onclick="window.location.href='index.html'">🔙 Home</button>
+            <button class="action-btn back-btn" onclick="window.location.href='scan.html'">🔙 Scanner</button>
         </div>
     </header>
 
@@ -130,8 +140,7 @@
         // 🛰️ SUPABASE CONFIGURATION
         // ==========================================
         const _supabaseUrl = 'https://iilfklquzyxmdergwawh.supabase.co';
-        const _supabaseAnonKey = 'sb_publishable_xO3twPzyDBLhdltnkwoS3w_xswYLyf_';
-        //const _supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6lpbGZrbHF1enl4bWRlcmd3YXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MTkzMDcsImV4cCI6MjEwMzI5NTMwN30.jMctz666CGfTdODLqNr24O3dQ5SDM6K5GkmihCtDdBQ';
+        const _supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpbGZrbHF1enl4bWRlcmd3YXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MTkzMDcsImV4cCI6MjEwMzI5NTMwN30.jMctz666CGfTdODLqNr24O3dQ5SDM6K5GkmihCtDdBQ';
         
         const supabaseLiveClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
 
@@ -141,27 +150,26 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);`
+        }).addTo(map);
 
         let markerLayer = L.layerGroup().addTo(map);
         let routePolylineLayer = L.layerGroup().addTo(map);
 
         // 🎨 MGA KOLOR PARA SA MATAG ROTA (Color Coding)
         const routeColors = {
-            "G83": "#ff0000",  // Pula (Red) - 888 3
-            "G82": "#ff0000",  // Pula (Red) - 888 2
-            "G81": "#ff0000",  // Pula (Red) - 888 1
-            "G5": "#ff0000",   // Pula (Red) - Man of Steel
-            "G3": "#0088ff",   // Asul (Blue) - Coastal Gaming
-            "AS26": "#00ff00", // Berde (Green) - 628 All Star
-            "G4": "#ff9900",   // Orange - Talaingod
-            "G1N": "#ff00ff",  // Magenta/Pink - North
-            "G1E": "#ffff00",  // Yellow - East
-            "G1W": "#00ffff",  // Cyan - West
-            "G1S": "#9900ff"   // Violet - South
+            "G83": "#ff0000",  
+            "G82": "#ff0000",  
+            "G81": "#ff0000",  
+            "G5": "#ff0000",   
+            "G3": "#0088ff",   
+            "AS26": "#00ff00", 
+            "G4": "#ff9900",   
+            "G1N": "#ff00ff",  
+            "G1E": "#ffff00",  
+            "G1W": "#00ffff",  
+            "G1S": "#9900ff"   
         };
 
-        // 👇 DIRIA NIMO ISINGIT ANG CREATECOLOREDICON FUNCTION 👇
         function createColoredIcon(colorHex) {
             return L.divIcon({
                 className: 'custom-pin',
@@ -171,19 +179,7 @@
             });
         }
 
-        // 🌐 MGA LAHI-LAHI NGA SCRIPT URL PARA SA MATAG ROTA (Multi-Database Routing)
-        // Ibutang dinhi ang mga tinuod nga Web App URLs sa tagsa-tagsa nimo ka Google Sheets
-        
-        function createColoredIcon(colorHex) {
-            return L.divIcon({
-                className: 'custom-pin',
-                html: `<div style="background-color: ${colorHex}; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.8);"></div>`,
-                iconSize: [16, 16],
-                iconAnchor: [8, 8]
-            });
-        }
-
-        // 2. IMONG MGA ROTA COORDINATES (Kung asa nimo gibutang ang routesData)
+        // 2. IMONG MGA ROTA COORDINATES
         const routesData = {
             "G1N": [
                 [7.454081, 125.782316], // 	- Starting Grid
@@ -526,7 +522,7 @@
                 [7.829528, 125.479180], //	-		Pipisan Bridge, Sitio Pipisan, Brgy. Gupitan, Kapalong, Davao del Norte
                 [7.841551, 125.512050], //	-		Lumondong Bridge / Falls, Sitio Lumondong, Brgy Gupitan, Kapalong, Davao del Norte
                 [7.818524, 125.621125], //	-		Junction Kili-Kili, Sitio Kili-Kili, Brgy Gupitan, Kapalong, Davao del Norte
-                [7.843550, 125.675869], //	-		Gatnaon Road, Sitio Butoy, Gupitan, Kapalong, Davao del Norte
+
                 [7.799224, 125.755219], //	-		Junction Imelda, Brgy. Imelda, Laak, Davao de Oro
                 [7.818617, 125.791668], //	-		Laak ta Bai
                 [8.021254, 125.950122], //	-		Sampaguita Junction Park
@@ -704,7 +700,7 @@
             ]
         };
 
-        // Function sa pag-ilis sa ruta inig pili sa dropdown (Mosumbalik sa OSRM ug mosulod sa saktong Database)
+        // Function sa pag-ilis sa ruta inig pili sa dropdown
         async function switchRoute() {
             let selectedKey = document.getElementById('routeSelect').value;
             let badge = document.getElementById('distanceBadge');
@@ -713,7 +709,7 @@
 
             if (!routesData[selectedKey] || routesData[selectedKey].length < 2) {
                 badge.style.display = "none";
-                loadRidersToMap("none"); 
+                loadRidersToMap(selectedKey); 
                 return;
             }
 
@@ -752,13 +748,12 @@
         }
 
         // 4. KUHAON ANG LIVE RIDERS DIREKTA GIKAN SA SUPABASE TABLE (rally_scans)
-        async function loadRidersToMap(selectedRoute = "none") {
+        async function loadRidersToMap(selectedRoute = "all") {
             markerLayer.clearLayers();
 
             if (selectedRoute === "none") return;
 
             try {
-                // Kuhaon ang tanang scans gikan sa Supabase table nga walay pabor-pabor
                 let { data, error } = await supabaseLiveClient
                     .from('rally_scans')
                     .select('*');
@@ -773,13 +768,12 @@
                     return;
                 }
 
-                // Aron makuha nato ang pinakabag-o nga log sa matag rider
+                // Aron makuha ang pinakabag-o nga log sa matag rider
                 let latestRidersMap = {};
                 data.forEach(rider => {
-                    // Siguruhon nga sakto ang pagbasa sa QR / ID
                     let rId = rider.qr_code || rider.idNum;
                     if (rId) {
-                        latestRidersMap[rId] = rider; // Overwrite aron ang pinakabag-o ang mabilin
+                        latestRidersMap[rId] = rider;
                     }
                 });
 
@@ -788,19 +782,19 @@
                     let lon = parseFloat(rider.longitude);
                     let routeKey = rider.rider_level || "G5";
                     
-                    // Kung ang gipili sa dropdown dili "all", i-filter nato (gi-handle ang case-insensitive)
+                    // Filter base sa napili sa dropdown kung dili "all"
                     if (selectedRoute !== "all") {
                         if (routeKey.toUpperCase() !== selectedRoute.toUpperCase()) {
-                            return; // Laktawan kung dili parehas ang rota
+                            return; 
                         }
                     }
 
-                    let pinColor = routeColors[routeKey] || "#ff9900"; // Default orange kung walay color
+                    let pinColor = routeColors[routeKey] || "#ff9900"; 
 
                     if (!isNaN(lat) && !isNaN(lon) && lat !== 0 && lon !== 0) {
                         let formattedTime = "Wala";
-                        if (rider.created_at) {
-                            let d = new Date(rider.created_at);
+                        if (rider.scanned_at || rider.created_at) {
+                            let d = new Date(rider.scanned_at || rider.created_at);
                             formattedTime = d.toLocaleString('en-PH', {
                                 timeZone: 'Asia/Manila',
                                 month: 'short', day: 'numeric',
