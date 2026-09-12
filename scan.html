@@ -441,33 +441,40 @@
             }
         }
 
-        function setupLogoLongPress(logoElement) {
-            if (!logoElement) return;
-            let pressTimer;
+        function setupOwnTracksOneTapButton(riderId) {
+            if (localStorage.getItem("mmc_owntracks_configured_" + riderId) === "true") {
+                const setupContainer = document.getElementById("setupOwntracksContainer");
+                if (setupContainer) setupContainer.style.display = "none";
+                return;
+            }
 
-            logoElement.addEventListener('contextmenu', e => e.preventDefault());
-
-            const startPress = (e) => {
-                e.preventDefault();
-                clearTimeout(pressTimer);
-                pressTimer = setTimeout(async () => {
-                    let passcode = await customPinPrompt("👑 ADMIN PANEL", "Pagsulod og Admin Passcode:");
-                    if (!passcode) return;
-                    if (typeof riderDatabase === 'undefined') return;
-
-                    const hashedInput = await sha256Hash(passcode);
-                    let validAdmin = riderDatabase.find(r => r.passcode === hashedInput && (r.idNum === "0000" || r.idNum === "0001" || r.idNum === "0003"));
-
-                    if (validAdmin) window.location.href = 'menu.html';
-                    else alert("❌ Sayop nga Passcode o dili ka awtorisado nga Admin!");
-                }, 2500);
+            const configJson = {
+                "_type": "configuration", "mode": 3,
+                "url": "https://iilfklquzyxmdergwawh.supabase.co/functions/v1/owntracks-webhook?rider_id=" + riderId,
+                "username": "rider_" + riderId, "deviceId": "phone", "tid": riderId.slice(-2),
+                "locatorDisplacement": 100, "locatorInterval": 120
             };
 
-            const cancelPress = () => clearTimeout(pressTimer);
-            logoElement.addEventListener('pointerdown', startPress);
-            logoElement.addEventListener('pointerup', cancelPress);
-            logoElement.addEventListener('pointercancel', cancelPress);
-            logoElement.addEventListener('pointerleave', cancelPress);
+            const base64Config = btoa(JSON.stringify(configJson));
+            const oneTapConfigUrl = `owntracks:///config?inline=${base64Config}`;
+            const oneTapBtn = document.getElementById("oneTapConfigBtn");
+            const setupContainer = document.getElementById("setupOwntracksContainer");
+            
+            if (oneTapBtn && setupContainer) {
+                setupContainer.style.display = "block";
+                oneTapBtn.onclick = function(e) {
+                    let userAgent = navigator.userAgent || navigator.vendor || window.opera;
+                    // Tsekon kung mobile phone ba gyud
+                    if (/android|iphone|ipad|ipod/i.test(userAgent)) {
+                        window.location.href = oneTapConfigUrl;
+                    } else {
+                        e.preventDefault();
+                        alert("⚠️ Ang OwnTracks One-Tap Config kay para ra sa Mobile Phone (Android/iOS). Palihug ablihi kini nga website sa imong selpon.");
+                    }
+                    localStorage.setItem("mmc_owntracks_configured_" + riderId, "true");
+                    setTimeout(() => { setupContainer.style.display = "none"; }, 500);
+                };
+            }
         }
 
         function setupSignalTripleTap() {
