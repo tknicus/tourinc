@@ -931,7 +931,7 @@
             if (failedData.length > 0) { localStorage.setItem('offlineData', JSON.stringify(failedData)); } 
             else {
                 localStorage.removeItem('offlineData');
-                alert("✅ Naka-Sync na ang tanang Offline Data padulong sa Supabase!");
+                alert("✅ Naka-Sync na ang tanang Offline Data padulong sa MasterMinds'CUP database");
             }
             if(submitBtn) { submitBtn.textContent = "I-Submit ang Data"; submitBtn.disabled = false; }
             isSyncing = false; 
@@ -1016,9 +1016,9 @@
                 let isDataSaved = false;
 
                 if (isStable) {
-                    if (submitBtn) submitBtn.textContent = "📍 Gipadala sa Supabase...";
+                    if (submitBtn) submitBtn.textContent = "📍 Gipadala sa Database...";
                     if (await sendDataToServer(data)) {
-                        alert("✅ Success! Na-save na sa Supabase!");
+                        alert("✅ Success! Na-save na sa MasterMinds'CUP Database!");
                         isDataSaved = true; 
                     } else {
                         saveToOfflineStorage(data);
