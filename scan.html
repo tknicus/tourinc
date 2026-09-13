@@ -237,8 +237,9 @@
         const supabaseLiveClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
         
         // 🛡️ COMPATIBILITY ALIAS: Gihimo namong pwedeng basahon ang routeConfigs gamit ang routeCheckpoints
-        const routeConfigs = typeof routeCheckpoints !== 'undefined' ? routeCheckpoints : {};
-        
+        //const routeConfigs = typeof routeCheckpoints !== 'undefined' ? routeCheckpoints : {};
+        // 🛡️ COMPATIBILITY ALIAS: Gihimo namong pwedeng basahon ang routeConfigs gamit ang routeCheckpoints
+        window.routeConfigs = (typeof routeCheckpoints !== 'undefined') ? routeCheckpoints : {};
         
         // ==========================================
         // 🛠️ CUSTOM PIN PROMPT HELPER
@@ -304,7 +305,7 @@
             window.routeTotalKm = { "G1N": 777, "G1E": 777, "G1W": 777, "G1S": 777, "G3": 3333, "G4": 444, "G5": 5555, "AS26": 628 };
         }
 
-        if (typeof window.routeConfigs === 'undefined') {
+        if (Object.keys(window.routeConfigs).length === 0) {
             window.routeConfigs = {
                 "G1N": [
                     { val: "CP 00", name: "#00 Starting Grid" }, 
@@ -521,6 +522,61 @@
             }
         }
 
+        function setupLogoLongPress(logoElement) {
+            if (!logoElement) return;
+            let pressTimer;
+
+            const startPress = (e) => {
+                pressTimer = window.setTimeout(async () => {
+                    let currentMarshalStatus = localStorage.getItem('tourIsMarshal') === "true";
+                    const scanQrBtn = document.getElementById('scanQrBtn');
+
+                    if (!currentMarshalStatus) {
+                        let passcode = await customPinPrompt("🕵️‍♂️ ADMIN OVERRIDE", "Pagsulod og Admin/Marshal Passcode:");
+                        if (!passcode) return;
+
+                        if (typeof riderDatabase !== 'undefined') {
+                            let hashedInput = await sha256Hash(passcode); 
+                            let validMarshal = riderDatabase.find(r => r.passcode === hashedInput && r.isMarshal === true);     
+                            
+                            if (validMarshal) {
+                                localStorage.setItem('marshalMode', 'true'); 
+                                localStorage.setItem('tourIsMarshal', 'true');
+                                if (scanQrBtn) scanQrBtn.style.display = "block"; 
+                                alert(`🔓 ADMIN OVERRIDE ON! Welcome, Master ${validMarshal.fullname}!`);
+                            } else { 
+                                alert("❌ Sayop nga Passcode!"); 
+                            }
+                        }
+                    } else {
+                        if (confirm("🔒 Naka-Admin Mode na ka. Gusto nimo i-lock ug ibalik sa Regular Rider Mode?")) {
+                            localStorage.setItem('marshalMode', 'false');
+                            localStorage.setItem('tourIsMarshal', 'false');
+                            if (scanQrBtn) scanQrBtn.style.display = "none"; 
+                            alert("🔒 Naka-Rider Mode na ang app.");
+                        }
+                    }
+                }, 2000); // 2000 ms = 2 seconds nga tuplok para mogawas
+            };
+
+            const cancelPress = () => {
+                clearTimeout(pressTimer);
+            };
+
+            // Para sa Mouse (Laptop/PC)
+            logoElement.addEventListener('mousedown', startPress);
+            logoElement.addEventListener('mouseup', cancelPress);
+            logoElement.addEventListener('mouseleave', cancelPress);
+            
+            // Para sa Touch (Cellphone)
+            logoElement.addEventListener('touchstart', startPress, {passive: true});
+            logoElement.addEventListener('touchend', cancelPress);
+            logoElement.addEventListener('touchcancel', cancelPress);
+        }
+
+
+
+
         document.addEventListener("DOMContentLoaded", function() {
             setupLogoLongPress(document.getElementById('loginLogo'));
             setupLogoLongPress(document.getElementById('masterMindsLogo'));
@@ -711,19 +767,27 @@
         function populateCheckpointsByLevel(riderLevel) {
             const dropdown = document.getElementById('checkpoint');
             if (!dropdown) return;
-            dropdown.innerHTML = '<option value="" disabled selected>-- PILIA ANG CHECKPOINT --</option>';
+            dropdown.innerHTML = '<option value="" disabled selected>-- PILIA ANG CHECKPOINT -- (I-scan usa ang Rider)</option>';
             
-            // Kuhaon direkta gikan sa routeCheckpoints sa database.js gamit ang Object.entries
-            let cpData = (typeof routeCheckpoints !== 'undefined' && routeCheckpoints[riderLevel]) 
-                         ? routeCheckpoints[riderLevel] 
-                         : (routeCheckpoints["G5"] || {});
+            // Gamiton ang window.routeConfigs nga siguradong walay error
+            let cpData = window.routeConfigs[riderLevel] || window.routeConfigs["G5"] || [];
 
-            Object.entries(cpData).forEach(([val, name]) => {
-                let opt = document.createElement('option');
-                opt.value = val;
-                opt.textContent = `${val} - ${name}`;
-                dropdown.appendChild(opt);
-            });
+            // Bulletproof checker: kung Array ba siya o Object
+            if (Array.isArray(cpData)) {
+                cpData.forEach(cp => {
+                    let opt = document.createElement('option');
+                    opt.value = cp.val;
+                    opt.textContent = `${cp.val} - ${cp.name}`;
+                    dropdown.appendChild(opt);
+                });
+            } else {
+                Object.entries(cpData).forEach(([val, name]) => {
+                    let opt = document.createElement('option');
+                    opt.value = val;
+                    opt.textContent = `${val} - ${name}`;
+                    dropdown.appendChild(opt);
+                });
+            }
         }
 
 
@@ -1143,24 +1207,33 @@
             });
 
             let currentLevel = window.activeRiderLevel || "G5";
-            let cpData = (typeof routeCheckpoints !== 'undefined' && routeCheckpoints[currentLevel]) 
-                         ? routeCheckpoints[currentLevel] 
-                         : (routeCheckpoints["G5"] || {});
+            let cpData = window.routeConfigs[currentLevel] || window.routeConfigs["G5"] || [];
 
             let htmlOutput = "";
             let countCompleted = 0;
             let firstUnfinishedCP = ""; 
 
-            // Gigamit ang Object.entries aron hapsay makuha ang Key ug Name gikan sa object
-            Object.entries(cpData).forEach(([cpVal, cpName]) => {
-                if (completedCheckpoints.includes(cpVal)) {
-                    htmlOutput += `<span style="color: #00ff00; margin-right: 8px; display: inline-block; font-weight: bold;" title="${cpName}">✓ ${cpVal}</span>`;
-                    countCompleted++;
-                } else {
-                    htmlOutput += `<span style="color: #555; margin-right: 8px; display: inline-block;" title="${cpName}">✗ ${cpVal}</span>`;
-                    if (firstUnfinishedCP === "") firstUnfinishedCP = cpVal;
-                }
-            });
+            if (Array.isArray(cpData)) {
+                cpData.forEach(cp => {
+                    if (completedCheckpoints.includes(cp.val)) {
+                        htmlOutput += `<span style="color: #00ff00; margin-right: 8px; display: inline-block; font-weight: bold;" title="${cp.name}">✓ ${cp.val}</span>`;
+                        countCompleted++;
+                    } else {
+                        htmlOutput += `<span style="color: #555; margin-right: 8px; display: inline-block;" title="${cp.name}">✗ ${cp.val}</span>`;
+                        if (firstUnfinishedCP === "") firstUnfinishedCP = cp.val;
+                    }
+                });
+            } else {
+                Object.entries(cpData).forEach(([cpVal, cpName]) => {
+                    if (completedCheckpoints.includes(cpVal)) {
+                        htmlOutput += `<span style="color: #00ff00; margin-right: 8px; display: inline-block; font-weight: bold;" title="${cpName}">✓ ${cpVal}</span>`;
+                        countCompleted++;
+                    } else {
+                        htmlOutput += `<span style="color: #555; margin-right: 8px; display: inline-block;" title="${cpName}">✗ ${cpVal}</span>`;
+                        if (firstUnfinishedCP === "") firstUnfinishedCP = cpVal;
+                    }
+                });
+            }
             
             checklistDiv.innerHTML = countCompleted === 0 ? "<span style='color: #888;'>Wala pay na-submit nga Checkpoint.</span>" : htmlOutput;
 
