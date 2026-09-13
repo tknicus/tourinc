@@ -85,13 +85,60 @@
         const { data, error } = await dbClient
             .from('tour_members')
             .select('*')
-            .order('id', { ascending: true }); // <--- Mao kini ang magpa-sunod sa ID!
+            .order('id', { ascending: true }); 
         
         if (error) { alert("Error sa Supabase: " + error.message); return; }
         
         allMembers = data || [];
         document.getElementById('memberCount').innerText = allMembers.length;
-        displayTable(allMembers);
+        
+        // Imbes i-display ang tanan, magbutang lang ta og instruction nga walay sulod nga data
+        const tbody = document.getElementById('membersTableBody');
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #777;">🔍 I-type ang ngalan, ID, o A.K.A. sa search box aron mogawas ang listahan.</td></tr>`;
+    }
+
+    function displayTable(members) {
+        const tbody = document.getElementById('membersTableBody');
+        tbody.innerHTML = '';
+
+        if (!members || members.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #ff3333;">❌ Walay nakit-an nga miyembro.</td></tr>`;
+            return;
+        }
+
+        members.forEach(member => {
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><b>${member.id || ''}</b></td>
+                <td>${member.full_name || ''}</td>
+                <td>${member.aka || ''}</td>
+                <td>${member.contact_no || ''}</td>
+                <td>${member.motor_make || ''}</td>
+                <td><span style="color: ${member.ms === 'ACTIVE' ? '#00ff00' : '#ff9900'};">${member.ms || ''}</span></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // ==========================================
+    // 🔍 SEARCH / FILTER TABLE
+    // ==========================================
+    function filterTable() {
+        const query = document.getElementById('searchBox').value.toLowerCase().trim();
+        
+        // Kung gi-erase ang gi-type (na-blangko balik ang search box), tagoan nato balik ang listahan
+        if (!query) {
+            const tbody = document.getElementById('membersTableBody');
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #777;">🔍 I-type ang ngalan, ID, o A.K.A. sa search box aron mogawas ang listahan.</td></tr>`;
+            return;
+        }
+
+        const filtered = allMembers.filter(m => 
+            (m.full_name && String(m.full_name).toLowerCase().includes(query)) ||
+            (m.id && String(m.id).toLowerCase().includes(query)) ||
+            (m.aka && String(m.aka).toLowerCase().includes(query))
+        );
+        displayTable(filtered);
     }
 
     function displayTable(members) {
