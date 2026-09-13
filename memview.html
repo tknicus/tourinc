@@ -125,19 +125,22 @@
     // ==========================================
     function filterTable() {
         const query = document.getElementById('searchBox').value.toLowerCase().trim();
-        
-        // Kung gi-erase ang gi-type (na-blangko balik ang search box), tagoan nato balik ang listahan
-        if (!query) {
-            const tbody = document.getElementById('membersTableBody');
+        const tbody = document.getElementById('membersTableBody');
+
+        // KUNG BLANGKO ANG SEARCH BOX (gi-erase ang gi-type)
+        if (query === "") {
+            // I-clear ang listahan ug ibalik ang instruction
             tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #777;">🔍 I-type ang ngalan, ID, o A.K.A. sa search box aron mogawas ang listahan.</td></tr>`;
-            return;
+            return; // Undang diri aron dili niya i-load ang tanan
         }
 
+        // KUNG NAAY GI-TYPE SA SEARCH BOX, I-FILTER ANG LISTAHAN
         const filtered = allMembers.filter(m => 
             (m.full_name && String(m.full_name).toLowerCase().includes(query)) ||
             (m.id && String(m.id).toLowerCase().includes(query)) ||
             (m.aka && String(m.aka).toLowerCase().includes(query))
         );
+        
         displayTable(filtered);
     }
 
