@@ -13,7 +13,7 @@ const riderDatabase = [
     { idNum: "1609", fullname: "PADRONES, ROCKY", nickname: "RaKiE", level: "AS26", category: "LONEWOLF", classification: "MASTER", vehicle: "", passcode: "e40e0225f947f1ae6cba2245dd9a1a50361512bb718c1ca1ce3f983fe3b3aa4e", isMarshal: false },
     { idNum: "1617", fullname: "REMOLLENO, ALEXANDER ", nickname: "XRM SAKALAM", level: "AS26", category: "LONEWOLF", classification: "MASTER", vehicle: "", passcode: "9f2ca3ad31656671b9e0bf12509c9e71dac5b8e8834145767f684bf193945d33", isMarshal: false },
     { idNum: "1634", fullname: "Galvadores, Riche Val", nickname: "Long Way PH", level: "AS26", category: "LONEWOLF", classification: "MASTER", vehicle: "", passcode: "0", isMarshal: false },
-    { idNum: "1635", fullname: "German, Henry Gulle", nickname: "technicus", level: "AS26", category: "LONEWOLF", classification: "MASTER", vehicle: "", passcode: "0", isMarshal: false }
+    { idNum: "1635", fullname: "German, Henry Gulle", nickname: "technicus", level: "AS26", category: "LONEWOLF", classification: "MASTER", vehicle: "", passcode: "0", isMarshal: false },
     { idNum: "1636", fullname: "WAWAY", nickname: "wa way", level: "G3", category: "LONEWOLF", classification: "MASTER", vehicle: "Doming", passcode: "6161b2838ffa6ce17b84db3b45b4f8437855ecf43e75de2d1ad0008eaae91aa0", isMarshal: false }
 ];
 
