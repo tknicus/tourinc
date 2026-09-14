@@ -102,7 +102,6 @@
             font-weight: bold;
         }
 
-
         /* ========================================== */
         /* 🪟 TRANSPARENT GLASS POP-UP BOX           */
         /* ========================================== */
@@ -188,6 +187,17 @@
         }
 
         // ==========================================
+        // 🚀 FAST LOOKUP DICTIONARY (ANTI-HANG SYSTEM)
+        // ==========================================
+        const riderDict = {};
+        // Pag-load sa panid, isulod tanan riders sa dictionary para kilat ra ang pagpangita
+        if (typeof riderDatabase !== 'undefined' && Array.isArray(riderDatabase)) {
+            riderDatabase.forEach(r => {
+                riderDict[String(r.idNum)] = r;
+            });
+        }
+
+        // ==========================================
         // 📏 HAVERSINE DISTANCE FORMULA (METERS)
         // ==========================================
         function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
@@ -220,11 +230,10 @@
         }
 
         if (!window.riderHistory) window.riderHistory = {};
-        const riderMarkers = {};
+        const riderMarkers = {}; // Ebidensya kinsay naa na sa mapa
 
         // 🎯 MGA VARIABLES PARA SA "FOLLOW MODE"
         let trackedRiderId = null;
-        let isRefreshing = false;
 
         // ==========================================
         // 🎨 ROUTE COLOR & LABEL MAPPER FUNCTION
@@ -246,7 +255,7 @@
         }
 
         // ==========================================
-        // 📡 FETCH & UPDATE RIDERS LOCATION
+        // 📡 FETCH & SMOOTH UPDATE RIDERS LOCATION
         // ==========================================
         async function fetchLiveRiders() {
             const { data, error } = await supabaseMapClient
@@ -262,14 +271,8 @@
             if (data) {
                 document.getElementById('connectionStatus').innerHTML = "🟢 Live Feed Active";
                 
-                isRefreshing = true;
-                Object.keys(riderMarkers).forEach(id => {
-                    map.removeLayer(riderMarkers[id]);
-                    delete riderMarkers[id];
-                });
-                isRefreshing = false;
-
                 let displayedCount = 0;
+                let activeIdsThisFetch = new Set(); // Para baw-on kinsay filtered in
 
                 data.forEach(rider => {
                     const rider_id = String(rider.rider_id || rider.riderId || rider.id);
@@ -283,22 +286,22 @@
                     let riderRoute = "AS26"; 
                     let isValidRider = false;
                     
-                    if (typeof riderDatabase !== 'undefined' && Array.isArray(riderDatabase)) {
-                        let found = riderDatabase.find(r => String(r.idNum) === rider_id);
-                        if (found) {
-                            riderFullName = found.fullname || found.name;
-                            if (found.route) riderRoute = String(found.route);
-                            else if (found.level) riderRoute = String(found.level);
-                            isValidRider = true;
-                        }
+                    // ⚡ Gigamit nato ang DICTIONARY para paspas kaayo
+                    let found = riderDict[rider_id];
+                    if (found) {
+                        riderFullName = found.fullname || found.name;
+                        riderRoute = found.route ? String(found.route) : (found.level ? String(found.level) : "AS26");
+                        isValidRider = true;
                     }
 
                     if (!isValidRider) return;
 
+                    // 🎛️ FILTER LOGIC
                     if (currentRouteFilter !== 'ALL' && riderRoute !== currentRouteFilter) {
                         return; 
                     }
 
+                    activeIdsThisFetch.add(rider_id); // Ilakip siya sa ibilin sa mapa
                     displayedCount++;
                     
                     let latLng = [latitude, longitude];
@@ -315,7 +318,7 @@
                     // ==========================================
                     let isMoving = false;
                     let speedKph = 0;
-                    let currentAngle = 0; // 🧭 Gi-add para sa rotasyon
+                    let currentAngle = 0;
                     const prev = window.riderHistory[rider_id];
 
                     if (prev) {
@@ -326,7 +329,6 @@
 
                             if (distanceMeters >= 15) {
                                 prev.isMoving = true;
-                                // 🧭 I-KWENTA ANG DIREKSYON
                                 prev.angle = getBearing(prev.lat, prev.lon, latitude, longitude);
 
                                 let actualSpeed = rider.vel !== undefined ? rider.vel : (rider.velocity !== undefined ? rider.velocity : 0);
@@ -347,7 +349,7 @@
                         }
                         isMoving = prev.isMoving;
                         speedKph = prev.speed || 0;
-                        currentAngle = prev.angle || 0; // 🧭 Kuhaon ang na-save nga angle
+                        currentAngle = prev.angle || 0; 
                     } else {
                         window.riderHistory[rider_id] = { 
                             lat: latitude, 
@@ -355,7 +357,7 @@
                             updated_at: updated_at,
                             isMoving: false,
                             speed: 0,
-                            angle: 0 // 🧭 I-set ang angle sa 0
+                            angle: 0 
                         };
                         isMoving = false;
                         speedKph = 0;
@@ -366,7 +368,6 @@
                     let routeBadgeColor = routeInfo.color;
                     let routeLabel = routeInfo.label;
 
-                    // 💥 COMPACT POPUP: ID#, Pangalan, Ruta, ug Speed Lang! 💥
                     let popupContent = `
                         <div style="font-family:sans-serif; color:#000; font-size:13px; line-height: 1.5; min-width: 140px;">
                             <b style="color:${routeBadgeColor}; font-size:15px;">${riderFullName}</b><br>
@@ -384,7 +385,7 @@
                             iconAnchor: [15, 15]
                         });
                     } else if (isMoving) {
-                        // ⚠️ IMPORTANTE: Ilisi ang "motmot.png" sa tinuod nga file name sa imong motor nga picture.
+                        // ⚠️ IMPORTANTE: Siguruha nga "motmot.png" ang saktong ngalan sa picture!
                         customIcon = L.divIcon({
                             className: 'moving-rider-marker',
                             html: `<div style="filter: drop-shadow(0px 0px 6px ${routeBadgeColor}); display: flex; align-items: center; justify-content: center; width: 35px; height: 35px;" title="${riderFullName} - ${speedKph} kph">
@@ -402,26 +403,46 @@
                         });
                     }
 
-                    let marker = L.marker(latLng, { icon: customIcon }).addTo(map)
-                        .bindPopup(popupContent);
-                    
-                    marker.on('click', () => {
-                        trackedRiderId = rider_id;
-                        map.panTo(latLng, { animate: true, duration: 0.5 });
-                    });
-
-                    marker.on('popupclose', () => {
-                        if (!isRefreshing && trackedRiderId === rider_id) {
-                            trackedRiderId = null;
+                    // ⚡ ANG TINUOD NGA MAGIC: Update ra ang posisyon, DILI idelete! ⚡
+                    if (riderMarkers[rider_id]) {
+                        riderMarkers[rider_id].setLatLng(latLng);
+                        riderMarkers[rider_id].setIcon(customIcon);
+                        
+                        // I-update ra ang popup text kung bukas kini
+                        if (riderMarkers[rider_id].isPopupOpen()) {
+                            riderMarkers[rider_id].getPopup().setContent(popupContent);
+                        } else {
+                            riderMarkers[rider_id].bindPopup(popupContent);
                         }
-                    });
+                    } else {
+                        // Wala pa sa mapa, mao nga magbuhat ta og bag-o
+                        let marker = L.marker(latLng, { icon: customIcon }).addTo(map)
+                            .bindPopup(popupContent);
+                        
+                        marker.on('click', () => {
+                            trackedRiderId = rider_id;
+                            map.panTo(latLng, { animate: true, duration: 0.5 });
+                        });
 
-                    if (trackedRiderId === rider_id) {
-                        marker.openPopup();
-                        map.panTo(latLng, { animate: true, duration: 1.0 });
+                        marker.on('popupclose', () => {
+                            if (trackedRiderId === rider_id) trackedRiderId = null;
+                        });
+
+                        riderMarkers[rider_id] = marker;
                     }
 
-                    riderMarkers[rider_id] = marker;
+                    // Auto-follow sa paboritong rider nga gi-click
+                    if (trackedRiderId === rider_id) {
+                        map.panTo(latLng, { animate: true, duration: 1.0 });
+                    }
+                });
+
+                // 🧹 LIMPYO SYSTEM: I-delete lang ang mga markers nga wala na na-detect (e.g. na-filter out)
+                Object.keys(riderMarkers).forEach(id => {
+                    if (!activeIdsThisFetch.has(id)) {
+                        map.removeLayer(riderMarkers[id]);
+                        delete riderMarkers[id];
+                    }
                 });
 
                 document.getElementById('activeCountBadge').innerText = `Gipakita: ${displayedCount} Riders`;
