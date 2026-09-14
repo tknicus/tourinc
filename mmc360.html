@@ -107,8 +107,8 @@
         /* 🪟 TRANSPARENT GLASS POP-UP BOX           */
         /* ========================================== */
         .leaflet-popup-content-wrapper, .leaflet-popup-tip {
-            background-color: rgba(255, 255, 255, 0.0) !important; /* 65% Puti nga Transparent */
-            backdrop-filter: blur(2px) !important; /* Hanap-hanap (blur) ang background nga kalsada */
+            background-color: rgba(255, 255, 255, 0.0) !important;
+            backdrop-filter: blur(2px) !important; 
             box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
             border-radius: 12px !important;
         }
@@ -116,7 +116,7 @@
             margin: 10px 12px !important;
         }
         .leaflet-container a.leaflet-popup-close-button {
-            color: #333 !important; /* Himoon nga mas klaro ang 'X' button */
+            color: #333 !important; 
             font-weight: bold;
         }
     </style>
@@ -202,6 +202,23 @@
             return R * c; 
         }
 
+        // ==========================================
+        // 🧭 BEARING (ANGLE) CALCULATOR
+        // ==========================================
+        function getBearing(startLat, startLng, destLat, destLng) {
+            startLat = startLat * Math.PI / 180;
+            startLng = startLng * Math.PI / 180;
+            destLat = destLat * Math.PI / 180;
+            destLng = destLng * Math.PI / 180;
+
+            let y = Math.sin(destLng - startLng) * Math.cos(destLat);
+            let x = Math.cos(startLat) * Math.sin(destLat) -
+                    Math.sin(startLat) * Math.cos(destLat) * Math.cos(destLng - startLng);
+            
+            let bearing = Math.atan2(y, x) * 180 / Math.PI;
+            return (bearing + 360) % 360; 
+        }
+
         if (!window.riderHistory) window.riderHistory = {};
         const riderMarkers = {};
 
@@ -214,16 +231,16 @@
         // ==========================================
         function getRouteDetails(code) {
             switch(code) {
-                case 'AS26': return { label: 'AS26 (628 KM)', color: '#ff8800' };      // Orange
-                case 'G1N':  return { label: 'G1N (777 KM North)', color: '#cc0000' }; // Pula
-                case 'G1E':  return { label: 'G1E (777 KM East)', color: '#e63946' };  // Pula-pula
-                case 'G1W':  return { label: 'G1W (777 KM West)', color: '#d90429' };  // Pula-pula
-                case 'G1S':  return { label: 'G1S (777 KM South)', color: '#b7094c' }; // Pula-pula
-                case 'G3':   return { label: 'G3 (3333 KM)', color: '#0066cc' };       // Asul
-                case 'G4':   return { label: 'G4 (400 KM)', color: '#2a9d8f' };        // Teal / Berde
-                case 'G5':   return { label: 'G5 (5555 KM)', color: '#7209b7' };       // Lila (Purple)
-                case 'G7':   return { label: 'G7 (7777 KM)', color: '#f72585' };       // Pink
-                case 'G8':   return { label: 'G8 (888 KM)', color: '#e9c46a' };        // Gold / Yellow
+                case 'AS26': return { label: 'AS26 (628 KM)', color: '#ff8800' };      
+                case 'G1N':  return { label: 'G1N (777 KM North)', color: '#cc0000' }; 
+                case 'G1E':  return { label: 'G1E (777 KM East)', color: '#e63946' };  
+                case 'G1W':  return { label: 'G1W (777 KM West)', color: '#d90429' };  
+                case 'G1S':  return { label: 'G1S (777 KM South)', color: '#b7094c' }; 
+                case 'G3':   return { label: 'G3 (3333 KM)', color: '#0066cc' };       
+                case 'G4':   return { label: 'G4 (400 KM)', color: '#2a9d8f' };        
+                case 'G5':   return { label: 'G5 (5555 KM)', color: '#7209b7' };       
+                case 'G7':   return { label: 'G7 (7777 KM)', color: '#f72585' };       
+                case 'G8':   return { label: 'G8 (888 KM)', color: '#e9c46a' };        
                 default:     return { label: code ? code + ' KM' : 'Unknown', color: '#555555' };
             }
         }
@@ -262,7 +279,6 @@
 
                     if (!rider_id || isNaN(latitude) || isNaN(longitude)) return;
 
-                    // Kuhaa ang tinuod nga impormasyon gikan sa database.js
                     let riderFullName = "Rider #" + rider_id;
                     let riderRoute = "AS26"; 
                     let isValidRider = false;
@@ -277,10 +293,8 @@
                         }
                     }
 
-                    // KUNG WALA SA RIDER DATABASE (Sama sa pamilya), LAKTAWAN DAYON!
                     if (!isValidRider) return;
 
-                    // --- 🎛️ FILTER LOGIC ---
                     if (currentRouteFilter !== 'ALL' && riderRoute !== currentRouteFilter) {
                         return; 
                     }
@@ -297,10 +311,11 @@
                     let isStale = diffMinutes > 15;
 
                     // ==========================================
-                    // 🏍️ SPEED UG MOVEMENT CHECKER
+                    // 🏍️ SPEED UG MOVEMENT CHECKER (WITH ANGLE)
                     // ==========================================
                     let isMoving = false;
                     let speedKph = 0;
+                    let currentAngle = 0; // 🧭 Gi-add para sa rotasyon
                     const prev = window.riderHistory[rider_id];
 
                     if (prev) {
@@ -311,6 +326,9 @@
 
                             if (distanceMeters >= 15) {
                                 prev.isMoving = true;
+                                // 🧭 I-KWENTA ANG DIREKSYON
+                                prev.angle = getBearing(prev.lat, prev.lon, latitude, longitude);
+
                                 let actualSpeed = rider.vel !== undefined ? rider.vel : (rider.velocity !== undefined ? rider.velocity : 0);
                                 
                                 if (actualSpeed === 0 && timeDiffHours > 0) {
@@ -329,16 +347,19 @@
                         }
                         isMoving = prev.isMoving;
                         speedKph = prev.speed || 0;
+                        currentAngle = prev.angle || 0; // 🧭 Kuhaon ang na-save nga angle
                     } else {
                         window.riderHistory[rider_id] = { 
                             lat: latitude, 
                             lon: longitude, 
                             updated_at: updated_at,
                             isMoving: false,
-                            speed: 0 
+                            speed: 0,
+                            angle: 0 // 🧭 I-set ang angle sa 0
                         };
                         isMoving = false;
                         speedKph = 0;
+                        currentAngle = 0;
                     }
                     
                     let routeInfo = getRouteDetails(riderRoute);
@@ -363,10 +384,12 @@
                             iconAnchor: [15, 15]
                         });
                     } else if (isMoving) {
+                        // ⚠️ IMPORTANTE: Ilisi ang "motmot.png" sa tinuod nga file name sa imong motor nga picture.
                         customIcon = L.divIcon({
                             className: 'moving-rider-marker',
-                            //html: `<div style="background-color: ${routeBadgeColor}; color: white; border: 2px solid #ffcc00; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 0 10px rgba(0,0,0,0.8);" title="${riderFullName} - ${speedKph} kph">🏍️</div>`,
-                            html: `<div style="font-size: 28px; filter: drop-shadow(0px 0px 6px ${routeBadgeColor}); display: flex; align-items: center; justify-content: center; width: 35px; height: 35px;" title="${riderFullName} - ${speedKph} kph">🏍️</div>`,
+                            html: `<div style="filter: drop-shadow(0px 0px 6px ${routeBadgeColor}); display: flex; align-items: center; justify-content: center; width: 35px; height: 35px;" title="${riderFullName} - ${speedKph} kph">
+                                       <img src="motmot.png" style="width: 100%; height: 100%; transform: rotate(${currentAngle}deg); transform-origin: center;">
+                                   </div>`,
                             iconSize: [35, 35],
                             iconAnchor: [17, 17]
                         });

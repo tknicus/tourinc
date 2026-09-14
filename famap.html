@@ -105,8 +105,8 @@
         /* 🪟 TRANSPARENT GLASS POP-UP BOX           */
         /* ========================================== */
         .leaflet-popup-content-wrapper, .leaflet-popup-tip {
-            background-color: rgba(255, 255, 255, 0.0) !important; /* 65% Puti nga Transparent */
-            backdrop-filter: blur(1px) !important; /* Hanap-hanap (blur) ang background nga kalsada */
+            background-color: rgba(255, 255, 255, 0.0) !important;
+            backdrop-filter: blur(1px) !important;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
             border-radius: 12px !important;
         }
@@ -114,7 +114,7 @@
             margin: 10px 12px !important;
         }
         .leaflet-container a.leaflet-popup-close-button {
-            color: #333 !important; /* Himoon nga mas klaro ang 'X' button */
+            color: #333 !important;
             font-weight: bold;
         }
     </style>
@@ -176,7 +176,7 @@
             btnElement.classList.add('active');
             fetchLiveRiders();
         }
-
+        
         // ==========================================
         // 📏 HAVERSINE DISTANCE FORMULA (METERS)
         // ==========================================
@@ -190,6 +190,23 @@
                 Math.sin(dLon / 2) * Math.sin(dLon / 2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             return R * c; 
+        }
+
+        // ==========================================
+        // 🧭 BEARING (ANGLE) CALCULATOR
+        // ==========================================
+        function getBearing(startLat, startLng, destLat, destLng) {
+            startLat = startLat * Math.PI / 180;
+            startLng = startLng * Math.PI / 180;
+            destLat = destLat * Math.PI / 180;
+            destLng = destLng * Math.PI / 180;
+
+            let y = Math.sin(destLng - startLng) * Math.cos(destLat);
+            let x = Math.cos(startLat) * Math.sin(destLat) -
+                    Math.sin(startLat) * Math.cos(destLat) * Math.cos(destLng - startLng);
+            
+            let bearing = Math.atan2(y, x) * 180 / Math.PI;
+            return (bearing + 360) % 360; 
         }
 
         if (!window.riderHistory) window.riderHistory = {};
@@ -265,6 +282,7 @@
 
                     let isMoving = false;
                     let speedKph = 0;
+                    let currentAngle = 0; // 🧭 Gi-add para sa angle
                     const prev = window.riderHistory[rider_id];
 
                     if (prev) {
@@ -275,6 +293,9 @@
 
                             if (distanceMeters >= 15) {
                                 prev.isMoving = true;
+                                // 🧭 I-KWENTA ANG DIREKSYON KUNG NAGLIHOK
+                                prev.angle = getBearing(prev.lat, prev.lon, latitude, longitude);
+
                                 let actualSpeed = rider.vel !== undefined ? rider.vel : (rider.velocity !== undefined ? rider.velocity : 0);
                                 
                                 if (actualSpeed === 0 && timeDiffHours > 0) {
@@ -293,16 +314,19 @@
                         }
                         isMoving = prev.isMoving;
                         speedKph = prev.speed || 0;
+                        currentAngle = prev.angle || 0; // 🧭 Kuhaon ang na-save nga angle
                     } else {
                         window.riderHistory[rider_id] = { 
                             lat: latitude, 
                             lon: longitude, 
                             updated_at: updated_at,
                             isMoving: false,
-                            speed: 0 
+                            speed: 0,
+                            angle: 0 // 🧭 I-set ang angle sa 0 para sa bag-ong logs
                         };
                         isMoving = false;
                         speedKph = 0;
+                        currentAngle = 0;
                     }
                     
                     let routeBadgeColor = riderRoute === "Laag" ? "#0066cc" : "#cc0000";
@@ -323,9 +347,13 @@
                             iconAnchor: [15, 15]
                         });
                     } else if (isMoving) {
+                        // ⚠️ IMPORTANTE: Ilisi ang "motmot.png" sa tinuod nga pangalan sa imong picture
+                        // Kung ang imong picture nag-atubang pa-TUO (East), ilisi ang ${currentAngle} ngadto sa ${currentAngle + 90}
                         customIcon = L.divIcon({
                             className: 'moving-marker', 
-                            html: `<div style="font-size: 28px; filter: drop-shadow(0px 0px 6px ${routeBadgeColor}); display: flex; align-items: center; justify-content: center; width: 35px; height: 35px;" title="${riderFullName} - ${speedKph} kph">🏍️</div>`,
+                            html: `<div style="filter: drop-shadow(0px 0px 6px ${routeBadgeColor}); display: flex; align-items: center; justify-content: center; width: 35px; height: 35px;" title="${riderFullName} - ${speedKph} kph">
+                                       <img src="motmot.png" style="width: 100%; height: 100%; transform: rotate(${currentAngle}deg); transform-origin: center;">
+                                   </div>`,
                             iconSize: [35, 35],
                             iconAnchor: [17, 17]
                         });
