@@ -453,7 +453,11 @@
                 "_type": "configuration", "mode": 3,
                 "url": "https://iilfklquzyxmdergwawh.supabase.co/functions/v1/owntracks-webhook?rider_id=" + riderId,
                 "username": "rider_" + riderId, "deviceId": "phone", "tid": riderId.slice(-2),
-                "locatorDisplacement": 100, "locatorInterval": 120
+                "autostartOnBoot": true, "extendedData": true,
+                "ignoreInaccurateLocations": 100, "ignoreStaleLocations": 0,
+                "locatorDisplacement": 50, "locatorInterval": 30,
+                "locatorPriority": 0, "monitoring": 2,
+                "notificationLocation": true, "pegLocatorFastestIntervalToInterval": true
             };
 
             const base64Config = btoa(JSON.stringify(configJson));
