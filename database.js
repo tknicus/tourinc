@@ -44,7 +44,8 @@ const routeCheckpoints = {
         "CP 00": "Start Point - Ruta 2",
         "CP 01": "Unang Checkpoint sa Ruta 2",
         // ... i-type ang mga sunod ...
-        "CP FL": "Finish Line - Ruta 2"
+        "CP FL": "Finish Line - Ruta 2",
+        "CP xx": "Stand By Me"
     },
 
     // --- Route 777E ---
@@ -52,7 +53,8 @@ const routeCheckpoints = {
         "CP 00": "Start Point - Ruta 2",
         "CP 01": "Unang Checkpoint sa Ruta 2",
         // ... i-type ang mga sunod ...
-        "CP FL": "Finish Line - Ruta 2"
+        "CP FL": "Finish Line - Ruta 2",
+        "CP xx": "Stand By Me"
     },
 
     // --- Route 777W ---
@@ -60,12 +62,13 @@ const routeCheckpoints = {
         "CP 00": "Start Point - Ruta 2",
         "CP 01": "Unang Checkpoint sa Ruta 2",
         // ... i-type ang mga sunod ...
-        "CP FL": "Finish Line - Ruta 2"
+        "CP FL": "Finish Line - Ruta 2",
+        "CP xx": "Stand By Me"
     },
 
     // --- Route 777S ---
     "G1S": {
-    
+        "CP xx": "Stand By Me"
     },
 
     // --- Route Mindanao Coastal Gaming ---
@@ -142,7 +145,8 @@ const routeCheckpoints = {
         "CP 69": "Diocesan Shrine of Our Mother of Pertual Help",
         "CP 70": "Fe Misa Ayala Seniors Park",
         "CP 71": "ELKAPITAN 's Burial Ground ",
-        "CP FL": "DavNor Sports Complex"      
+        "CP FL": "DavNor Sports Complex",
+        "CP xx": "Stand By Me"
     },
     // --- Route 4 Wheels---
     "G4": {
@@ -281,11 +285,11 @@ const routeCheckpoints = {
         "CP 126": "Mt. Hamiguitan World Heritage Park",
         "CP 127": "711/SeaOil Governor Generoso",
         "CP 128": "Centennial Tree General Generoso",
-        "CP 129": "Cape San Agustin (Mandatory Photo Op)",
+        "CP 129": "Cape San Agustin",
         "CP 130": "Manikling Rotonda",
         "CP 131": "Diocesan Shrine of Our Mother of Pertual Help",
         "CP 132": "711 Mawab",
-        "CP 133": "Bilawa Mainit Falls (Mandatory Photo Op)",
+        "CP 133": "Bilawa Mainit Falls",
         "CP 134": "Tambo View Deck",
         "CP 135": "Maragusan Landmark",
         "CP 136": "Saddle Road (Mandatory Photo Op)",
@@ -293,7 +297,7 @@ const routeCheckpoints = {
         "CP 138": "Montevista Rotonda",
         "CP 139": "Monkayo (turn left to LS Sarmiento)",
         "CP 140": "Casoon National HighSchool",
-        "CP 141": "S Sarmiento Bridge (Mandatory Photo Op)",
+        "CP 141": "S Sarmiento Bridge",
         "CP 142": "Conception Elementary School",
         "CP 143": "Laak Municipal Hall",
         "CP 144": "w0w Assuncion",
@@ -314,11 +318,11 @@ const routeCheckpoints = {
         "CP 06": "Junction Kalagangan - Talaingod Rd",
         "CP 07": "Junction Bukidnon - Laak Road",
         "CP 08": "Sitio Bulo, Brgy Namnam, San Fernando, Bukidnon, Terracing Landscape View",
-        "CP 09": "Pipisan Bridge, Sitio Pipisan, Brgy. Gupitan, Kapalong, Davao del Norte",
-        "CP 10": "Lumondong Bridge / Falls, Sitio Lumondong, Brgy Gupitan, Kapalong, Davao del Norte",
-        "CP 11": "Junction Kili-Kili, Sitio Kili-Kili, Brgy Gupitan, Kapalong, Davao del Norte",
-        "CP 12": "Gatnaon Road, Sitio Butoy, Gupitan, Kapalong, Davao del Norte",
-        "CP 13": "Junction Imelda, Brgy. Imelda, Laak, Davao de Oro",
+        "CP 09": "Pipisan Bridge, Sitio Pipisan, Brgy. Gupitan, Kapalong",
+        "CP 10": "Lumondong Bridge / Falls, Sitio Lumondong, Brgy Gupitan, Kapalong",
+        "CP 11": "Junction Kili-Kili, Sitio Kili-Kili, Brgy Gupitan, Kapalong",
+        "CP 12": "Gatnaon Road, Sitio Butoy, Gupitan, Kapalong",
+        "CP 13": "Junction Imelda, Brgy. Imelda, Laak",
         "CP 14": "Laak ta Bai",
         "CP 15": "Sampaguita Junction Park",
         "CP 16": "Sta Josefa Petron",
@@ -344,37 +348,42 @@ const routeCheckpoints = {
         "CP 36": "Motor Parts, Brgy. Tagugpo, Pantukan",
         "CP 37": "Napapan Mandatory Photo Op",
         "CP 38": "Jolibee Pantukan",
-        "CP FL": "ELKAPITAN's Headstone (Finish Line)"
+        "CP FL": "ELKAPITAN's Headstone (Finish Line)",
+        "CP xx": "Stand By Me"
     },
 
     // --- Route 7777 ---
     "G7": {
-        "CP 00": "Start Point - Ruta 4",
-        "CP FL": "Finish Line - Ruta 4"
+        "CP 00": "Start Point",
+        "CP FL": "Finish Line",
+        "CP xx": "Stand By Me"
     },
 
     // --- Route 81 ---
     "G81": {
-        "CP 00": "Start Point - Ruta 2",
-        "CP 01": "Unang Checkpoint sa Ruta 2",
+        "CP 00": "Start Point",
+        "CP 01": "Unang Checkpoint",
         // ... i-type ang mga sunod ...
-        "CP FL": "Finish Line - Ruta 2"
+        "CP FL": "Finish Line",
+        "CP xx": "Stand By Me"
     },
 
     // --- Route 82 ---
     "G82": {
-        "CP 00": "Start Point - Ruta 2",
-        "CP 01": "Unang Checkpoint sa Ruta 2",
+        "CP 00": "Start Point",
+        "CP 01": "Unang Checkpoint",
         // ... i-type ang mga sunod ...
-        "CP FL": "Finish Line - Ruta 2"
+        "CP FL": "Finish Line",
+        "CP xx": "Stand By Me"
     },
 
     // --- Route 83 ---
     "G83": {
-        "CP 00": "Start Point - Ruta 2",
-        "CP 01": "Unang Checkpoint sa Ruta 2",
+        "CP 00": "Start Point",
+        "CP 01": "Unang Checkpoint",
         // ... i-type ang mga sunod ...
-        "CP FL": "Finish Line - Ruta 2"
+        "CP FL": "Finish Line",
+        "CP xx": "Stand By Me"
     },
 
 };
