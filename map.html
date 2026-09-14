@@ -520,6 +520,9 @@
                 [7.823998, 125.392453], //	-		Junction Bukidnon - Laak Road
                 [7.848564, 125.436973], //	-		Sitio Bulo, Brgy Namnam, San Fernando, Bukidnon, Terracing Landscape View
                 [7.829528, 125.479180], //	-		Pipisan Bridge, Sitio Pipisan, Brgy. Gupitan, Kapalong, Davao del Norte
+
+                [7.831917, 125.493500], //	-		dotted Line, Sitio Pipisan, Brgy. Gupitan, Kapalong, Davao del Norte
+
                 [7.841551, 125.512050], //	-		Lumondong Bridge / Falls, Sitio Lumondong, Brgy Gupitan, Kapalong, Davao del Norte
                 [7.818524, 125.621125], //	-		Junction Kili-Kili, Sitio Kili-Kili, Brgy Gupitan, Kapalong, Davao del Norte
                 [7.843550, 125.675869], //	-		Gatnaon Road, Sitio Butoy, Gupitan, Kapalong, Davao del Norte
@@ -701,8 +704,27 @@
         };
 
         // Function sa pag-ilis sa ruta inig pili sa dropdown
+        // ==========================================
+        // 🗺️ HYBRID ROUTE SWITCHING & DRAWING LOGIC
+        // ==========================================
+        // ==========================================
+        // 🗺️ ULTIMATE ROUTE SWITCHING LOGIC
+        // ==========================================
+        // ==========================================
+        // 🗺️ BULLETPROOF ROUTE SWITCHING LOGIC
+        // ==========================================
+        // ==========================================
+        // 🗺️ HYBRID ROUTE SWITCHING LOGIC (OSRM + Direct Trail)
+        // ==========================================
+        // ==========================================
+        // 🗺️ FIXED HYBRID ROUTE SWITCHING LOGIC
+        // ==========================================
+        // ==========================================
+        // 🗺️ HYBRID ROUTE SWITCHING LOGIC (RED LINE)
+        // ==========================================
         async function switchRoute() {
-            let selectedKey = document.getElementById('routeSelect').value;
+            let rawKey = document.getElementById('routeSelect').value;
+            let selectedKey = rawKey ? rawKey.trim().toUpperCase() : "";
             let badge = document.getElementById('distanceBadge');
             
             routePolylineLayer.clearLayers();
@@ -714,7 +736,80 @@
             }
 
             let coords = routesData[selectedKey];
-            let coordString = coords.map(c => `${c[1]},${c[0]}`).join(';');
+            
+            // 🔴 Gihimo natong Pula (#ff0000) ang AS26 para klaro kaayo sa berdeng background sa mapa
+            let pinColor = (selectedKey === "AS26") ? "#ff0000" : (routeColors[selectedKey] || '#ff0000');
+
+            // 🛑 HYBRID PARA SA AS26: OSRM sa Highway + Direct Line sa Trail Part 🛑
+            if (selectedKey === "AS26") {
+                let highwayPart1 = coords.slice(0, 10);
+                let trailPart = coords.slice(9, 12);
+                let highwayPart2 = coords.slice(11);
+
+                // 1. I-fetch ug i-draw ang Highway Part 1 (Pula)
+                await fetchAndDrawOSRM(highwayPart1, pinColor);
+
+                // 2. I-draw direkta ang Trail Part (Pula nga putol-putol / dashed line)
+                let directTrail = L.polyline(trailPart, {
+                    color: pinColor,
+                    weight: 4,
+                    opacity: 0.9,
+                    dashArray: '6, 6' 
+                });
+                routePolylineLayer.addLayer(directTrail);
+
+                // 3. I-fetch ug i-draw ang Highway Part 2 (Pula)
+                await fetchAndDrawOSRM(highwayPart2, pinColor);
+
+                badge.innerText = `🏁 Route AS26 (Hybrid: Road & Trail)`;
+                badge.style.display = "block";
+                
+                setTimeout(() => {
+                    if (routePolylineLayer.getLayers().length > 0) {
+                        let group = new L.FeatureGroup(routePolylineLayer.getLayers());
+                        map.fitBounds(group.getBounds(), { padding: [50, 50] });
+                    }
+                }, 500);
+            } 
+            // 🚙 PARA SA UBANG ROTA 🚙
+            else {
+                let coordString = coords.map(c => `${c[1]},${c[0]}`).join(';');
+                let osrmUrl = `https://router.project-osrm.org/route/v1/driving/${coordString}?overview=full&geometries=geojson`;
+
+                try {
+                    let response = await fetch(osrmUrl);
+                    let data = await response.json();
+
+                    if (data.routes && data.routes.length > 0) {
+                        let routeData = data.routes[0];
+                        let routeCoords = routeData.geometry.coordinates.map(c => [c[1], c[0]]); 
+
+                        let totalKm = (routeData.distance / 1000).toFixed(1);
+                        badge.innerText = `🏁 Total: ${totalKm} KM`;
+                        badge.style.display = "block";
+
+                        let roadPolyline = L.polyline(routeCoords, {
+                            color: pinColor, 
+                            weight: 4,
+                            opacity: 0.85
+                        });
+
+                        routePolylineLayer.addLayer(roadPolyline);
+                        map.fitBounds(roadPolyline.getBounds());
+                    }
+                } catch (error) {
+                    console.error("Napakyas pagkuha sa OSRM route:", error);
+                    badge.style.display = "none";
+                }
+            }
+
+            loadRidersToMap(selectedKey);
+        }
+
+        // Helper function para sa OSRM fetch
+        async function fetchAndDrawOSRM(coordArray, color) {
+            if (coordArray.length < 2) return;
+            let coordString = coordArray.map(c => `${c[1]},${c[0]}`).join(';');
             let osrmUrl = `https://router.project-osrm.org/route/v1/driving/${coordString}?overview=full&geometries=geojson`;
 
             try {
@@ -725,27 +820,21 @@
                     let routeData = data.routes[0];
                     let routeCoords = routeData.geometry.coordinates.map(c => [c[1], c[0]]); 
 
-                    let totalKm = (routeData.distance / 1000).toFixed(1);
-                    badge.innerText = `🏁 Total: ${totalKm} KM`;
-                    badge.style.display = "block";
-
                     let roadPolyline = L.polyline(routeCoords, {
-                        color: '#ff0000', 
+                        color: color, 
                         weight: 4,
                         opacity: 0.85
                     });
-
+                    
                     routePolylineLayer.addLayer(roadPolyline);
-                    map.fitBounds(roadPolyline.getBounds());
                 }
             } catch (error) {
                 console.error("Napakyas pagkuha sa OSRM route:", error);
-                badge.style.display = "none";
             }
-
-            // 🚀 KUHAON ANG MGA RIDERS GIKAN SA SUPABASE
-            loadRidersToMap(selectedKey);
         }
+
+
+
 
         // 4. KUHAON ANG LIVE RIDERS DIREKTA GIKAN SA SUPABASE TABLE (rally_scans)
         async function loadRidersToMap(selectedRoute = "all") {
