@@ -14,6 +14,7 @@ const riderDatabase = [
     { idNum: "1617", fullname: "REMOLLENO, ALEXANDER ", nickname: "XRM SAKALAM", level: "AS26", category: "LONEWOLF", classification: "MASTER", vehicle: "", passcode: "9f2ca3ad31656671b9e0bf12509c9e71dac5b8e8834145767f684bf193945d33", isMarshal: false },
     { idNum: "1634", fullname: "Galvadores, Riche Val", nickname: "Long Way PH", level: "AS26", category: "LONEWOLF", classification: "MASTER", vehicle: "", passcode: "0", isMarshal: false },
     { idNum: "1635", fullname: "German, Henry Gulle", nickname: "technicus", level: "AS26", category: "LONEWOLF", classification: "MASTER", vehicle: "", passcode: "0", isMarshal: false }
+    { idNum: "1635", fullname: "WAWAY", nickname: "wa way", level: "G3", category: "LONEWOLF", classification: "MASTER", vehicle: "Doming", passcode: "6161b2838ffa6ce17b84db3b45b4f8437855ecf43e75de2d1ad0008eaae91aa0", isMarshal: false }
 ];
 
 
@@ -38,52 +39,16 @@ const routeNames = {
 // Pwede nimong usbon ang "AS26", "G5", "G1S" base sa saktong pangalan sa level/ruta sa imong riders.
 const routeCheckpoints = {
     
-    // --- RUTA 1: AS26 ---
-    "AS26": {
-        "CP 00": "Start Point / Assembly Area",
-        "CP 01": "Mr. DIY Panabo",
-        "CP 02": "Junction Paquibato - Kalagangan Rd / Calinan Rd.",
-        "CP 03": "New Paquibato District Hall",
-        "CP 04": "Pungco Hill",
-        "CP 05": "Junction Panaga - Tapak Road / Paquibato - Kalagangan Rd",
-        "CP 06": "Junction Kalagangan - Talaingod Rd",
-        "CP 07": "Junction Bukidnon - Laak Road",
-        "CP 08": "Sitio Bulo, Brgy Namnam, San Fernando, Bukidnon, Terracing Landscape View",
-        "CP 09": "Pipisan Bridge, Sitio Pipisan, Brgy. Gupitan, Kapalong, Davao del Norte",
-        "CP 10": "Lumondong Bridge / Falls, Sitio Lumondong, Brgy Gupitan, Kapalong, Davao del Norte",
-        "CP 11": "Junction Kili-Kili, Sitio Kili-Kili, Brgy Gupitan, Kapalong, Davao del Norte",
-        "CP 12": "Gatnaon Road, Sitio Butoy, Gupitan, Kapalong, Davao del Norte",
-        "CP 13": "Junction Imelda, Brgy. Imelda, Laak, Davao de Oro",
-        "CP 14": "Laak ta Bai",
-        "CP 15": "Sampaguita Junction Park",
-        "CP 16": "Sta Josefa Petron",
-        "CP 17": "Crossing Brgy. Angas & Brgy. Awao",
-        "CP 18": "Awao River Crossing (A)",
-        "CP 19": "Awao River Crossing (B)",
-        "CP 20": "Awao Ticket Booth",
-        "CP 21": "Awao Falls",
-        "CP 22": "Crossing Brgy. Angas & Brgy. Awao",
-        "CP 23": "INC, Monkayo",
-        "CP 24": "JESREL STORE, Mount Diwata",
-        "CP 25": "GKK Santo Niño",
-        "CP 26": "Goldie Mark Store, Purok 1-A, Mount Diwata",
-        "CP 27": "Libunao Store",
-        "CP 28": "Tru-Cut, Diwalwal",
-        "CP 29": "Petron Boston",
-        "CP 30": "Aliwagwag Falls Ecopark",
-        "CP 31": "Manurigao highlands 5650 ft. Above sea level",
-        "CP 32": "Shadol's Coffee Paste",
-        "CP 33": "Maragusan Rotunda",
-        "CP 34": "Araibo, Pantukan, Davao de Oro Checkpoint",
-        "CP 35": "Special Village, Las Arenas, Pantukan",
-        "CP 36": "Motor Parts, Brgy. Tagugpo, Pantukan",
-        "CP 37": "Napapan Mandatory Photo Op",
-        "CP 38": "Jolibee Pantukan",
-        "CP FL": "ELKAPITAN's Headstone (Finish Line)"
+    // --- RUTA 1 ---
+    "G1N": {
+        "CP 00": "Start Point - Ruta 2",
+        "CP 01": "Unang Checkpoint sa Ruta 2",
+        // ... i-type ang mga sunod ...
+        "CP FL": "Finish Line - Ruta 2"
     },
 
     // --- RUTA 2 ---
-    "G5": {
+    "G1E": {
         "CP 00": "Start Point - Ruta 2",
         "CP 01": "Unang Checkpoint sa Ruta 2",
         // ... i-type ang mga sunod ...
@@ -91,6 +56,14 @@ const routeCheckpoints = {
     },
 
     // --- RUTA 3 ---
+    "G1W": {
+        "CP 00": "Start Point - Ruta 2",
+        "CP 01": "Unang Checkpoint sa Ruta 2",
+        // ... i-type ang mga sunod ...
+        "CP FL": "Finish Line - Ruta 2"
+    },
+
+    // --- RUTA 4 ---
     "G1S": {
         "CP 00": "DavNor Sports Complex",
         "CP 01": "F Bangoy Central Elementary School",
@@ -167,33 +140,100 @@ const routeCheckpoints = {
         "CP FL": "DavNor Sports Complex"      
     },
 
-    // --- RUTA 4 ---
-    "RUTA_4": {
+    // --- RUTA 5 ---
+    "G3": {
+        "CP 00": "Start Point - Ruta 2",
+        "CP 01": "Unang Checkpoint sa Ruta 2",
+        // ... i-type ang mga sunod ...
+        "CP FL": "Finish Line - Ruta 2"
+    },
+
+    // --- RUTA 6 ---
+    "G4": {
         "CP 00": "Start Point - Ruta 4",
         "CP FL": "Finish Line - Ruta 4"
     },
 
-    // --- RUTA 5 ---
-    "RUTA_5": {
-        "CP 00": "Start Point - Ruta 5",
-        "CP FL": "Finish Line - Ruta 5"
-    },
-
-    // --- RUTA 6 ---
-    "RUTA_6": {
-        "CP 00": "Start Point - Ruta 6",
-        "CP FL": "Finish Line - Ruta 6"
-    },
-
     // --- RUTA 7 ---
-    "RUTA_7": {
-        "CP 00": "Start Point - Ruta 7",
-        "CP FL": "Finish Line - Ruta 7"
+    "G5": {
+        "CP 00": "Start Point - Ruta 2",
+        "CP 01": "Unang Checkpoint sa Ruta 2",
+        // ... i-type ang mga sunod ...
+        "CP FL": "Finish Line - Ruta 2"
     },
 
-    // --- RUTA 8 ---
-    "RUTA_8": {
-        "CP 00": "Start Point - Ruta 8",
-        "CP FL": "Finish Line - Ruta 8"
-    }
+    // --- RUTA 8: AS26 ---
+    "AS26": {
+        "CP 00": "Start Point / Assembly Area",
+        "CP 01": "Mr. DIY Panabo",
+        "CP 02": "Junction Paquibato - Kalagangan Rd / Calinan Rd.",
+        "CP 03": "New Paquibato District Hall",
+        "CP 04": "Pungco Hill",
+        "CP 05": "Junction Panaga - Tapak Road / Paquibato - Kalagangan Rd",
+        "CP 06": "Junction Kalagangan - Talaingod Rd",
+        "CP 07": "Junction Bukidnon - Laak Road",
+        "CP 08": "Sitio Bulo, Brgy Namnam, San Fernando, Bukidnon, Terracing Landscape View",
+        "CP 09": "Pipisan Bridge, Sitio Pipisan, Brgy. Gupitan, Kapalong, Davao del Norte",
+        "CP 10": "Lumondong Bridge / Falls, Sitio Lumondong, Brgy Gupitan, Kapalong, Davao del Norte",
+        "CP 11": "Junction Kili-Kili, Sitio Kili-Kili, Brgy Gupitan, Kapalong, Davao del Norte",
+        "CP 12": "Gatnaon Road, Sitio Butoy, Gupitan, Kapalong, Davao del Norte",
+        "CP 13": "Junction Imelda, Brgy. Imelda, Laak, Davao de Oro",
+        "CP 14": "Laak ta Bai",
+        "CP 15": "Sampaguita Junction Park",
+        "CP 16": "Sta Josefa Petron",
+        "CP 17": "Crossing Brgy. Angas & Brgy. Awao",
+        "CP 18": "Awao River Crossing (A)",
+        "CP 19": "Awao River Crossing (B)",
+        "CP 20": "Awao Ticket Booth",
+        "CP 21": "Awao Falls",
+        "CP 22": "Crossing Brgy. Angas & Brgy. Awao",
+        "CP 23": "INC, Monkayo",
+        "CP 24": "JESREL STORE, Mount Diwata",
+        "CP 25": "GKK Santo Niño",
+        "CP 26": "Goldie Mark Store, Purok 1-A, Mount Diwata",
+        "CP 27": "Libunao Store",
+        "CP 28": "Tru-Cut, Diwalwal",
+        "CP 29": "Petron Boston",
+        "CP 30": "Aliwagwag Falls Ecopark",
+        "CP 31": "Manurigao highlands 5650 ft. Above sea level",
+        "CP 32": "Shadol's Coffee Paste",
+        "CP 33": "Maragusan Rotunda",
+        "CP 34": "Araibo, Pantukan, Davao de Oro Checkpoint",
+        "CP 35": "Special Village, Las Arenas, Pantukan",
+        "CP 36": "Motor Parts, Brgy. Tagugpo, Pantukan",
+        "CP 37": "Napapan Mandatory Photo Op",
+        "CP 38": "Jolibee Pantukan",
+        "CP FL": "ELKAPITAN's Headstone (Finish Line)"
+    },
+
+    // --- RUTA 9 ---
+    "G7": {
+        "CP 00": "Start Point - Ruta 4",
+        "CP FL": "Finish Line - Ruta 4"
+    },
+
+    // --- RUTA 10 ---
+    "G81": {
+        "CP 00": "Start Point - Ruta 2",
+        "CP 01": "Unang Checkpoint sa Ruta 2",
+        // ... i-type ang mga sunod ...
+        "CP FL": "Finish Line - Ruta 2"
+    },
+
+    // --- RUTA 11 ---
+    "G82": {
+        "CP 00": "Start Point - Ruta 2",
+        "CP 01": "Unang Checkpoint sa Ruta 2",
+        // ... i-type ang mga sunod ...
+        "CP FL": "Finish Line - Ruta 2"
+    },
+
+    // --- RUTA 12 ---
+    "G83": {
+        "CP 00": "Start Point - Ruta 2",
+        "CP 01": "Unang Checkpoint sa Ruta 2",
+        // ... i-type ang mga sunod ...
+        "CP FL": "Finish Line - Ruta 2"
+    },
+
 };
