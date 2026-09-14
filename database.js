@@ -39,7 +39,7 @@ const routeNames = {
 // Pwede nimong usbon ang "AS26", "G5", "G1S" base sa saktong pangalan sa level/ruta sa imong riders.
 const routeCheckpoints = {
     
-    // --- RUTA 1 ---
+    // --- Route 777N ---
     "G1N": {
         "CP 00": "Start Point - Ruta 2",
         "CP 01": "Unang Checkpoint sa Ruta 2",
@@ -47,7 +47,7 @@ const routeCheckpoints = {
         "CP FL": "Finish Line - Ruta 2"
     },
 
-    // --- RUTA 2 ---
+    // --- Route 777E ---
     "G1E": {
         "CP 00": "Start Point - Ruta 2",
         "CP 01": "Unang Checkpoint sa Ruta 2",
@@ -55,7 +55,7 @@ const routeCheckpoints = {
         "CP FL": "Finish Line - Ruta 2"
     },
 
-    // --- RUTA 3 ---
+    // --- Route 777W ---
     "G1W": {
         "CP 00": "Start Point - Ruta 2",
         "CP 01": "Unang Checkpoint sa Ruta 2",
@@ -63,8 +63,13 @@ const routeCheckpoints = {
         "CP FL": "Finish Line - Ruta 2"
     },
 
-    // --- RUTA 4 ---
+    // --- Route 777S ---
     "G1S": {
+    
+    },
+
+    // --- Route Mindanao Coastal Gaming ---
+    "G3": {
         "CP 00": "DavNor Sports Complex",
         "CP 01": "F Bangoy Central Elementary School",
         "CP 02": "Davao City Coastal Road",
@@ -139,27 +144,163 @@ const routeCheckpoints = {
         "CP 71": "ELKAPITAN 's Burial Ground ",
         "CP FL": "DavNor Sports Complex"      
     },
-
-    // --- RUTA 5 ---
-    "G3": {
-        "CP 00": "Start Point - Ruta 2",
-        "CP 01": "Unang Checkpoint sa Ruta 2",
-        // ... i-type ang mga sunod ...
-        "CP FL": "Finish Line - Ruta 2"
-    },
-
-    // --- RUTA 6 ---
+    // --- Route 4 Wheels---
     "G4": {
         "CP 00": "Start Point - Ruta 4",
         "CP FL": "Finish Line - Ruta 4"
     },
 
-    // --- RUTA 7 ---
+    // --- Route 5555 MAN OF STEEL ---
     "G5": {
-        "CP 00": "Start Point - Ruta 2",
-        "CP 01": "Unang Checkpoint sa Ruta 2",
-        // ... i-type ang mga sunod ...
-        "CP FL": "Finish Line - Ruta 2"
+        "CP 000": "DavNor Sports Complex",
+        "CP 001": "Davao City Coastal Road",
+        "CP 002": "McDo Cogon Digos",
+        "CP 003": "Esso Gasoline Station, Paco, Kidapawan",
+        "CP 004": "White Hills View, Sitio Dao Road, Arakan",
+        "CP 005": "Philippine Eagle Monument",
+        "CP 006": "Greek Hills",
+        "CP 007": "OverView Nature & Culture Park",
+        "CP 008": "3J Gazz, Quezon, Bukidnon",
+        "CP 009": "Aglayan Roundball",
+        "CP 010": "Lantaw 360 Camp & Cafe",
+        "CP 011": "junction Tikalaan turn left",
+        "CP 012": "711 Pangantukan",
+        "CP 013": "Discovery Hotel Dangcagan",
+        "CP 014": "Buagas Machine Shop, Carmen",
+        "CP 015": "crash site atbang sa menteryo",
+        "CP 016": "Bagontapay Roundball",
+        "CP 017": "turn RIGHT to Magsaysay",
+        "CP 018": "Tacul Elementary School",
+        "CP 019": "Magsaysay Municipality",
+        "CP 020": "Matanao, turn right to Savoy",
+        "CP 021": "Columbio Municipal Hall",
+        "CP 022": "Isulan Roundball",
+        "CP 023": "711 Surallah",
+        "CP 024": "Marbel Roundball",
+        "CP 025": "BK's Kitchen @ Ondeng’s Food Park",
+        "CP 026": "Bangkapayapaan Monument",
+        "CP 027": "Flying V Otsenta Junction",
+        "CP 028": "Malita Municipal Plaza",
+        "CP 029": "Joyce Paradise",
+        "CP 030": "Baños Point Lighthouse",
+        "CP 031": "JAS Municipal Hall",
+        "CP 032": "TOUR Town Glan",
+        "CP 033": "Maasim Town Plaza",
+        "CP 034": "Maitum Municipal Hall",
+        "CP 035": "Baywalk Palimbang",
+        "CP 036": "Kalamansig Municipal",
+        "CP 037": "Lebak Municipal Portal / Lebak ",
+        "CP 038": "The Grand Mosque of Cotabato",
+        "CP 039": "People's Palace Cotabato City",
+        "CP 040": "Alamada Municipal Hall",
+        "CP 041": "Tent City",
+        "CP 042": "WOWWAO",
+        "CP 043": "KM0 Warawi",
+        "CP 044": "Picong Tunnel",
+        "CP 045": "Pagadian Rotonda Park",
+        "CP 046": "Ipil Rotunda Obelisk",
+        "CP 047": "Pasonanca Park",
+        "CP 048": "Zamboanga City Signage",
+        "CP 049": "Historic BSP Monument",
+        "CP 050": "Limpana TRUSS Bridge",
+        "CP 051": "Pangian Bridge",
+        "CP 052": "Sibuco Municipal Hall",
+        "CP 053": "Siocon Municipal Hall",
+        "CP 054": "Liloy Municipal Hall",
+        "CP 055": "Manukan Town Hall",
+        "CP 056": "Dipolog City Hall",
+        "CP 057": "New Dapitan City Hall",
+        "CP 058": "I Love Oroquieta",
+        "CP 059": "Hoyohoy View Deck",
+        "CP 060": "Petron Tangub",
+        "CP 061": "Panguil Bay Bridge",
+        "CP 062": "Dapit Alim Shrine",
+        "CP 063": "Maria Christina Falls",
+        "CP 064": "Iligan City (711/Petron)",
+        "CP 065": "El Salvador City Hall",
+        "CP 066": "Devine Mercy Statue",
+        "CP 067": "Shell CDO",
+        "CP 068": "Atugan Nature Farm",
+        "CP 069": "Valencia Jollibee",
+        "CP 070": "San Fernando Cabanglasan Junction",
+        "CP 071": "Manggaod",
+        "CP 072": "Iba",
+        "CP 073": "Kulaman",
+        "CP 074": "Busdi",
+        "CP 075": "Bulonay",
+        "CP 076": "Magawa",
+        "CP 077": "Magawa Bridge",
+        "CP 078": "Lamingan",
+        "CP 079": "Mintapud",
+        "CP 080": "Gingoog Butuan Fork",
+        "CP 081": "Bal-ason",
+        "CP 082": "Kahulogan",
+        "CP 083": "Claveria View Deck",
+        "CP 084": "Municipal Hall of Claveria",
+        "CP 085": "Balingasag Light House",
+        "CP 086": "Balingoan",
+        "CP 087": "The Bay Gingoog",
+        "CP 088": "Vin4 (Jurassic) Blue Waters",
+        "CP 089": "Bancasi",
+        "CP 090": "right to Amparo",
+        "CP 091": "Tungao Lauan Eco Park",
+        "CP 092": "Ezperanza Bridge",
+        "CP 093": "right to Guadalupe",
+        "CP 094": "Talacogon",
+        "CP 095": "La Paz Signage",
+        "CP 096": "Petron Loreto",
+        "CP 097": "Loreto Municipal Hall",
+        "CP 098": "Trento Rotonda",
+        "CP 099": "Rotonda/711 San Francisco",
+        "CP 100": "Bayugan Park",
+        "CP 101": "Jollibee Cabadbaran",
+        "CP 102": "Jabonga People's Park",
+        "CP 103": "Hanagdong Project",
+        "CP 104": "Looc Landmark",
+        "CP 105": "Punta Bilar Lighthouse",
+        "CP 106": "I Love Surigao",
+        "CP 107": "Nabago Elementary School",
+        "CP 108": "Claver 711",
+        "CP 109": "Noventa View Deck",
+        "CP 110": "Tandag Boulevard",
+        "CP 111": "Lianga Signage",
+        "CP 112": "Harip Beach",
+        "CP 113": "Enchanted River",
+        "CP 114": "Hinatuan Signage",
+        "CP 115": "iLoveBislig",
+        "CP 116": "Cuevas",
+        "CP 117": "Monkayo",
+        "CP 118": "Mt. Diwata",
+        "CP 119": "Poblacion Boston",
+        "CP 120": "Baganga Sunrise",
+        "CP 121": "Pusan Point Caraga",
+        "CP 122": "WOW Manay Landmark",
+        "CP 123": "Dahican Rotunda",
+        "CP 124": "DavOr Provincial Museum",
+        "CP 125": "Mati Baywalk Park",
+        "CP 126": "Mt. Hamiguitan World Heritage Park",
+        "CP 127": "711/SeaOil Governor Generoso",
+        "CP 128": "Centennial Tree General Generoso",
+        "CP 129": "Cape San Agustin (Mandatory Photo Op)",
+        "CP 130": "Manikling Rotonda",
+        "CP 131": "Diocesan Shrine of Our Mother of Pertual Help",
+        "CP 132": "711 Mawab",
+        "CP 133": "Bilawa Mainit Falls (Mandatory Photo Op)",
+        "CP 134": "Tambo View Deck",
+        "CP 135": "Maragusan Landmark",
+        "CP 136": "Saddle Road (Mandatory Photo Op)",
+        "CP 137": "Nabunturan",
+        "CP 138": "Montevista Rotonda",
+        "CP 139": "Monkayo (turn left to LS Sarmiento)",
+        "CP 140": "Casoon National HighSchool",
+        "CP 141": "S Sarmiento Bridge (Mandatory Photo Op)",
+        "CP 142": "Conception Elementary School",
+        "CP 143": "Laak Municipal Hall",
+        "CP 144": "w0w Assuncion",
+        "CP 145": "Fe Misa Ayala Seniors Park",
+        "CP 146": "ELKAPITAN's Burial Ground",
+        "CP FL": "Finish Line: DavNor Sports Complex", 
+        "CP xx": "Stand By Me"
     },
 
     // --- RUTA 8: AS26 ---
@@ -206,13 +347,13 @@ const routeCheckpoints = {
         "CP FL": "ELKAPITAN's Headstone (Finish Line)"
     },
 
-    // --- RUTA 9 ---
+    // --- Route 7777 ---
     "G7": {
         "CP 00": "Start Point - Ruta 4",
         "CP FL": "Finish Line - Ruta 4"
     },
 
-    // --- RUTA 10 ---
+    // --- Route 81 ---
     "G81": {
         "CP 00": "Start Point - Ruta 2",
         "CP 01": "Unang Checkpoint sa Ruta 2",
@@ -220,7 +361,7 @@ const routeCheckpoints = {
         "CP FL": "Finish Line - Ruta 2"
     },
 
-    // --- RUTA 11 ---
+    // --- Route 82 ---
     "G82": {
         "CP 00": "Start Point - Ruta 2",
         "CP 01": "Unang Checkpoint sa Ruta 2",
@@ -228,7 +369,7 @@ const routeCheckpoints = {
         "CP FL": "Finish Line - Ruta 2"
     },
 
-    // --- RUTA 12 ---
+    // --- Route 83 ---
     "G83": {
         "CP 00": "Start Point - Ruta 2",
         "CP 01": "Unang Checkpoint sa Ruta 2",
