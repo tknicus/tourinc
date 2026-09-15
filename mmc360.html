@@ -31,9 +31,27 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 3px solid #cc0000;
-            height: 55px;
+            min-height: 55px; /* ⚠️ ILISI ang 'height' og 'min-height' para dili ma-ipit */
             box-sizing: border-box;
             flex-wrap: wrap;
+            gap: 8px; /* Nagdugang tag gap aron naay space inig tapad nila */
+        }
+
+        /* FILTER BUTTONS STYLING */
+        .filter-container {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            flex-wrap: nowrap; /* ⚠️ ILISI ang 'wrap' ngadto sa 'nowrap' aron mag-linya ra sila */
+            overflow-x: auto; /* 🪄 KINI ANG MAGHIMO SA SLIDE/SWIPE EFFECT */
+            -webkit-overflow-scrolling: touch; /* Para smooth kaayo inig slide sa phone */
+            max-width: 100%; /* Siguruhon nga sakto ra sa screen */
+            padding-bottom: 4px; 
+        }
+
+        /* 🪄 TAGOAN ANG SCROLLBAR PARA LIMPYO TAN-AWON (App-like feel) */
+        .filter-container::-webkit-scrollbar {
+            display: none;
         }
 
         h2 {
