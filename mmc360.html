@@ -225,6 +225,8 @@
                 [7.823998, 125.392453], //	-		Junction Bukidnon - Laak Road
                 [7.848564, 125.436973], //	-		Sitio Bulo, Brgy Namnam, San Fernando, Bukidnon, Terracing Landscape View
                 [7.829528, 125.479180], //	-		Pipisan Bridge, Sitio Pipisan, Brgy. Gupitan, Kapalong, Davao del Norte
+            [7.832514, 125.486269],
+        [7.832963, 125.485834],
 [7.832432, 125.486355], //	-
 [7.832132, 125.486768], //	-
 [7.831940, 125.487251], //	-
@@ -336,7 +338,9 @@
 [7.829480, 125.505613], //	-
 [7.829836, 125.505828], //	-
 [7.829971, 125.505940], //	-
-[7.830083, 125.506141], //	-                [7.841551, 125.512050], //	-		Lumondong Bridge / Falls, Sitio Lumondong, Brgy Gupitan, Kapalong, Davao del Norte
+[7.830083, 125.506141], //	-                
+        [7.831731, 125.506493], //	-
+                [7.841551, 125.512050], //	-		Lumondong Bridge / Falls, Sitio Lumondong, Brgy Gupitan, Kapalong, Davao del Norte
                 [7.818524, 125.621125], //	-		Junction Kili-Kili, Sitio Kili-Kili, Brgy Gupitan, Kapalong, Davao del Norte
                 [7.843550, 125.675869], //	-		Gatnaon Road, Sitio Butoy, Gupitan, Kapalong, Davao del Norte
                 [7.799224, 125.755219], //	-		Junction Imelda, Brgy. Imelda, Laak, Davao de Oro
@@ -670,7 +674,7 @@
 
 
 
-// ==========================================
+        // ==========================================
         // 🗺️ ROUTE DRAWING LAYER & LOGIC (OSRM HYBRID)
         // ==========================================
         // Diri nato ibutang ang mga linya para dali ra ma-clear
@@ -698,9 +702,9 @@
 
             // 🛑 HYBRID PARA SA AS26: OSRM sa Highway + Direct Line sa Trail Part 🛑
             if (routeCode === 'AS26') {
-                let highwayPart1 = coords.slice(0, 10);
-                let trailPart = coords.slice(9, 12);
-                let highwayPart2 = coords.slice(11);
+                let highwayPart1 = coords.slice(0, 11);
+                let trailPart = coords.slice(12, 123);
+                let highwayPart2 = coords.slice(122);
 
                 // A. I-fetch ug i-draw ang Highway Part 1
                 await fetchAndDrawOSRM(highwayPart1, pinColor);
