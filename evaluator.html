@@ -8,113 +8,101 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 10px; color: #111; }
-        .report-wrapper { max-width: 1100px; margin: 0 auto; background: #ffffff; padding: 15px; border: 1px solid #b5b5b5; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
+        .report-wrapper { max-width: 1300px; margin: 0 auto; background: #ffffff; padding: 15px; border: 1px solid #b5b5b5; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
         
         /* 📱 SEARCH CONTROL PANEL */
         .control-panel { background: #1e1e1e; padding: 15px; border-radius: 6px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; color: white; }
         .control-panel label { font-weight: bold; }
         .control-panel input { padding: 10px 12px; font-size: 16px; border: 1px solid #444; border-radius: 4px; flex: 1; min-width: 180px; background: #2a2a2a; color: white; }
         .control-panel button { padding: 10px 20px; background: #cc0000; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; text-transform: uppercase; width: 100%; }
+        .control-panel button.pdf-btn { background: #0077cc; }
+        .control-panel button.pdf-btn:hover { background: #005599; }
         
-        @media (min-width: 600px) {
-            .control-panel button { width: auto; }
-        }
+        @media (min-width: 600px) { .control-panel button { width: auto; } }
         .control-panel button:hover { background: #990000; }
 
         /* 📱 RESPONSIVE EXCEL HEADER */
-        .excel-header { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 12px; 
-            border: 2px solid #000; 
-            padding: 12px; 
-            background: #fdfdfd; 
-            margin-bottom: 15px; 
-        }
-        .profile-side { 
-            width: 100%; 
-            font-size: 13px; 
-            font-family: Arial, sans-serif; 
-            color: #000000;
-            -webkit-font-smoothing: antialiased; 
-        }
-        .profile-side div { 
-            margin-bottom: 6px; 
-            word-break: break-word; 
-            font-weight: normal; 
-            color: #000000;
-        }
-        .profile-side b { 
-            display: inline-block; 
-            width: 150px; 
-            font-weight: normal; 
-            color: #555555; 
-        }
+        .excel-header { display: flex; flex-direction: column; gap: 12px; border: 2px solid #000; padding: 12px; background: #fdfdfd; margin-bottom: 15px; }
+        .profile-side { width: 100%; font-size: 13px; font-family: Arial, sans-serif; color: #000000; -webkit-font-smoothing: antialiased; }
+        .profile-side div { margin-bottom: 6px; word-break: break-word; font-weight: normal; color: #000000; }
+        .profile-side b { display: inline-block; width: 150px; font-weight: normal; color: #555555; }
         
         /* Summary Box */
-        .summary-side { 
-            border: 2px solid #000000; 
-            width: 100%; 
-            background: #ffffff; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: space-between; 
-            font-size: 13px; 
-            font-family: Arial, sans-serif; 
-        }
-        .summary-row { 
-            display: flex; 
-            justify-content: space-between; 
-            border-bottom: 1px solid #000000; 
-            padding: 8px 12px; 
-        }
-        .summary-row:last-child { 
-            border-bottom: none; 
-        }
+        .summary-side { border: 2px solid #000000; width: 100%; background: #ffffff; display: flex; flex-direction: column; justify-content: space-between; font-size: 13px; font-family: Arial, sans-serif; }
+        .summary-row { display: flex; justify-content: space-between; border-bottom: 1px solid #000000; padding: 8px 12px; }
+        .summary-row:last-child { border-bottom: none; }
         .summary-row span { color: #555555; }
         .summary-row b { text-align: right; color: #000000; }
 
-        /* 🖥️ DESKTOP VIEW */
         @media (min-width: 768px) {
-            .excel-header { 
-                flex-direction: row; 
-                justify-content: space-between; 
-                align-items: stretch; 
-            }
+            .excel-header { flex-direction: row; justify-content: space-between; align-items: stretch; }
             .profile-side { flex: 1; width: auto; }
-            .summary-side { 
-                width: 280px; 
-                min-width: 280px;
-                flex-shrink: 0;
-            }
+            .summary-side { width: 280px; min-width: 280px; flex-shrink: 0; }
         }
 
         /* 📊 TABLE LAYOUT */
         .table-container { width: 100%; overflow-x: auto; margin-top: 10px; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; font-family: Arial, sans-serif; min-width: 850px; }
-        th, td { border: 1px solid #000; padding: 6px 8px; text-align: left; vertical-align: middle; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; font-family: Arial, sans-serif; min-width: 1050px; }
+        th, td { border: 1px solid #000; padding: 6px 8px; text-align: left; vertical-align: middle; transition: background-color 0.3s; }
         th { background-color: #d9d9d9; text-align: center; font-weight: bold; color: #000; }
         .center { text-align: center; }
         .no-data { text-align: center; padding: 40px; font-size: 16px; color: #666; font-style: italic; }
         .photo-link { color: #0066cc; text-decoration: none; font-weight: bold; }
         .photo-link:hover { text-decoration: underline; }
+
+        /* 🟢🔴 EVALUATION STYLES */
+        .status-dropdown { padding: 4px; font-weight: bold; border-radius: 4px; border: 1px solid #000; cursor: pointer; outline: none; width: 90px; }
+        .status-Pending { background-color: #ffc107; color: #000; }
+        .status-Valid { background-color: #28a745; color: #fff; }
+        .status-Invalid { background-color: #dc3545; color: #fff; }
+        
+        /* Admin Remarks Input */
+        .admin-remark { width: 100%; padding: 5px; border: 1px solid #999; border-radius: 3px; font-size: 11px; box-sizing: border-box; background-color: rgba(255,255,255,0.8); transition: 0.3s; }
+        .admin-remark:focus { border-color: #cc0000; outline: none; background-color: #fff; box-shadow: 0 0 5px rgba(204,0,0,0.5); }
+        .admin-remark::placeholder { color: #aaa; font-style: italic; }
+
+        /* Row Colors based on Evaluation */
+        .row-Pending { background-color: #ffffff; }
+        .row-Valid { background-color: #d4edda; } /* Light Green */
+        .row-Invalid { background-color: #f8d7da; } /* Light Red */
+        
+        .toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 5px; padding: 12px; position: fixed; z-index: 1000; right: 20px; bottom: 20px; font-size: 14px; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+        .toast.show { visibility: visible; -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+        @-webkit-keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 20px; opacity: 1;} }
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 20px; opacity: 1;} }
+        @-webkit-keyframes fadeout { from {bottom: 20px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+        @keyframes fadeout { from {bottom: 20px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+
+        /* 🖨️ PRINT / PDF STYLES (Mao ni mo-format inig-print/PDF) */
+        @media print {
+            body { background-color: #ffffff; padding: 0; color: #000; }
+            .report-wrapper { border: none; box-shadow: none; padding: 0; max-width: 100%; width: 100%; }
+            .control-panel { display: none !important; } /* Tagoan ang search ug buttons */
+            .admin-remark { border: none; background: transparent; font-weight: bold; padding: 0; }
+            .status-dropdown { border: none; background: transparent; -webkit-appearance: none; appearance: none; font-weight: bold; padding: 0; }
+            table { font-size: 10px; page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            th, td { border: 1px solid #000 !important; }
+        }
     </style>
 </head>
 <body>
 
     <div class="report-wrapper">
-        <!-- 🔍 SEARCH BAR -->
         <div class="control-panel">
             <label style="font-weight: bold;">RIDER ID:</label>
             <input type="text" id="searchIdInput" placeholder="Pananglitan: 0001 o 1604">
-            <button onclick="generateReport()">I-Generate gikan sa Supabase</button>
+            <button onclick="generateReport()">Generate gikan sa Database</button>
+            <button onclick="window.print()" class="pdf-btn">📄 Save as PDF / Print</button>
         </div>
 
-        <!-- 📊 REPORT OUTPUT AREA -->
         <div id="reportContent">
             <div class="no-data">I-type ang Rider ID sa ibabaw ug i-klik ang button aron kuhaon ang live data gikan sa Supabase.</div>
         </div>
     </div>
+
+    <!-- Notification pop-up -->
+    <div id="snackbar" class="toast">✅ Na-save ang Data sa Database!</div>
 
     <script src="database.js"></script>
     <script>
@@ -137,7 +125,6 @@
                 alert("Palihug isulod ang Rider ID!");
                 return;
             }
-
             if (!supabaseClient) {
                 container.innerHTML = `<div class="no-data" style="color: #cc0000;">❌ Error: Wala na-initialize ang Supabase client.</div>`;
                 return;
@@ -148,13 +135,11 @@
             try {
                 let targetNum = parseInt(targetId) || targetId;
 
-                // 1. PANGITAON ANG RIDER SA MASTERLIST (database.js)
                 let riderInfo = null;
                 if (typeof riderDatabase !== 'undefined' && Array.isArray(riderDatabase)) {
                     riderInfo = riderDatabase.find(r => String(r.idNum) === String(targetId) || String(r.idNum) === String(targetNum));
                 }
 
-                // 2. QUERY GIKAN SA SUPABASE TABLE (rally_scans)
                 let { data: scans, error } = await supabaseClient
                     .from('rally_scans')
                     .select('*')
@@ -168,19 +153,16 @@
                     return;
                 }
 
-                // 👉 KUHAON ANG MGA DETALYE (Lakip ang Vehicle ug Nickname)
                 let fullName = riderInfo ? (riderInfo.fullname || riderInfo.name) : (scans[0].rider_name || 'Wala sa Masterlist');
                 let riderLevel = riderInfo ? riderInfo.level : (scans[0].rider_level || 'AS26');
                 let codeName = riderInfo ? (riderInfo.nickname || 'N/A') : 'N/A';
                 let vehicleName = riderInfo ? (riderInfo.vehicle || 'N/A') : (scans[0].vehicle || 'N/A');
 
-                // 👉 KUHAON ANG NGALAN SA RUTA
                 let routeFullName = riderLevel; 
                 if (typeof routeNames !== 'undefined' && routeNames[riderLevel]) {
                     routeFullName = routeNames[riderLevel]; 
                 }
 
-                // Pag-compute sa oras ug distansya
                 let firstScanTime = new Date(scans[0].scanned_at);
                 let lastScanTime = new Date(scans[scans.length - 1].scanned_at);
                 let diffMs = lastScanTime - firstScanTime;
@@ -192,11 +174,10 @@
                 let startOdo = parseFloat(scans[0].odometer) || 0;
                 let endOdo = parseFloat(scans[scans.length - 1].odometer) || startOdo;
                 let totalDistance = endOdo >= startOdo ? (endOdo - startOdo) : endOdo;
-                if (totalDistance === 0) totalDistance = 655; // Placeholder kung walay valid movement
+                if (totalDistance === 0) totalDistance = 655;
 
                 let speedVal = totalHours > 0 ? (totalDistance / (diffMs / (1000 * 60 * 60))).toFixed(2) : "0.00";
 
-                // Himoon ang Excel-like table HTML nga linya-linya
                 let html = `
                     <div class="excel-header">
                         <div class="profile-side">
@@ -218,13 +199,15 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th style="width: 40px;">#</th>
+                                    <th style="width: 30px;">#</th>
                                     <th>CHECKPOINTS</th>
                                     <th style="width: 140px;">TIME (SCANNED AT)</th>
-                                    <th style="width: 60px;">ODO</th>
-                                    <th style="width: 130px;">COORDINATES (Lat, Lon)</th>
-                                    <th style="width: 110px;">EBIDENSYA</th>
-                                    <th>REMARKS / NOTES</th>
+                                    <th style="width: 50px;">ODO</th>
+                                    <th style="width: 120px;">COORDINATES</th>
+                                    <th style="width: 80px;">EBIDENSYA</th>
+                                    <th style="width: 150px;">REMARKS / NOTES</th>
+                                    <th style="width: 150px; background-color: #cc0000; color: white;">ADMIN REMARKS</th>
+                                    <th style="width: 100px; background-color: #cc0000; color: white;">EVALUATION</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -232,31 +215,23 @@
 
                 scans.forEach((scan, index) => {
                     let formattedDate = new Date(scan.scanned_at).toLocaleString();
-                    
                     let rLevel = riderInfo ? riderInfo.level : (scan.rider_level || 'AS26');
                     let cpCode = String(scan.checkpoint || '').trim();
-                    
                     let locationName = '';
 
-                    // 👉 ENSAKTO NGA PAGPANGITA SA CHECKPOINT NAME
                     if (typeof routeCheckpoints !== 'undefined') {
                         if (routeCheckpoints[rLevel] && routeCheckpoints[rLevel][cpCode]) {
                             locationName = routeCheckpoints[rLevel][cpCode];
-                        } 
-                        else if (routeCheckpoints["AS26"] && routeCheckpoints["AS26"][cpCode]) {
+                        } else if (routeCheckpoints["AS26"] && routeCheckpoints["AS26"][cpCode]) {
                             locationName = routeCheckpoints["AS26"][cpCode];
                         }
                     }
-
-                    if (!locationName) {
-                        locationName = scan.notes || ''; // Fallback lang kung wala gyud sa database
-                    }
+                    if (!locationName) locationName = scan.notes || ''; 
 
                     let photoLinkText = (scan.photo_url && scan.photo_url.startsWith('http')) 
-                        ? `<a href="${scan.photo_url}" target="_blank" class="photo-link">📷 Tan-awa ang Pic</a>` 
-                        : `<span style="color:#888;">${scan.photo_url || 'Walay Ebidensya'}</span>`;
+                        ? `<a href="${scan.photo_url}" target="_blank" class="photo-link">📷 Tan-awa</a>` 
+                        : `<span style="color:#888;">N/A</span>`;
 
-                    // 👉 PAG-FORMAT UG PAG-LINK SA COORDINATES
                     let rawLat = scan.latitude || scan.lat;
                     let rawLon = scan.longitude || scan.lon || scan.lng;
                     let coordsDisplay = '<span style="color:#aaa;">N/A</span>';
@@ -267,8 +242,11 @@
                         coordsDisplay = `<a href="https://www.google.com/maps?q=${rawLat},${rawLon}" target="_blank" title="Tan-awa sa Mapa" style="color:#0277bd; text-decoration:none; font-family:monospace; font-size:11px; display:inline-block; line-height:1.3;"><b>${latFormat},<br>${lonFormat}</b></a>`;
                     }
 
+                    let evalStatus = scan.status || 'Pending'; 
+                    let evalRemarks = scan.eval_remarks || '';
+                    
                     html += `
-                        <tr>
+                        <tr id="row-${scan.id}" class="row-${evalStatus}">
                             <td class="center">${index + 1}</td>
                             <td><b>${scan.checkpoint}</b> - ${locationName}</td>
                             <td class="center">${formattedDate}</td>
@@ -276,6 +254,16 @@
                             <td class="center">${coordsDisplay}</td>
                             <td class="center">${photoLinkText}</td>
                             <td>${scan.notes || '-'}</td>
+                            <td class="center">
+                                <input type="text" id="rem-${scan.id}" class="admin-remark" value="${evalRemarks}" placeholder="Ibutang ang rason..." onblur="saveEvaluation('${scan.id}')" onkeypress="if(event.key === 'Enter') this.blur();">
+                            </td>
+                            <td class="center">
+                                <select id="stat-${scan.id}" class="status-dropdown status-${evalStatus}" onchange="saveEvaluation('${scan.id}')">
+                                    <option value="Pending" ${evalStatus === 'Pending' ? 'selected' : ''}>⏳ Pending</option>
+                                    <option value="Valid" ${evalStatus === 'Valid' ? 'selected' : ''}>✅ Valid</option>
+                                    <option value="Invalid" ${evalStatus === 'Invalid' ? 'selected' : ''}>❌ Invalid</option>
+                                </select>
+                            </td>
                         </tr>
                     `;
                 });
@@ -292,6 +280,47 @@
                 console.error("Report Generation Error:", err);
                 container.innerHTML = `<div class="no-data" style="color: #cc0000;">❌ Naay error nga nahitabo: <b>${err.message}</b></div>`;
             }
+        }
+
+        async function saveEvaluation(recordId) {
+            const statElement = document.getElementById(`stat-${recordId}`);
+            const remElement = document.getElementById(`rem-${recordId}`);
+            const trElement = document.getElementById(`row-${recordId}`);
+            
+            const newStatus = statElement.value;
+            const newRemark = remElement.value;
+
+            statElement.disabled = true;
+            remElement.disabled = true;
+
+            try {
+                const { error } = await supabaseClient
+                    .from('rally_scans')
+                    .update({ 
+                        status: newStatus,
+                        eval_remarks: newRemark
+                    })
+                    .eq('id', recordId);
+
+                if (error) throw error;
+
+                trElement.className = `row-${newStatus}`;
+                statElement.className = `status-dropdown status-${newStatus}`;
+                
+                showToast();
+
+            } catch (err) {
+                alert("❌ Wala na-save ang data! Error: " + err.message);
+            } finally {
+                statElement.disabled = false;
+                remElement.disabled = false;
+            }
+        }
+
+        function showToast() {
+            const x = document.getElementById("snackbar");
+            x.className = "toast show";
+            setTimeout(function(){ x.className = x.className.replace("toast show", "toast"); }, 3000);
         }
     </script>
 </body>
