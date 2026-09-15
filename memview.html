@@ -10,7 +10,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0; padding: 20px;
         }
-        .container { max-width: 1100px; margin: auto; }
+        .container { max-width: 1200px; margin: auto; }
         header {
             display: flex; justify-content: space-between; align-items: center;
             border-bottom: 2px solid #cc0000; padding-bottom: 10px; margin-bottom: 20px;
@@ -42,10 +42,10 @@
         <a href="index.html" class="back-btn">Balik sa Main Page</a>
     </header>
     
-    <!-- SEARCH BOX: Gi-ilisan nako og 'oninput' aron perpekto ang pag-detect inig backspace -->
+    <!-- SEARCH BOX -->
     <input type="text" id="searchBox" class="search-box" placeholder="🔍 Pangitaa ang ngalan, ID o aka..." oninput="filterTable()">
     
-    <!-- LISTAHAN SA MGA MEMBERS (VIEW ONLY) -->
+    <!-- LISTAHAN SA MGA MEMBERS -->
     <div style="color: #aaa; font-size: 12px; margin-bottom: 5px;">Kinatibuk-ang Miyembro: <span id="memberCount">0</span></div>
     
     <div class="table-container">
@@ -55,6 +55,7 @@
                     <th>ID</th>
                     <th>Full Name</th>
                     <th>A.K.A</th>
+                    <th>Birthday</th>
                     <th>Contact</th>
                     <th>Motor Make</th>
                     <th>MS (Status)</th>
@@ -92,14 +93,12 @@
         allMembers = data || [];
         document.getElementById('memberCount').innerText = allMembers.length;
         
-        // Inig load sa page, blangko daan ang table 
         resetTableToInstruction();
     }
 
-    // Kini ang magsiguro nga mobalik sa "Search" instruction inig ka blangko
     function resetTableToInstruction() {
         const tbody = document.getElementById('membersTableBody');
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #777; padding: 20px;">🔍 I-type ang ngalan, ID, o A.K.A. sa search box aron mogawas ang listahan.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #777; padding: 20px;">🔍 I-type ang ngalan, ID, o A.K.A. sa search box aron mogawas ang listahan.</td></tr>`;
     }
 
     function displayTable(members) {
@@ -107,7 +106,7 @@
         tbody.innerHTML = '';
 
         if (!members || members.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #ff3333; padding: 20px;">❌ Walay nakit-an nga miyembro.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #ff3333; padding: 20px;">❌ Walay nakit-an nga miyembro.</td></tr>`;
             return;
         }
 
@@ -117,6 +116,7 @@
                 <td><b>${member.id || ''}</b></td>
                 <td>${member.full_name || ''}</td>
                 <td>${member.aka || ''}</td>
+                <td>${member.dob || ''}</td>
                 <td>${member.contact_no || ''}</td>
                 <td>${member.motor_make || ''}</td>
                 <td><span style="color: ${member.ms === 'ACTIVE' ? '#00ff00' : '#ff9900'};">${member.ms || ''}</span></td>
@@ -131,7 +131,6 @@
     function filterTable() {
         const query = document.getElementById('searchBox').value.toLowerCase().trim();
         
-        // Kung gi-erase ang text ug na-blangko ang box, i-trigger ang reset function!
         if (query === "") {
             resetTableToInstruction();
             return; 
