@@ -539,48 +539,36 @@
             logoElement.addEventListener('touchcancel', cancelPress);
         }
 
-
-
-
         document.addEventListener("DOMContentLoaded", function() {
-            setupLogoLongPress(document.getElementById('loginLogo'));
-            setupLogoLongPress(document.getElementById('masterMindsLogo'));
-            setupSignalTripleTap();
-
-            let gatePassed = localStorage.getItem("mmc_gatekeeper_passed") === "true";
+            const owntracksCheck = document.getElementById("owntracksCheck");
+            const proceedBtn = document.getElementById("proceedToLoginBtn");
             const gatekeeperContainer = document.getElementById("gatekeeperContainer");
             const loginContainer = document.getElementById("loginScreenContainer");
-            const scannerContainer = document.getElementById("scannerScreenContainer");
 
-            if (!gatePassed) {
-                if (gatekeeperContainer) gatekeeperContainer.style.display = "flex";
-                if (loginContainer) loginContainer.style.display = "none";
-                if (scannerContainer) scannerContainer.style.display = "none";
-                return;
-            } else {
-                if (gatekeeperContainer) gatekeeperContainer.style.display = "none";
-            }
+            if (owntracksCheck && proceedBtn) {
+                owntracksCheck.addEventListener("change", function() {
+                    if (this.checked) {
+                        proceedBtn.disabled = false;
+                        proceedBtn.style.background = "#cc0000";
+                        proceedBtn.style.color = "white";
+                        proceedBtn.style.cursor = "pointer";
+                    } else {
+                        proceedBtn.disabled = true;
+                        proceedBtn.style.background = "#444";
+                        proceedBtn.style.color = "#888";
+                        proceedBtn.style.cursor = "not-allowed";
+                    }
+                });
 
-            let isLoggedIn = localStorage.getItem("tourIsLoggedIn");
-            let savedRiderID = localStorage.getItem("tourRiderID");
-            let isMarshal = localStorage.getItem("tourIsMarshal") === "true";
-
-            if (isLoggedIn === "true" && savedRiderID) {
-                loginContainer.style.display = "none";
-                scannerContainer.style.display = "flex";
-                
-                checkEventStatus(savedRiderID);
-                initScannerApp(savedRiderID);
-                setupOwnTracksOneTapButton(savedRiderID);
-
-                const scanQrBtn = document.getElementById('scanQrBtn');
-                if (scanQrBtn) scanQrBtn.style.display = isMarshal ? "block" : "none";
-            } else {
-                loginContainer.style.display = "flex";
-                scannerContainer.style.display = "none";
+                proceedBtn.addEventListener("click", function() {
+                    if (owntracksCheck.checked) {
+                        localStorage.setItem("mmc_gatekeeper_passed", "true");
+                        if (gatekeeperContainer) gatekeeperContainer.style.display = "none";
+                        if (loginContainer) loginContainer.style.display = "flex";
+                    }
+                });
             }
         });
-
 
         function setupOwnTracksOneTapButton(riderId) {
             if (localStorage.getItem("mmc_owntracks_configured_" + riderId) === "true") {
