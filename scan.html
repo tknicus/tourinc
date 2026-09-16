@@ -581,36 +581,6 @@
             }
         });
 
-        document.addEventListener("DOMContentLoaded", function() {
-            const owntracksCheck = document.getElementById("owntracksCheck");
-            const proceedBtn = document.getElementById("proceedToLoginBtn");
-            const gatekeeperContainer = document.getElementById("gatekeeperContainer");
-            const loginContainer = document.getElementById("loginScreenContainer");
-
-            if (owntracksCheck && proceedBtn) {
-                owntracksCheck.addEventListener("change", function() {
-                    if (this.checked) {
-                        proceedBtn.disabled = false;
-                        proceedBtn.style.background = "#cc0000";
-                        proceedBtn.style.color = "white";
-                        proceedBtn.style.cursor = "pointer";
-                    } else {
-                        proceedBtn.disabled = true;
-                        proceedBtn.style.background = "#444";
-                        proceedBtn.style.color = "#888";
-                        proceedBtn.style.cursor = "not-allowed";
-                    }
-                });
-
-                proceedBtn.addEventListener("click", function() {
-                    if (owntracksCheck.checked) {
-                        localStorage.setItem("mmc_gatekeeper_passed", "true");
-                        if (gatekeeperContainer) gatekeeperContainer.style.display = "none";
-                        if (loginContainer) loginContainer.style.display = "flex";
-                    }
-                });
-            }
-        });
 
         function setupOwnTracksOneTapButton(riderId) {
             if (localStorage.getItem("mmc_owntracks_configured_" + riderId) === "true") {
