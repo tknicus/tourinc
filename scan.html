@@ -550,6 +550,32 @@
             const gatekeeperContainer = document.getElementById("gatekeeperContainer");
             const loginContainer = document.getElementById("loginScreenContainer");
             const scannerContainer = document.getElementById("scannerScreenContainer");
+            const owntracksCheck = document.getElementById("owntracksCheck");
+            const proceedBtn = document.getElementById("proceedToLoginBtn");         
+
+            if (owntracksCheck && proceedBtn) {
+                owntracksCheck.addEventListener("change", function() {
+                    if (this.checked) {
+                        proceedBtn.disabled = false;
+                        proceedBtn.style.background = "#cc0000";
+                        proceedBtn.style.color = "white";
+                        proceedBtn.style.cursor = "pointer";
+                    } else {
+                        proceedBtn.disabled = true;
+                        proceedBtn.style.background = "#444";
+                        proceedBtn.style.color = "#888";
+                        proceedBtn.style.cursor = "not-allowed";
+                    }
+                });
+
+                proceedBtn.addEventListener("click", function() {
+                    if (owntracksCheck.checked) {
+                        localStorage.setItem("mmc_gatekeeper_passed", "true");
+                        if (gatekeeperContainer) gatekeeperContainer.style.display = "none";
+                        if (loginContainer) loginContainer.style.display = "flex";
+                    }
+                });
+            }
 
             if (!gatePassed) {
                 if (gatekeeperContainer) gatekeeperContainer.style.display = "flex";
@@ -577,37 +603,6 @@
             } else {
                 loginContainer.style.display = "flex";
                 scannerContainer.style.display = "none";
-            }
-        });
-
-        document.addEventListener("DOMContentLoaded", function() {
-            const owntracksCheck = document.getElementById("owntracksCheck");
-            const proceedBtn = document.getElementById("proceedToLoginBtn");
-            const gatekeeperContainer = document.getElementById("gatekeeperContainer");
-            const loginContainer = document.getElementById("loginScreenContainer");
-
-            if (owntracksCheck && proceedBtn) {
-                owntracksCheck.addEventListener("change", function() {
-                    if (this.checked) {
-                        proceedBtn.disabled = false;
-                        proceedBtn.style.background = "#cc0000";
-                        proceedBtn.style.color = "white";
-                        proceedBtn.style.cursor = "pointer";
-                    } else {
-                        proceedBtn.disabled = true;
-                        proceedBtn.style.background = "#444";
-                        proceedBtn.style.color = "#888";
-                        proceedBtn.style.cursor = "not-allowed";
-                    }
-                });
-
-                proceedBtn.addEventListener("click", function() {
-                    if (owntracksCheck.checked) {
-                        localStorage.setItem("mmc_gatekeeper_passed", "true");
-                        if (gatekeeperContainer) gatekeeperContainer.style.display = "none";
-                        if (loginContainer) loginContainer.style.display = "flex";
-                    }
-                });
             }
         });
 
