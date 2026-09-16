@@ -782,12 +782,22 @@
                         finalPhotoUrl = publicUrlData.publicUrl;
                     }
                 }
+
+                // 🛑 I-APIL DIRI ANG SCANNED_AT O TIMESTAMP NGA GIPADALA SA PAYLOAD:
                 const { error: dbError } = await supabaseLiveClient.from('rally_scans').insert([{
-                    qr_code: dataPayload.idNum, rider_name: dataPayload.name, rider_level: dataPayload.level,
-                    checkpoint: dataPayload.checkpoint, odometer: dataPayload.odometer || 0, notes: dataPayload.notes || "",
-                    latitude: dataPayload.latitude || 0, longitude: dataPayload.longitude || 0,
-                    location_address: dataPayload.location || "", photo_url: finalPhotoUrl
+                    qr_code: dataPayload.idNum, 
+                    rider_name: dataPayload.name, 
+                    rider_level: dataPayload.level,
+                    checkpoint: dataPayload.checkpoint, 
+                    odometer: dataPayload.odometer || 0, 
+                    notes: dataPayload.notes || "",
+                    latitude: dataPayload.latitude || 0, 
+                    longitude: dataPayload.longitude || 0,
+                    location_address: dataPayload.location || "", 
+                    photo_url: finalPhotoUrl,
+                    scanned_at: dataPayload.timestamp // <--- Diri nato i-salibay ang tinuod nga oras sa pag-scan!
                 }]);
+
                 if (dbError) { console.error("Sipyat sa database insert:", dbError.message); return false; }
                 return true; 
             } catch (error) { console.error("Critical error sa pag-send:", error); return false; }
