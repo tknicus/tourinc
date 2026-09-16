@@ -942,7 +942,8 @@
             try {
                 let { data, error } = await supabaseLiveClient
                     .from('rally_scans')
-                    .select('*');
+                    .select('*')
+                    .order('scanned_at', { ascending: true }); // 👈 KINI ANG SAKTONG SEKRETO!
 
                 if (error) {
                     console.error("Error sa pagkuha gikan sa Supabase:", error.message);
