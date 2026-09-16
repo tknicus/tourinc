@@ -6,13 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MasterMinds'CUP Offline Locator</title>
 
+    <!-- PWA MANIFEST UG ICON -->
     <link rel="icon" type="image/png" href="scan.png">
     <link rel="apple-touch-icon" href="scan.png">
     <meta name="theme-color" content="#121212">
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- 📷 QR CODE SCANNER LIBRARY 📷 -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     
+    <!-- 🎨 SUGOD SA MODERN DARK RACING THEME 🎨 -->
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -20,9 +24,8 @@
             color: #f5f5f5;
             margin: 0;
             padding: 0;
-            display: flex;
-            justify-content: center;
         }
+
         .container {
             background-color: #1e1e1e;
             width: 100%;
@@ -35,27 +38,35 @@
             margin-top: 15px;
             margin-bottom: 15px;
         }
+
         .app-logo {
             width: 100%;
             max-width: 250px;
             display: block;
             margin: 0 auto 15px auto;
-            -webkit-touch-callout: none; user-select: none;
+            -webkit-touch-callout: none; 
+            -webkit-user-select: none; 
+            user-select: none; 
         }
+
         h4 { text-align: center; color: #ffffff; margin-top: 0; text-transform: lowercase; font-style: italic; letter-spacing: 1px; font-size: 15px; }
         h2 { text-align: center; color: #ffffff; margin-top: 0; text-transform: uppercase; font-style: italic; letter-spacing: 1px; font-size: 20px; }
+
         #statusIndicator, #liveLocation { text-align: center; padding: 10px; margin-bottom: 15px; border-radius: 5px; font-weight: bold; font-size: 14px; }
         #liveLocation { background-color: #2a2a2a; border: 1px solid #444; color: #ccc; }
+
         input[type="text"], input[type="number"], input[type="password"], textarea, select {
             width: 100%; padding: 12px; margin-top: 5px; margin-bottom: 15px; border: 1px solid #444; border-radius: 4px;
             background-color: #2a2a2a; color: #ffffff; font-size: 16px; box-sizing: border-box; transition: all 0.3s ease; font-family: Arial, sans-serif;
         }
         input:focus, textarea:focus, select:focus { outline: none; border-color: #cc0000; box-shadow: 0 0 5px rgba(204, 0, 0, 0.5); }
         input[readonly] { background-color: #1a1a1a; color: #888; }
+
         button { width: 100%; padding: 15px; font-size: 16px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
         button[type="submit"] { background-color: #cc0000; color: white; box-shadow: 0 4px 6px rgba(204, 0, 0, 0.3); margin-top: 5px; }
         button[type="submit"]:hover { background-color: #990000; }
         button[type="submit"]:disabled { background-color: #555; color: #888; cursor: not-allowed; box-shadow: none; }
+
         .camera-btn-wrapper { position: relative; overflow: hidden; display: inline-block; width: 100%; margin-bottom: 15px; }
         .camera-btn { background-color: #444; color: white; }
         .camera-btn:hover { background-color: #555; }
@@ -67,29 +78,34 @@
     <!-- ================= 0. GATEKEEPER SCREEN ================= -->
     <div id="gatekeeperContainer" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000000; z-index: 999999; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
         <div style="width: 100%; max-width: 380px; background: #111; padding: 25px; border-radius: 12px; border: 1px solid #333; color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.8); text-align: center; max-height: 90vh; overflow-y: auto;">
+            
             <img src="mmc.png" alt="MasterMinds CUP Logo" style="width: 90px; display: block; margin: 0 auto 10px auto;">
             <h3 style="color: #ff9900; margin-bottom: 5px; font-size: 17px;">LAKBANG 1: LIVE GPS TRACKING</h3>
             <p style="font-size: 12px; color: #ccc; line-height: 1.4; margin-bottom: 12px;">
                 Para sa safety ug live monitoring sa MasterMinds'CUP, kinahanglan naay <b>OwnTracks</b> app ang imong selpon.
             </p>
+            
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                 <a href="https://play.google.com/store/apps/details?id=org.owntracks.android" target="_blank" style="flex:1; background:#222; border:1px solid #444; color:#fff; padding:8px; text-decoration:none; border-radius:6px; font-size:11px; font-weight:bold; display:block;">🤖 Play Store<br><span style="font-size:9px; color:#aaa;">(Android)</span></a>
                 <a href="https://apps.apple.com/us/app/owntracks/id692987167" target="_blank" style="flex:1; background:#222; border:1px solid #444; color:#fff; padding:8px; text-decoration:none; border-radius:6px; font-size:11px; font-weight:bold; display:block;">🍏 App Store<br><span style="font-size:9px; color:#aaa;">(iPhone)</span></a>
             </div>
+
             <div style="background: #2a1a00; border: 1px solid #ff9900; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 11px; color: #ffcc00; text-align: left; line-height: 1.4;">
                 <b>⚠️ PAHINUMDOM SA RIDER:</b><br>
                 Human ma-install, palihug siguruha nga:
                 <ul style="margin: 3px 0 0 15px; padding: 0; color: #ddd;">
                     <li><b>Location:</b> I-set sa <i>"Allow all the time"</i>.</li>
-                    <li><b>Battery:</b> I-set sa <i>"Unrestricted"</i> aron dili mapalong ang GPS.</li>
+                    <li><b>Battery:</b> I-set sa <i>"Unrestricted"</i> aron dili mapalong ang GPS kung ma-off ang screen.</li>
                 </ul>
             </div>
+
             <div style="background: #1a1a1a; padding: 12px; border-radius: 8px; border: 1px dashed #555; text-align: left; margin-bottom: 15px;">
                 <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 12px; color: #fff;">
                     <input type="checkbox" id="owntracksCheck" style="width: 18px; height: 18px; margin-top: 2px; accent-color: #cc0000; cursor: pointer;">
                     <span>Oo, na-download ug na-install na nako, ug gibutang na nako sa Unrestricted ang battery.</span>
                 </label>
             </div>
+
             <button id="proceedToLoginBtn" disabled style="width: 100%; background: #444; color: #888; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: not-allowed; font-size: 14px; transition: 0.3s;">IPADAYON SA LOGIN</button>
         </div>
     </div>
@@ -97,17 +113,22 @@
     <!-- ================= 1. FULL-SCREEN LOGIN OVERLAY ================= -->
     <div id="loginScreenContainer" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000000; z-index: 999999; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
         <div style="width: 100%; max-width: 380px; background: #111; padding: 25px; border-radius: 12px; border: 1px solid #333; color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.8);">
-            <img src="mmc.png" alt="MasterMinds CUP Logo" id="loginLogo" style="width: 150px; display: block; margin: 0 auto 15px auto; cursor: pointer; user-select: none;">
+            
+            <img src="mmc.png" alt="MasterMinds CUP Logo" id="loginLogo" style="width: 150px; display: block; margin: 0 auto 15px auto; cursor: pointer; -webkit-touch-callout: none; user-select: none;">
+            
             <h2 style="text-align: center; margin-bottom: 5px; font-size: 20px;">MMC SCANNER LOGIN</h2>
             <p style="text-align: center; color: #aaa; font-size: 13px; margin-bottom: 20px;">Palihug isulod ang imong ID ug Passcode.</p>
+            
             <div style="margin-bottom: 15px;">
                 <label style="font-size: 13px; color: #ccc;">Rider ID#:</label><br>
                 <input type="text" id="riderIdInput" placeholder="Pananglitan: 0001" style="width: 100%; padding: 12px; margin-top: 5px; background: #222; color: white; border: 1px solid #444; border-radius: 6px; box-sizing: border-box;">
             </div>
+            
             <div style="margin-bottom: 20px;">
                 <label style="font-size: 13px; color: #ccc;">Passcode / PIN:</label><br>
                 <input type="password" id="riderPassInput" placeholder="Isulod ang passcode" style="width: 100%; padding: 12px; margin-top: 5px; background: #222; color: white; border: 1px solid #444; border-radius: 6px; box-sizing: border-box;">
             </div>
+            
             <button onclick="verifyAndLogin()" id="loginBtn" style="width: 100%; background: #007BFF; color: white; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px;">SULOD SA SCANNER</button>
         </div>
     </div>
@@ -115,6 +136,7 @@
     <!-- ================= 2. MAIN SCANNER SCREEN ================= -->
     <div id="scannerScreenContainer" style="display: none; width: 100%; justify-content: center;">
         <div class="container">
+            
             <img src="mmc.png" alt="MasterMinds CUP Logo" class="app-logo" id="masterMindsLogo">
             <h4>" never say never "</h4>
             <h2>Checkpoint Scanner</h2>
@@ -195,12 +217,13 @@
 
             <div style="text-align: center; margin-top: 25px; padding-bottom: 20px; font-size: 12px; color: #aaa; border-top: 1px solid #333; padding-top: 15px;">
                 <p style="margin: 0; font-weight: bold; color: #ffcc00;">&copy; 2026 MasterMinds'CUP. All Rights Reserved.</p>
-                <p style="margin: 5px 0 0 0;">Build Version: <span id="appVersionText" style="color: #00ff00; font-family: monospace;">v4.1-technicus-optimized</span></p>
+                <p style="margin: 5px 0 0 0;">Build Version: <span id="appVersionText" style="color: #00ff00; font-family: monospace;">v4.0-technicus-secure</span></p>
                 <p style="margin: 3px 0 0 0; font-size: 10px; color: #666;">Status: Active & Secure 🛡️</p>
             </div>
         </div>
     </div>
 
+    <!-- 🎵 AUDIO WEAPON -->
     <audio id="submitMusic" src="./never_say_never.mp3" preload="auto"></audio> 
 
     <script src="database.js"></script>
@@ -209,14 +232,17 @@
         // 🛰️ SUPABASE CONFIGURATION
         // ==========================================
         const _supabaseUrl = 'https://iilfklquzyxmdergwawh.supabase.co';
-        const _supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpbGZrbHF1enl4bWRlcmd3YXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MTkzMDcsImV4cCI6MjEwMzI5NTMwN30.jMctz666CGfTdODLqNr24O3dQ5SDM6K5GkmihCtDdBQ';
+        const _supabaseAnonKey = 'sb_publishable_xO3twPzyDBLhdltnkwoS3w_xswYLyf_';
         
         const supabaseLiveClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
         
+        // 🛡️ COMPATIBILITY ALIAS: Gihimo namong pwedeng basahon ang routeConfigs gamit ang routeCheckpoints
+        //const routeConfigs = typeof routeCheckpoints !== 'undefined' ? routeCheckpoints : {};
+        // 🛡️ COMPATIBILITY ALIAS: Gihimo namong pwedeng basahon ang routeConfigs gamit ang routeCheckpoints
         window.routeConfigs = (typeof routeCheckpoints !== 'undefined') ? routeCheckpoints : {};
-
+        
         // ==========================================
-        // 🛠️ CUSTOM PIN PROMPT & HASHING
+        // 🛠️ CUSTOM PIN PROMPT HELPER
         // ==========================================
         function customPinPrompt(title, message) {
             return new Promise((resolve) => {
@@ -235,6 +261,7 @@
                         <button id="promptOkBtn" style="background:#cc0000;color:white;padding:10px;border:none;border-radius:4px;cursor:pointer;flex:1;font-weight:bold;">SULOD</button>
                     </div>
                 `;
+                
                 overlay.appendChild(box);
                 document.body.appendChild(overlay);
                 
@@ -257,15 +284,15 @@
                 const encoder = new TextEncoder();
                 const data = encoder.encode(str);
                 const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-                return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
             } catch (err) {
                 return "";
             }
         }
 
-        // ==========================================
-        // 🗺️ ROUTE DEFAULTS
-        // ==========================================
+
+        // 🛡️ SAFE & BULLETPROOF ROUTE CONFIGS (Dili gyud ma-stock o mo-pilit ang app)
         if (typeof window.routeNames === 'undefined') {
             window.routeNames = {
                 "AS26": "628 ALL STAR", "G5": "MAN OF STEEL", "G4": "4W RIDERS",
@@ -280,67 +307,79 @@
 
         if (Object.keys(window.routeConfigs).length === 0) {
             window.routeConfigs = {
-                "G1N": [{ val: "CP 00", name: "#00 StartingGrid" }, { val: "CP 01", name: "#01 San Fernando Municipal Plaza" }, { val: "CP 02", name: "#02 Iba Central Elementary School 25km" }, { val: "CP FL", name: "#FL Ending Grid" }],
-                "G1E": [{ val: "CP 00", name: "#00 Starting Grid" }, { val: "CP 01", name: "#01 Carmen Cannon" }, { val: "CP FL", name: "#18 Ending Grid" }],
-                "G1W": [{ val: "CP 00", name: "#00 DavNor Sports Complex" }, { val: "CP 01", name: "#01 Davao City Coastal Road" }, { val: "CP FL", name: "#17 DavNor Sports Complex (End Grid)" }],
-                "G1S": [{ val: "CP 00", name: "#00 Starting Grid" }, { val: "CP 01", name: "#01 Davao City Coastal Road" }, { val: "CP FL", name: "#22 Clossing Grid" }],
-                "G3": [{ val: "CP 00", name: "#00 Start G3" }, { val: "CP 01", name: "#07 Bukidnon Route - A" }, { val: "CP 02", name: "#08 Bukidnon Route - B" }, { val: "CP 03", name: "#09 Finish Line G3" }],
-                "G4": [{ val: "CP 00", name: "#00 Start G4" }, { val: "CP FL", name: "#04 Finish Line G4" }],
-                "G5": [{ val: "CP 000", name: "#00 DavNor Sports Complex" }, { val: "CP 001", name: "#00 Davao City Coastal Road" }, { val: "CP FL", name: "#00 Finish Line G5" }],
-                "AS26": [{ val: "CP 00", name: "#00 Glorious Gate" }, { val: "CP 01", name: "#01 Mr. DIY" }, { val: "CP FL", name: "#48 ELKAPITAN's Headstone" }]
+                "G1N": [
+                    { val: "CP 00", name: "#00 Starting Grid" }, 
+                    { val: "CP 01", name: "#01 San Fernando Municipal Plaza" }, 
+                    { val: "CP 02", name: "#02 Iba Central Elementary School 25km" }, 
+                    { val: "CP FL", name: "#FL Ending Grid" }
+                ],
+                "G1E": [
+                    { val: "CP 00", name: "#00 Starting Grid" }, 
+                    { val: "CP 01", name: "#01 Carmen Cannon" }, 
+                    { val: "CP FL", name: "#18 Ending Grid" }
+                ],
+                "G1W": [
+                    { val: "CP 00", name: "#00 DavNor Sports Complex (Starting Grid)" }, 
+                    { val: "CP 01", name: "#01 Davao City Coastal Road" }, 
+                    { val: "CP FL", name: "#17 DavNor Sports Complex (End Grid)" }
+                ],
+                "G1S": [
+                    { val: "CP 00", name: "#00 Starting Grid" }, 
+                    { val: "CP 01", name: "#01 Davao City Coastal Road" }, 
+                    { val: "CP FL", name: "#22 Clossing Grid" }
+                ],
+                "G3": [
+                    { val: "CP 00", name: "#00 Start G3" }, 
+                    { val: "CP 01", name: "#07 Bukidnon Route - A" },
+                    { val: "CP 02", name: "#08 Bukidnon Route - B" }, 
+                    { val: "CP 03", name: "#09 Finish Line G3" }
+                ],
+                "G4": [
+                    { val: "CP 00", name: "#00 Start G4 tark-tarak Riddes" }, 
+                    { val: "CP FL", name: "#04 Finish Line G4" }
+                ],
+                "G5": [
+                    { val: "CP 000", name: "#00 DavNor Sports Complex" }, 
+                    { val: "CP 001", name: "#00 Davao City Coastal Road" },
+                    { val: "CP FL", name: "#00 Finish Line G5" }
+                ],
+                "AS26": [
+                    { val: "CP 00", name: "#00 Glorious Gate" }, 
+                    { val: "CP 01", name: "#01 Mr. DIY" }, 
+                    { val: "CP FL", name: "#48 ELKAPITAN's Headstone" }
+                ]
             };
         }
 
-        // ==========================================
-        // ⚙️ UNIFIED OWNTRACKS CONFIG FUNCTION
-        // ==========================================
-        function setupOwnTracksOneTapButton(riderId) {
-            const configJson = {
-                "_type": "configuration", "mode": 3,
-                "url": "https://iilfklquzyxmdergwawh.supabase.co/rest/v1/rider_locations",
-                "username": "Rider_" + riderId, "device": String(riderId), "tid": String(riderId).slice(-2),
-                "autostartOnBoot": true, "extendedData": true,
-                "ignoreInaccurateLocations": 100, "ignoreStaleLocations": 0,
-                "locatorDisplacement": 150, "locatorInterval": 180,
-                "locatorPriority": 0, "monitoring": 2,
-                "notificationLocation": true, "pegLocatorFastestIntervalToInterval": true
-            };
 
-            const base64Config = btoa(JSON.stringify(configJson));
-            const oneTapConfigUrl = `owntracks://config?cfg=${base64Config}`;
-            const oneTapBtn = document.getElementById("oneTapConfigBtn");
-            const setupContainer = document.getElementById("setupOwntracksContainer");
-            
-            if (oneTapBtn && setupContainer) {
-                oneTapBtn.href = oneTapConfigUrl;
-                setupContainer.style.display = "block";
-                oneTapBtn.onclick = function(e) {
-                    let userAgent = navigator.userAgent || navigator.vendor || window.opera;
-                    if (!(/android|iphone|ipad|ipod/i.test(userAgent))) {
-                        e.preventDefault();
-                        alert("⚠️ Ang OwnTracks One-Tap Config kay para ra sa Mobile Phone (Android/iOS).");
-                    }
-                    localStorage.setItem("mmc_owntracks_configured_" + riderId, "true");
-                };
-            }
-        }
 
-        // ==========================================
-        // 🔐 LOGIN & OVERRIDE HANDLERS
-        // ==========================================
         async function verifyAndLogin() {
-            let isOwnTracksInstalled = localStorage.getItem("mmc_owntracks_ready");
-            if (isOwnTracksInstalled !== "true") {
-                let confirmInstall = confirm("⚠️ MAHINUNGDANONG PAHIBALO:\n\nPara sa Live Tracking, kinahanglan naay OwnTracks app.\n\nNa-install na ba nimo?");
+            function checkOwnTracksRequirement() {
+                let isOwnTracksInstalled = localStorage.getItem("mmc_owntracks_ready");
+                if (isOwnTracksInstalled === "true") return true;
+
+                let confirmInstall = confirm("⚠️ MAHINUNGDANONG PAHIBALO:\n\nPara sa Life360-style Live Tracking sa MasterMinds'CUP, kinahanglan una nimo i-install ang 'OwnTracks' app.\n\nNa-install na ba nimo ang OwnTracks?");
+                
                 if (confirmInstall) {
                     localStorage.setItem("mmc_owntracks_ready", "true");
+                    return true;
                 } else {
-                    let userAgent = navigator.userAgent || "";
-                    if (/android/i.test(userAgent)) window.location.href = "https://play.google.com/store/apps/details?id=org.owntracks.android";
-                    else window.location.href = "https://owntracks.org/";
-                    return;
+                    let userAgent = navigator.userAgent || navigator.vendor || window.opera;
+                    if (/android/i.test(userAgent)) {
+                        alert("I-redirect ka namo sa Google Play Store aron i-download ang OwnTracks.");
+                        window.location.href = "https://play.google.com/store/apps/details?id=org.owntracks.android";
+                    } else if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+                        alert("I-redirect ka namo sa Apple App Store aron i-download ang OwnTracks.");
+                        window.location.href = "https://apps.apple.com/us/app/owntracks/id692987167";
+                    } else {
+                        alert("Palihug i-download ang OwnTracks app sa App Store o Play Store.");
+                        window.location.href = "https://owntracks.org/";
+                    }
+                    return false;
                 }
             }
+
+            if (!checkOwnTracksRequirement()) return;
 
             let inputtedID = document.getElementById("riderIdInput").value.trim();
             let inputtedPass = document.getElementById("riderPassInput").value.trim();
@@ -356,13 +395,20 @@
             }
 
             let rider = riderDatabase.find(r => r.idNum === inputtedID);
+
             if (rider) {
                 let isPasscodeValid = false;
                 if (rider.passcode) {
                     let hashedInputPass = await sha256Hash(inputtedPass);
-                    if (hashedInputPass === rider.passcode) isPasscodeValid = true;
-                    else { alert("ACCESS DENIED: Sayop ang imong Passcode!"); return; }
-                } else { isPasscodeValid = true; }
+                    if (hashedInputPass === rider.passcode) {
+                        isPasscodeValid = true;
+                    } else {
+                        alert("ACCESS DENIED: Sayop ang imong Passcode!");
+                        return;
+                    }
+                } else {
+                    isPasscodeValid = true; 
+                }
 
                 if (isPasscodeValid) {
                     localStorage.setItem("tourRiderID", rider.idNum);
@@ -371,26 +417,74 @@
                     localStorage.setItem("tourIsLoggedIn", "true");
                     setupOwnTracksOneTapButton(rider.idNum);
                     
-                    let isMarshal = rider.isMarshal === true;
-                    localStorage.setItem("tourIsMarshal", isMarshal ? "true" : "false");
-                    localStorage.setItem("marshalMode", isMarshal ? "true" : "false");
+                    if (rider.isMarshal === true) {
+                        localStorage.setItem("tourIsMarshal", "true");
+                        localStorage.setItem("marshalMode", "true");
+                    } else {
+                        localStorage.setItem("tourIsMarshal", "false");
+                        localStorage.setItem("marshalMode", "false");
+                    }
 
                     document.getElementById("loginScreenContainer").style.display = "none";
                     document.getElementById("scannerScreenContainer").style.display = "flex";
 
                     initScannerApp(rider.idNum);
+
                     const scanQrBtn = document.getElementById('scanQrBtn');
-                    if (scanQrBtn) scanQrBtn.style.display = isMarshal ? "block" : "none";
+                    if (scanQrBtn) {
+                        scanQrBtn.style.display = (rider.isMarshal === true) ? "block" : "none";
+                    }
                 }
             } else {
-                alert("ACCESS DENIED: Ang maong ID# kay dili rehistrado.");
+                alert("ACCESS DENIED: Ang maong ID# kay walay labot o dili rehistrado.");
                 document.getElementById("riderIdInput").value = "";
                 document.getElementById("riderPassInput").value = "";
             }
         }
 
+        function setupOwnTracksOneTapButton(riderId) {
+            if (localStorage.getItem("mmc_owntracks_configured_" + riderId) === "true") {
+                const setupContainer = document.getElementById("setupOwntracksContainer");
+                if (setupContainer) setupContainer.style.display = "none";
+                return;
+            }
+
+            const configJson = {
+                "_type": "configuration", "mode": 3,
+                "url": "https://iilfklquzyxmdergwawh.supabase.co/functions/v1/owntracks-webhook?rider_id=" + riderId,
+                "username": "rider_" + riderId, "deviceId": "phone", "tid": riderId.slice(-2),
+                "autostartOnBoot": true, "extendedData": true,
+                "ignoreInaccurateLocations": 100, "ignoreStaleLocations": 0,
+                "locatorDisplacement": 50, "locatorInterval": 60,
+                "locatorPriority": 0, "monitoring": 2,
+                "notificationLocation": true, "pegLocatorFastestIntervalToInterval": true
+            };
+
+            const base64Config = btoa(JSON.stringify(configJson));
+            const oneTapConfigUrl = `owntracks:///config?inline=${base64Config}`;
+            const oneTapBtn = document.getElementById("oneTapConfigBtn");
+            const setupContainer = document.getElementById("setupOwntracksContainer");
+            
+            if (oneTapBtn && setupContainer) {
+                setupContainer.style.display = "block";
+                oneTapBtn.onclick = function(e) {
+                    let userAgent = navigator.userAgent || navigator.vendor || window.opera;
+                    // Tsekon kung mobile phone ba gyud
+                    if (/android|iphone|ipad|ipod/i.test(userAgent)) {
+                        window.location.href = oneTapConfigUrl;
+                    } else {
+                        e.preventDefault();
+                        alert("⚠️ Ang OwnTracks One-Tap Config kay para ra sa Mobile Phone (Android/iOS). Palihug ablihi kini nga website sa imong selpon.");
+                    }
+                    localStorage.setItem("mmc_owntracks_configured_" + riderId, "true");
+                    setTimeout(() => { setupContainer.style.display = "none"; }, 500);
+                };
+            }
+        }
+
         function setupSignalTripleTap() {
-            let tapCount = 0, tapTimeout;
+            let tapCount = 0;
+            let tapTimeout;
             const signalWrapper = document.getElementById('signalStatusWrapper');
             const scanQrBtn = document.getElementById('scanQrBtn');
 
@@ -403,17 +497,22 @@
                     if (tapCount === 3) {
                         tapCount = 0; 
                         let currentMarshalStatus = localStorage.getItem('tourIsMarshal') === "true";
+
                         if (!currentMarshalStatus) {
-                            let passcode = await customPinPrompt("🕵️‍♂️ MARSHAL OVERRIDE", "Pagsulod og Marshal PIN:");
+                            let passcode = await customPinPrompt("🕵️‍♂️ MARSHAL OVERRIDE", "Pagsulod og Marshal Passcode (PIN):");
                             if (!passcode) return;
-                            let hashedInput = await sha256Hash(passcode); 
-                            let validMarshal = riderDatabase.find(r => r.passcode === hashedInput && r.isMarshal === true);     
-                            if (validMarshal) {
-                                localStorage.setItem('marshalMode', 'true'); 
-                                localStorage.setItem('tourIsMarshal', 'true');
-                                if (scanQrBtn) scanQrBtn.style.display = "block"; 
-                                alert(`🔓 MARSHAL OVERRIDE ON! Welcome, Master ${validMarshal.fullname}!`);
-                            } else { alert("❌ Sayop nga Passcode!"); }
+
+                            if (typeof riderDatabase !== 'undefined') {
+                                let hashedInput = await sha256Hash(passcode); 
+                                let validMarshal = riderDatabase.find(r => r.passcode === hashedInput && r.isMarshal === true);     
+                                
+                                if (validMarshal) {
+                                    localStorage.setItem('marshalMode', 'true'); 
+                                    localStorage.setItem('tourIsMarshal', 'true');
+                                    if (scanQrBtn) scanQrBtn.style.display = "block"; 
+                                    alert(`🔓 MARSHAL OVERRIDE ON! Welcome, Master ${validMarshal.fullname}! Naabli na ang QR Scanner.`);
+                                } else { alert("❌ Sayop nga Passcode!"); }
+                            }
                         } else {
                             if (confirm("🔒 Gusto nimo i-lock ug ibalik sa Regular Rider Mode?")) {
                                 localStorage.setItem('marshalMode', 'false');
@@ -430,36 +529,58 @@
         function setupLogoLongPress(logoElement) {
             if (!logoElement) return;
             let pressTimer;
-            const startPress = () => {
+
+            const startPress = (e) => {
                 pressTimer = window.setTimeout(async () => {
                     let currentMarshalStatus = localStorage.getItem('tourIsMarshal') === "true";
                     const scanQrBtn = document.getElementById('scanQrBtn');
+
                     if (!currentMarshalStatus) {
-                        let passcode = await customPinPrompt("🕵️‍♂️ ADMIN OVERRIDE", "Pagsulod og Admin Passcode:");
+                        let passcode = await customPinPrompt("🕵️‍♂️ ADMIN OVERRIDE", "Pagsulod og Admin/Marshal Passcode:");
                         if (!passcode) return;
-                        let hashedInput = await sha256Hash(passcode); 
-                        let validMarshal = riderDatabase.find(r => r.passcode === hashedInput && r.isMarshal === true);     
-                        if (validMarshal) {
-                            localStorage.setItem('marshalMode', 'true'); 
-                            localStorage.setItem('tourIsMarshal', 'true');
-                            if (scanQrBtn) scanQrBtn.style.display = "block"; 
-                            alert(`🔓 ADMIN OVERRIDE ON!`);
-                        } else { alert("❌ Sayop nga Passcode!"); }
+
+                        if (typeof riderDatabase !== 'undefined') {
+                            let hashedInput = await sha256Hash(passcode); 
+                            let validMarshal = riderDatabase.find(r => r.passcode === hashedInput && r.isMarshal === true);     
+                            
+                            if (validMarshal) {
+                                localStorage.setItem('marshalMode', 'true'); 
+                                localStorage.setItem('tourIsMarshal', 'true');
+                                if (scanQrBtn) scanQrBtn.style.display = "block"; 
+                                alert(`🔓 ADMIN OVERRIDE ON! Welcome, Master ${validMarshal.fullname}!`);
+                            } else { 
+                                alert("❌ Sayop nga Passcode!"); 
+                            }
+                        }
+                    } else {
+                        if (confirm("🔒 Naka-Admin Mode na ka. Gusto nimo i-lock ug ibalik sa Regular Rider Mode?")) {
+                            localStorage.setItem('marshalMode', 'false');
+                            localStorage.setItem('tourIsMarshal', 'false');
+                            if (scanQrBtn) scanQrBtn.style.display = "none"; 
+                            alert("🔒 Naka-Rider Mode na ang app.");
+                        }
                     }
-                }, 2000);
+                }, 2000); // 2000 ms = 2 seconds nga tuplok para mogawas
             };
-            const cancelPress = () => clearTimeout(pressTimer);
+
+            const cancelPress = () => {
+                clearTimeout(pressTimer);
+            };
+
+            // Para sa Mouse (Laptop/PC)
             logoElement.addEventListener('mousedown', startPress);
             logoElement.addEventListener('mouseup', cancelPress);
             logoElement.addEventListener('mouseleave', cancelPress);
+            
+            // Para sa Touch (Cellphone)
             logoElement.addEventListener('touchstart', startPress, {passive: true});
             logoElement.addEventListener('touchend', cancelPress);
             logoElement.addEventListener('touchcancel', cancelPress);
         }
 
-        // ==========================================
-        // 🚀 SINGLE DOM CONTENT LOADED (UNIFIED)
-        // ==========================================
+
+
+
         document.addEventListener("DOMContentLoaded", function() {
             setupLogoLongPress(document.getElementById('loginLogo'));
             setupLogoLongPress(document.getElementById('masterMindsLogo'));
@@ -474,35 +595,50 @@
                 if (gatekeeperContainer) gatekeeperContainer.style.display = "flex";
                 if (loginContainer) loginContainer.style.display = "none";
                 if (scannerContainer) scannerContainer.style.display = "none";
+                return;
             } else {
                 if (gatekeeperContainer) gatekeeperContainer.style.display = "none";
-                let isLoggedIn = localStorage.getItem("tourIsLoggedIn");
-                let savedRiderID = localStorage.getItem("tourRiderID");
-                let isMarshal = localStorage.getItem("tourIsMarshal") === "true";
-
-                if (isLoggedIn === "true" && savedRiderID) {
-                    if(loginContainer) loginContainer.style.display = "none";
-                    if(scannerContainer) scannerContainer.style.display = "flex";
-                    checkEventStatus(savedRiderID);
-                    initScannerApp(savedRiderID);
-                    setupOwnTracksOneTapButton(savedRiderID);
-                    const scanQrBtn = document.getElementById('scanQrBtn');
-                    if (scanQrBtn) scanQrBtn.style.display = isMarshal ? "block" : "none";
-                } else {
-                    if(loginContainer) loginContainer.style.display = "flex";
-                    if(scannerContainer) scannerContainer.style.display = "none";
-                }
             }
 
+            let isLoggedIn = localStorage.getItem("tourIsLoggedIn");
+            let savedRiderID = localStorage.getItem("tourRiderID");
+            let isMarshal = localStorage.getItem("tourIsMarshal") === "true";
+
+            if (isLoggedIn === "true" && savedRiderID) {
+                loginContainer.style.display = "none";
+                scannerContainer.style.display = "flex";
+                
+                checkEventStatus(savedRiderID);
+                initScannerApp(savedRiderID);
+                setupOwnTracksOneTapButton(savedRiderID);
+
+                const scanQrBtn = document.getElementById('scanQrBtn');
+                if (scanQrBtn) scanQrBtn.style.display = isMarshal ? "block" : "none";
+            } else {
+                loginContainer.style.display = "flex";
+                scannerContainer.style.display = "none";
+            }
+        });
+
+        document.addEventListener("DOMContentLoaded", function() {
             const owntracksCheck = document.getElementById("owntracksCheck");
             const proceedBtn = document.getElementById("proceedToLoginBtn");
+            const gatekeeperContainer = document.getElementById("gatekeeperContainer");
+            const loginContainer = document.getElementById("loginScreenContainer");
 
             if (owntracksCheck && proceedBtn) {
                 owntracksCheck.addEventListener("change", function() {
-                    proceedBtn.disabled = !this.checked;
-                    proceedBtn.style.background = this.checked ? "#cc0000" : "#444";
-                    proceedBtn.style.color = this.checked ? "white" : "#888";
-                    proceedBtn.style.cursor = this.checked ? "pointer" : "not-allowed";
+                    if (this.checked) {
+                        proceedBtn.disabled = false;
+                        proceedBtn.style.background = "#cc0000";
+                        proceedBtn.style.color = "white";
+                        proceedBtn.style.cursor = "pointer";
+                    } else {
+                        proceedBtn.disabled = true;
+                        proceedBtn.style.background = "#444";
+                        proceedBtn.style.color = "#888";
+                        proceedBtn.style.cursor = "not-allowed";
+                    }
                 });
 
                 proceedBtn.addEventListener("click", function() {
@@ -515,29 +651,81 @@
             }
         });
 
-        // ==========================================
-        // 🏁 SCANNER INITIALIZATION & HELPERS
-        // ==========================================
+        function setupOwnTracksOneTapButton(riderId) {
+            if (localStorage.getItem("mmc_owntracks_configured_" + riderId) === "true") {
+                const setupContainer = document.getElementById("setupOwntracksContainer");
+                if (setupContainer) setupContainer.style.display = "none";
+                return;
+            }
+
+            const configJson = {
+                "_type": "configuration", "mode": 3,
+                "url": "https://iilfklquzyxmdergwawh.supabase.co/functions/v1/owntracks-webhook?rider_id=" + riderId,
+                "username": "rider_" + riderId, "deviceId": "phone", "tid": riderId.slice(-2),
+                "autostartOnBoot": true, "extendedData": true,
+                "ignoreInaccurateLocations": 100, "ignoreStaleLocations": 0,
+                "locatorDisplacement": 200, "locatorInterval": 300,
+                "locatorPriority": 0, "monitoring": 2,
+                "notificationLocation": true, "pegLocatorFastestIntervalToInterval": true
+            };
+
+            const base64Config = btoa(JSON.stringify(configJson));
+            const oneTapConfigUrl = `owntracks:///config?inline=${base64Config}`;
+            const oneTapBtn = document.getElementById("oneTapConfigBtn");
+            const setupContainer = document.getElementById("setupOwntracksContainer");
+            
+            if (oneTapBtn && setupContainer) {
+                oneTapBtn.href = oneTapConfigUrl;
+                setupContainer.style.display = "block";
+                oneTapBtn.onclick = function() {
+                    localStorage.setItem("mmc_owntracks_configured_" + riderId, "true");
+                    setTimeout(() => { setupContainer.style.display = "none"; }, 500);
+                };
+            }
+        }
+
+        
+
         function checkEventStatus(riderID) {
-            let appStatus = localStorage.getItem('mmc_app_status') || 'T';
+            let appStatus = localStorage.getItem('mmc_app_status');
+            if (!appStatus) { localStorage.setItem('mmc_app_status', 'T'); appStatus = 'T'; }
+
             const eventExpiryDate = new Date('2026-10-01T00:00:00'); 
-            if (new Date() > eventExpiryDate || appStatus === 'F') {
+            const today = new Date();
+
+            if (today > eventExpiryDate || appStatus === 'F') {
                 localStorage.setItem('mmc_app_status', 'F');
                 let riderName = localStorage.getItem('offlineName_' + riderID) || "MasterMinds Marshal";
                 let riderLevel = localStorage.getItem('offlineLevel_' + riderID) || "G5";
-                let completedCheckpoints = JSON.parse(localStorage.getItem('history_' + riderID)) || [];
+                let riderHistoryKey = 'history_' + riderID;
+                let completedCheckpoints = JSON.parse(localStorage.getItem(riderHistoryKey)) || [];
                 let isFinisher = completedCheckpoints.includes("CP FL");
                 
+                let badgeTitle = isFinisher ? "🏆 Official Finisher Badge" : "🛡️ Official Participant Badge";
+                let statusText = isFinisher ? "⭐ FINISHER" : "🏁 RIDER PARTICIPANT";
+                let statusColor = isFinisher ? "#00ff00" : "#ffcc00";
+                let borderGlow = isFinisher ? "#ffcc00" : "#ff9900";
+                let messageText = isFinisher 
+                    ? "📸 <b>I-screenshot kini nga screen para i-flex sa imong wall!</b><br>Daghang salamat sa imong kaisog ug pag-apil sa MasterMinds' CUP."
+                    : "📸 <b>I-screenshot kini nga badge isip handumanan!</b><br>Bisan wala nakaabot sa finish line, dako kaayog pasidungog ang imong gi-survive nga mga checkpoints.";
+
                 const container = document.querySelector('.container');
                 if (container) {
                     container.innerHTML = `
                         <img src="mmc.png" alt="MasterMinds CUP Logo" class="app-logo">
                         <h4 style="color: #ffcc00; text-align: center; font-style: italic;">" never say never "</h4>
-                        <h2 style="color: #fff; text-align: center; text-transform: uppercase;">${isFinisher ? "🏆 Finisher" : "🛡️ Participant"}</h2>
-                        <div style="background: #1a1a1a; border: 2px solid #ff9900; border-radius: 12px; padding: 20px; text-align: center;">
-                            <h1 style="color: #fff; font-size: 22px;">${riderName}</h1>
-                            <p style="color: #ff9900;">ID: #${riderID} | Level: ${riderLevel}</p>
+                        <h2 style="color: #fff; text-align: center; text-transform: uppercase;">${badgeTitle}</h2>
+                        <div style="background: linear-gradient(145deg, #1a1a1a, #2a2a2a); border: 2px solid ${borderGlow}; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center;">
+                            <div style="font-size: 12px; color: #aaa; text-transform: uppercase; letter-spacing: 2px;">Gisertipikahan si</div>
+                            <h1 style="color: #ffffff; font-size: 24px; margin: 10px 0; text-transform: uppercase;">${riderName}</h1>
+                            <div style="font-size: 13px; color: #ff9900; font-weight: bold; margin-bottom: 15px;">Rider ID: #${riderID} | Level: ${riderLevel}</div>
+                            <hr style="border: 0; border-top: 1px solid #444; margin: 15px 0;">
+                            <div style="display: flex; justify-content: space-around; color: #fff; font-size: 14px;">
+                                <div><span style="font-size: 10px; color: #aaa; display: block;">STATUS</span><b style="color: ${statusColor};">${statusText}</b></div>
+                                <div style="border-left: 1px solid #444; padding-left: 15px;"><span style="font-size: 10px; color: #aaa; display: block;">NA-SURVIVE</span><b style="color: #00d2ff;">${completedCheckpoints.length} Checkpoints</b></div>
+                            </div>
                         </div>
+                        <p style="text-align: center; color: #ccc; font-size: 13px; line-height: 1.5; margin-bottom: 20px;">${messageText}</p>
                     `;
                 }
             }
@@ -557,253 +745,449 @@
                 if (currentRider) {
                     let rLevel = currentRider.level || "G5";
                     if (nameElem) nameElem.value = currentRider.fullname || currentRider.name || "";
-                    if (levelElem) levelElem.value = window.routeNames[rLevel] || rLevel;
+                    let fullRouteName = routeNames[rLevel] ? routeNames[rLevel] : rLevel;
+                    if (levelElem) levelElem.value = fullRouteName;
+                    
                     window.activeRiderLevel = rLevel; 
                     populateCheckpointsByLevel(rLevel);
+
+                    localStorage.setItem('offlineName_' + savedRiderID, currentRider.fullname || currentRider.name || "");
+                    localStorage.setItem('offlineLevel_' + savedRiderID, rLevel);
                 } else {
                     if (nameElem) nameElem.value = "❌ Wala sa Masterlist";
+                    if (levelElem) levelElem.value = "G5";
                     window.activeRiderLevel = "G5";
                     populateCheckpointsByLevel("G5");
                 }
             }
+
             updateCheckpointCheckmarks(savedRiderID);
             updateRiderProgress();
             initBatteryMonitor();
             showLiveLocationOnLoad();
         }
 
-        let isSyncing = false, compressedPhotoBase64 = "", globalLat = "N/A", globalLon = "N/A";
+        let isSyncing = false; 
+        let compressedPhotoBase64 = ""; 
+        let globalLat = "N/A";
+        let globalLon = "N/A";
 
         function populateCheckpointsByLevel(riderLevel) {
             const dropdown = document.getElementById('checkpoint');
             if (!dropdown) return;
-            dropdown.innerHTML = '<option value="" disabled selected>-- PILIA ANG CHECKPOINT --</option>';
+            dropdown.innerHTML = '<option value="" disabled selected>-- PILIA ANG CHECKPOINT -- (I-scan usa ang Rider)</option>';
+            
+            // Gamiton ang window.routeConfigs nga siguradong walay error
             let cpData = window.routeConfigs[riderLevel] || window.routeConfigs["G5"] || [];
-            cpData.forEach(cp => {
-                let opt = document.createElement('option');
-                opt.value = cp.val;
-                opt.textContent = `${cp.val} - ${cp.name}`;
-                dropdown.appendChild(opt);
-            });
+
+            // Bulletproof checker: kung Array ba siya o Object
+            if (Array.isArray(cpData)) {
+                cpData.forEach(cp => {
+                    let opt = document.createElement('option');
+                    opt.value = cp.val;
+                    opt.textContent = `${cp.val} - ${cp.name}`;
+                    dropdown.appendChild(opt);
+                });
+            } else {
+                Object.entries(cpData).forEach(([val, name]) => {
+                    let opt = document.createElement('option');
+                    opt.value = val;
+                    opt.textContent = `${val} - ${name}`;
+                    dropdown.appendChild(opt);
+                });
+            }
         }
+
 
         function initBatteryMonitor() {
             const batStatus = document.getElementById('batteryStatus');
             if (!batStatus) return;
+            batStatus.innerHTML = "🔋 100%"; 
             if (navigator.getBattery) {
-                navigator.getBattery().then(battery => {
-                    const updateBattery = () => {
+                navigator.getBattery().then(function(battery) {
+                    const updateBatteryInfo = () => {
                         const level = Math.round(battery.level * 100);
-                        batStatus.innerHTML = `${battery.charging ? "⚡" : "🔋"} ${level}%`;
+                        const icon = battery.charging ? "⚡" : "🔋";
+                        batStatus.innerHTML = `${icon} ${level}%`;
+                        batStatus.style.color = (level <= 15 && !battery.charging) ? "#ff3333" : "white";
                     };
-                    updateBattery();
-                    battery.addEventListener('levelchange', updateBattery);
+                    updateBatteryInfo();
+                    battery.addEventListener('levelchange', updateBatteryInfo);
+                    battery.addEventListener('chargingchange', updateBatteryInfo);
                 }).catch(() => {});
             }
         }
 
-        // Camera handling & Canvas Watermark
         const cameraInput = document.getElementById('cameraInput');
         if (cameraInput) {
-            cameraInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    const img = new Image();
-                    img.onload = function() {
-                        const canvas = document.getElementById('photoCanvas');
-                        const ctx = canvas.getContext("2d");
-                        const MAX_WIDTH = 600;
-                        canvas.width = MAX_WIDTH;
-                        canvas.height = img.height * (MAX_WIDTH / img.width);
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            cameraInput.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = new Image();
+                        img.onload = function() {
+                            const canvas = document.getElementById('photoCanvas');
+                            if (!canvas) return;
+                            const ctx = canvas.getContext("2d");
+                            const MAX_WIDTH = 600;
+                            const scaleSize = MAX_WIDTH / img.width;
+                            canvas.width = MAX_WIDTH;
+                            canvas.height = img.height * scaleSize;
+                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                        const idElem = document.getElementById('idNum');
-                        const nameElem = document.getElementById('name');
-                        const now = new Date();
-                        const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+                            // Helper para sa DMS format
+                            function convertToDMS(decimal, isLat) {
+                                if (decimal === "N/A") return "N/A";
+                                const val = parseFloat(decimal);
+                                const absVal = Math.abs(val);
+                                const d = Math.floor(absVal);
+                                const m = Math.floor((absVal - d) * 60);
+                                const s = ((absVal - d - m / 60) * 3600).toFixed(0);
+                                const dir = isLat ? (val >= 0 ? "N" : "S") : (val >= 0 ? "E" : "W");
+                                return `${d}° ${m}' ${s}" ${dir}`;
+                            }
 
-                        ctx.fillStyle = "white"; ctx.strokeStyle = "black"; ctx.lineWidth = 3; ctx.font = "bold 14px Arial"; ctx.textAlign = "right";
-                        ctx.strokeText(`ID: ${idElem?.value || ''} (${nameElem?.value || ''})`, canvas.width - 10, canvas.height - 35);
-                        ctx.fillText(`ID: ${idElem?.value || ''} (${nameElem?.value || ''})`, canvas.width - 10, canvas.height - 35);
-                        ctx.strokeText(`Time: ${timeStr} | Lat/Lon: ${globalLat}, ${globalLon}`, canvas.width - 10, canvas.height - 15);
-                        ctx.fillText(`Time: ${timeStr} | Lat/Lon: ${globalLat}, ${globalLon}`, canvas.width - 10, canvas.height - 15);
+                            // Function para i-render ang text ug optional logo
+                            const finalizeCanvas = () => {
+                                ctx.fillStyle = "white";
+                                ctx.strokeStyle = "black"; 
+                                ctx.lineWidth = 3;
+                                ctx.font = "bold 16px Arial"; 
+                                ctx.textAlign = "right";
 
-                        compressedPhotoBase64 = canvas.toDataURL("image/jpeg", 0.5);
-                        const preview = document.getElementById('photoPreview');
-                        if (preview) { preview.src = compressedPhotoBase64; preview.style.display = "block"; }
+                                const idElem = document.getElementById('idNum');
+                                const nameElem = document.getElementById('name');
+                                const riderID = idElem && idElem.value ? idElem.value : "WALA I-SCAN";
+                                const riderName = nameElem && nameElem.value ? nameElem.value : "Wala Kaila";
+                            
+                                const now = new Date();
+                                const militaryDateTime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+
+                                ctx.strokeText(`ID: ${riderID} (${riderName})`, canvas.width - 10, canvas.height - 55);
+                                ctx.fillText(`ID: ${riderID} (${riderName})`, canvas.width - 10, canvas.height - 55);
+
+                                ctx.strokeText(`Date/Time: ${militaryDateTime}`, canvas.width - 10, canvas.height - 35);
+                                ctx.fillText(`Date/Time: ${militaryDateTime}`, canvas.width - 10, canvas.height - 35);
+
+                                ctx.strokeText(`${convertToDMS(globalLat, true)}, ${convertToDMS(globalLon, false)}`, canvas.width - 10, canvas.height - 15);
+                                ctx.fillText(`${convertToDMS(globalLat, true)}, ${convertToDMS(globalLon, false)}`, canvas.width - 10, canvas.height - 15);
+
+                                compressedPhotoBase64 = canvas.toDataURL("image/jpeg", 0.5);
+                                const photoPreview = document.getElementById('photoPreview');
+                                if (photoPreview) {
+                                    photoPreview.src = compressedPhotoBase64;
+                                    photoPreview.style.display = "block";
+                                }
+                            };
+
+                            // Sulayan nato pag-load ang mmc.png logo sa ibabaw sa litrato
+                            const logoImg = new Image();
+                            logoImg.src = 'mmc.png';
+                            logoImg.onload = function() {
+                                const logoWidth = canvas.width * 0.28; 
+                                const logoHeight = (logoImg.height / logoImg.width) * logoWidth;
+                                ctx.drawImage(logoImg, 10, canvas.height - logoHeight - 10, logoWidth, logoHeight);
+                                finalizeCanvas();
+                            };
+                            logoImg.onerror = function() {
+                                // Kung offline o walay makit-an nga logo, i-padayon gihapon ang pagbutang sa text!
+                                finalizeCanvas();
+                            };
+                        };
+                        img.src = e.target.result;
                     };
-                    img.src = evt.target.result;
-                };
-                reader.readAsDataURL(file);
+                    reader.readAsDataURL(file);
+                }
             });
         }
 
+        const liveLocationDiv = document.getElementById('liveLocation');
+        const myForm = document.getElementById('myForm');
+
         function showLiveLocationOnLoad() {
-            if (navigator.geolocation) {
-                navigator.geolocation.watchPosition(pos => {
-                    globalLat = pos.coords.latitude.toFixed(6);
-                    globalLon = pos.coords.longitude.toFixed(6);
-                    const locDiv = document.getElementById('liveLocation');
-                    if (locDiv) locDiv.innerHTML = `📍 <b>Lat:</b> ${globalLat} &nbsp;|&nbsp; <b>Lon:</b> ${globalLon}`;
-                }, () => {}, { enableHighAccuracy: true });
-            }
+            if (navigator.geolocation && liveLocationDiv) {
+                navigator.geolocation.watchPosition(
+                    (position) => {
+                        globalLat = position.coords.latitude.toFixed(6);
+                        globalLon = position.coords.longitude.toFixed(6);
+                        liveLocationDiv.innerHTML = `📍 <b>Lat:</b> ${globalLat} &nbsp;|&nbsp; <b>Lon:</b> ${globalLon}`;
+                    },
+                    (error) => { liveLocationDiv.innerHTML = "⚠️ Palihug i-allow ang Location / GPS."; },
+                    { enableHighAccuracy: true, maximumAge: 0 }
+                );
+            } else if (liveLocationDiv) { liveLocationDiv.innerHTML = "❌ GPS wala gisuportahan sa imong device."; }
         }
 
         function getLocation() {
-            return new Promise(resolve => {
-                if (!navigator.geolocation) resolve({ link: "No GPS", lat: "0", lon: "0" });
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) { resolve({ link: "No GPS", lat: "N/A", lon: "N/A", time: "N/A" }); } 
                 else {
-                    navigator.geolocation.getCurrentPosition(pos => {
-                        resolve({
-                            link: `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`,
-                            lat: pos.coords.latitude, lon: pos.coords.longitude
-                        });
-                    }, () => resolve({ link: "Error", lat: "0", lon: "0" }), { timeout: 8000, enableHighAccuracy: true });
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            resolve({
+                                link: `https://www.google.com/maps?q=${position.coords.latitude},${position.coords.longitude}`,
+                                lat: position.coords.latitude, lon: position.coords.longitude,
+                                time: new Date(position.timestamp).toLocaleString()
+                            });
+                        },
+                        (error) => { resolve({ link: "Error/Gibalibaran", lat: "N/A", lon: "N/A", time: "N/A" }); },
+                        { timeout: 10000, enableHighAccuracy: true, maximumAge: 0 }
+                    );
                 }
             });
         }
 
+        async function checkInternetStability() {
+            if (!navigator.onLine) return false;
+            try {
+                await fetch('https://www.google.com/favicon.ico?rand=' + Math.random(), { mode: 'no-cors', cache: 'no-store' });
+                return true;
+            } catch (error) { return false; }
+        }
+
+        // 🚀 INSTANT & FROZEN-FREE OFFLINE DETECTOR
         function checkRealInternet() {
             const sigStatus = document.getElementById('signalStatus');
             if (!sigStatus) return;
+
+            // Gigamit ang pinaka-diretso ug kasaligan nga browser status (Walay network fetch nga mo-hang!)
             if (navigator.onLine) {
-                sigStatus.innerHTML = "🟢 ONLINE"; sigStatus.style.color = "#00ff00";
+                sigStatus.innerHTML = "🟢 ONLINE";
+                sigStatus.style.color = "#00ff00";
+                
+                // Sulayan nato pag-sync kung naa man gani pending offline data (async nga dili mo-block sa UI)
                 let offlineData = JSON.parse(localStorage.getItem('offlineData')) || [];
-                if (offlineData.length > 0 && !isSyncing) syncOfflineData();
+                if (offlineData.length > 0 && !isSyncing) {
+                    syncOfflineData();
+                }
             } else {
-                sigStatus.innerHTML = "🔴 OFFLINE"; sigStatus.style.color = "#ff3333";
+                sigStatus.innerHTML = "🔴 OFFLINE";
+                sigStatus.style.color = "#ff3333";
             }
         }
+
+        // Diretsong paminaw sa tinuod nga estado sa network sa selpon (Instant mo-switch!)
         window.addEventListener('online', checkRealInternet);
         window.addEventListener('offline', checkRealInternet);
+
+        // Panagsa ra paminawon (kada 10 segundos) aron hapsay ug dili mag-load sa CPU
         setInterval(checkRealInternet, 10000);
 
-        function b64toBlob(b64Data) {
+
+        // ==========================================
+        // 🚀 SUPABASE DATA SENDER & PHOTO UPLOADER
+        // ==========================================
+        
+        // Helper: I-convert ang Base64 Picture padulong Blob para ma-upload sa Supabase
+        function b64toBlob(b64Data, contentType='', sliceSize=512) {
             const byteCharacters = atob(b64Data.split(',')[1]);
             const byteArrays = [];
-            for (let offset = 0; offset < byteCharacters.length; offset += 512) {
-                const slice = byteCharacters.slice(offset, offset + 512);
+            for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+                const slice = byteCharacters.slice(offset, offset + sliceSize);
                 const byteNumbers = new Array(slice.length);
-                for (let i = 0; i < slice.length; i++) byteNumbers[i] = slice.charCodeAt(i);
-                byteArrays.push(new Uint8Array(byteNumbers));
+                for (let i = 0; i < slice.length; i++) {
+                    byteNumbers[i] = slice.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                byteArrays.push(byteArray);
             }
-            return new Blob(byteArrays, {type: 'image/jpeg'});
+            return new Blob(byteArrays, {type: contentType});
         }
 
+        // Gipulihan nato ang daan nga fetch paingon sa Google Sheet og Supabase client call
         async function sendDataToServer(dataPayload) {
             try {
                 let finalPhotoUrl = "Walay Ebidensya";
+
+                // 1. Upload Photo sa Supabase Storage (kon naay photo)
                 if (dataPayload.photo && dataPayload.photo.includes('base64')) {
-                    const blob = b64toBlob(dataPayload.photo);
-                    const fileName = `${dataPayload.idNum}_${dataPayload.checkpoint.replace(/\s+/g, '')}_${Date.now()}.jpg`;
-                    const { error: uploadError } = await supabaseLiveClient.storage.from('photos').upload(fileName, blob, { contentType: 'image/jpeg' });
+                    const blob = b64toBlob(dataPayload.photo, 'image/jpeg');
+                    const cleanCp = dataPayload.checkpoint.replace(/\s+/g, '');
+                    const fileName = `${dataPayload.idNum}_${cleanCp}_${new Date().getTime()}.jpg`;
+
+                    const { data: uploadData, error: uploadError } = await supabaseLiveClient
+                        .storage
+                        .from('photos')
+                        .upload(fileName, blob, { contentType: 'image/jpeg' });
+
                     if (!uploadError) {
-                        const { data: pubData } = supabaseLiveClient.storage.from('photos').getPublicUrl(fileName);
-                        finalPhotoUrl = pubData.publicUrl;
+                        const { data: publicUrlData } = supabaseLiveClient
+                            .storage
+                            .from('photos')
+                            .getPublicUrl(fileName);
+                        finalPhotoUrl = publicUrlData.publicUrl;
                     }
                 }
+
+                // 2. Isalibay ang data sa rally_scans table
                 const { error: dbError } = await supabaseLiveClient.from('rally_scans').insert([{
-                    qr_code: dataPayload.idNum, rider_name: dataPayload.name, rider_level: dataPayload.level,
-                    checkpoint: dataPayload.checkpoint, odometer: dataPayload.odometer || 0, notes: dataPayload.notes || "",
-                    latitude: dataPayload.latitude || 0, longitude: dataPayload.longitude || 0, location_address: dataPayload.location || "",
+                    qr_code: dataPayload.idNum,
+                    rider_name: dataPayload.name,
+                    rider_level: dataPayload.level,
+                    checkpoint: dataPayload.checkpoint,
+                    odometer: dataPayload.odometer || 0,
+                    notes: dataPayload.notes || "",
+                    latitude: dataPayload.latitude || 0,
+                    longitude: dataPayload.longitude || 0,
+                    location_address: dataPayload.location || "",
                     photo_url: finalPhotoUrl
                 }]);
-                return !dbError;
-            } catch (err) { return false; }
+
+                if (dbError) {
+                    console.error("Sipyat sa database insert:", dbError.message);
+                    return false;
+                }
+
+                return true; 
+            } catch (error) {
+                console.error("Critical error sa pag-send:", error);
+                return false;
+            }
         }
 
         async function syncOfflineData() {
-            if (isSyncing) return;
+            if (isSyncing) return; 
             let offlineData = JSON.parse(localStorage.getItem('offlineData')) || [];
-            if (offlineData.length === 0) return;
-            isSyncing = true;
-            let failed = [];
-            for (let item of offlineData) {
-                let success = await sendDataToServer(item);
-                if (!success) failed.push(item);
+            if (offlineData.length === 0) return; 
+
+            isSyncing = true; 
+            const submitBtn = myForm ? myForm.querySelector('button[type="submit"]') : null;
+            if(submitBtn) { submitBtn.textContent = "🔄 Nag-Sync sa Data..."; submitBtn.disabled = true; }
+
+            let failedData = []; 
+            for (let i = 0; i < offlineData.length; i++) {
+                let singleRecord = offlineData[i];
+                try {
+                    let success = await sendDataToServer(singleRecord); 
+                    if (!success) failedData.push(singleRecord);
+                } catch (error) { failedData.push(singleRecord); }
             }
-            localStorage.setItem('offlineData', JSON.stringify(failed));
-            if (failed.length === 0) alert("✅ Na-sync na ang tanang Offline Data sa Database!");
-            isSyncing = false;
+            if (failedData.length > 0) { localStorage.setItem('offlineData', JSON.stringify(failedData)); } 
+            else {
+                localStorage.removeItem('offlineData');
+                alert("✅ Naka-Sync na ang tanang Offline Data padulong sa MasterMinds'CUP database");
+            }
+            if(submitBtn) { submitBtn.textContent = "I-Submit ang Data"; submitBtn.disabled = false; }
+            isSyncing = false; 
+            updateDashboardCounters();
         }
 
         function saveToOfflineStorage(recordData) {
-            let saved = JSON.parse(localStorage.getItem('offlineData')) || [];
-            saved.push(recordData);
-            localStorage.setItem('offlineData', JSON.stringify(saved));
+            let savedData = JSON.parse(localStorage.getItem('offlineData')) || [];
+            savedData.push(recordData);
+            localStorage.setItem('offlineData', JSON.stringify(savedData));
+            updateDashboardCounters();
         }
 
-        setInterval(() => {
-            let count = (JSON.parse(localStorage.getItem('offlineData')) || []).length;
-            const p = document.getElementById('pendingCount');
-            if (p) { p.innerText = count; p.style.color = count > 0 ? "#ff9900" : "white"; }
-        }, 2000);
+        function updateDashboardCounters() {
+            let offlineData = JSON.parse(localStorage.getItem('offlineData')) || [];
+            const pCount = document.getElementById('pendingCount');
+            if (pCount) {
+                pCount.innerText = offlineData.length;
+                pCount.style.color = offlineData.length > 0 ? "#ff9900" : "white"; 
+            }
+        }
+        setInterval(updateDashboardCounters, 2000);
 
-        // Form Submission
-        const myForm = document.getElementById('myForm');
+        const submitAudio = document.getElementById('submitMusic');
         if (myForm) {
+            const mainSubmitBtn = document.getElementById('mainSubmitBtn');
+            if (mainSubmitBtn && submitAudio) {
+                mainSubmitBtn.addEventListener('click', function() {
+                    submitAudio.currentTime = 0;
+                    let playPromise = submitAudio.play();
+                    if (playPromise !== undefined) { playPromise.catch(e => {}); }
+                });
+            }
+
             myForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
-                if (isSubmitting) return;
+                const submitBtn = myForm.querySelector('button[type="submit"]');
+                if (isSubmitting || (submitBtn && submitBtn.disabled)) return;
                 isSubmitting = true;
 
-                const submitBtn = document.getElementById('mainSubmitBtn');
-                if (submitBtn) { submitBtn.textContent = "📍 Gipadala..."; submitBtn.disabled = true; }
+                if (submitBtn) { submitBtn.textContent = "📍 Gipadala ang Data..."; submitBtn.disabled = true; submitBtn.style.opacity = "0.5"; }
 
-                const checkId = document.getElementById('idNum')?.value || "";
-                const checkName = document.getElementById('name')?.value || "";
-                const currentCheckpoint = document.getElementById('checkpoint')?.value || "";
+                const checkId = document.getElementById('idNum') ? document.getElementById('idNum').value : "";
+                const checkName = document.getElementById('name') ? document.getElementById('name').value : "";
+                const currentCheckpoint = document.getElementById('checkpoint') ? document.getElementById('checkpoint').value : "";
 
-                if (!checkId || checkName.includes("❌")) {
-                    alert("🛑 Blangko o dili sakto ang Rider ID.");
-                    if (submitBtn) { submitBtn.textContent = "I-Submit ang Data"; submitBtn.disabled = false; }
+                if (checkId === "" || checkName === "" || checkName.includes("❌")) {
+                    if (submitAudio) { submitAudio.pause(); submitAudio.currentTime = 0; }
+                    alert("🛑 DILI MA-SAVE! Blangko ang Rider ID.");
+                    if(submitBtn) { submitBtn.textContent = "I-Submit ang Data"; submitBtn.disabled = false; submitBtn.style.opacity = "1"; }
                     isSubmitting = false; return;
                 }
 
-                if (!compressedPhotoBase64) {
-                    alert("📸 Palihug pagkuha una og ebidensya/picture.");
-                    if (submitBtn) { submitBtn.textContent = "I-Submit ang Data"; submitBtn.disabled = false; }
-                    isSubmitting = false; return;
+                const gpsData = await getLocation();
+                if (gpsData.lat === "N/A" || gpsData.link === "No GPS" || gpsData.link === "Error/Gibalibaran") {
+                    if (submitAudio) { submitAudio.pause(); submitAudio.currentTime = 0; }
+                    alert("🛑 DILI MA-SAVE! Palihug i-on ang Location / GPS.");
+                    if(submitBtn) { submitBtn.textContent = "I-Submit ang Data"; submitBtn.disabled = false; submitBtn.style.opacity = "1"; }
+                    isSubmitting = false; return; 
                 }
 
-                const gps = await getLocation();
+                // 🛑 DIRE NIMO ISINGIT ANG PHOTO VALIDATION CHECK:
+                if (!compressedPhotoBase64 || compressedPhotoBase64 === "" || !compressedPhotoBase64.includes('base64')) {
+                    if (submitAudio) { submitAudio.pause(); submitAudio.currentTime = 0; }
+                    alert("📸 DILI MA-SAVE! Palihug pagkuha una og Ebidensya/Picture.");
+                    if(submitBtn) { submitBtn.textContent = "I-Submit ang Data"; submitBtn.disabled = false; submitBtn.style.opacity = "1"; }
+                    isSubmitting = false; return; 
+                }
+                
                 const data = {
-                    idNum: checkId, name: checkName, checkpoint: currentCheckpoint,
-                    odometer: document.getElementById('odometer')?.value || "",
-                    notes: document.getElementById('notes')?.value || "",
-                    photo: compressedPhotoBase64,
-                    timestamp: new Date().toLocaleString(),
-                    location: gps.link, latitude: gps.lat, longitude: gps.lon,
-                    level: window.activeRiderLevel || "G5"
+                    idNum: checkId, name: checkName, checkpoint: currentCheckpoint, 
+                    odometer: document.getElementById('odometer') ? document.getElementById('odometer').value : "", 
+                    notes: document.getElementById('notes') ? document.getElementById('notes').value : "",
+                    photo: compressedPhotoBase64, 
+                    timestamp: new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' }), 
+                    location: gpsData.link, latitude: gpsData.lat, longitude: gpsData.lon,
+                    locationTime: gpsData.time, level: window.activeRiderLevel || "G5" 
                 };
 
-                let saved = false;
-                if (navigator.onLine && await sendDataToServer(data)) {
-                    alert("✅ Success! Na-save sa Database!");
-                    saved = true;
+                if (submitBtn) submitBtn.textContent = "🌐 Gisusi ang Internet...";
+                let isStable = await checkInternetStability();
+                let isDataSaved = false;
+
+                if (isStable) {
+                    if (submitBtn) submitBtn.textContent = "📍 Gipadala sa Database...";
+                    if (await sendDataToServer(data)) {
+                        alert("✅ Success! Na-save na sa MasterMinds'CUP Database!");
+                        isDataSaved = true; 
+                    } else {
+                        saveToOfflineStorage(data);
+                        isDataSaved = true; 
+                    }
                 } else {
                     saveToOfflineStorage(data);
-                    alert("⚠️ Walay signal o hinay. Gi-save sa Offline Storage!");
-                    saved = true;
+                    alert("⚠️ Hinay ang internet! Gi-save sa Offline Data.");
+                    isDataSaved = true;
                 }
 
-                if (saved) {
-                    let historyKey = 'history_' + checkId;
-                    let history = JSON.parse(localStorage.getItem(historyKey)) || [];
-                    if (!history.includes(currentCheckpoint)) {
-                        history.push(currentCheckpoint);
-                        localStorage.setItem(historyKey, JSON.stringify(history));
+                if (submitAudio) { submitAudio.pause(); submitAudio.currentTime = 0; }
+
+                if (isDataSaved) {
+                    let riderHistoryKey = 'history_' + checkId;
+                    let completedCheckpoints = JSON.parse(localStorage.getItem(riderHistoryKey)) || [];
+                    if (!completedCheckpoints.includes(currentCheckpoint)) {
+                        completedCheckpoints.push(currentCheckpoint);
+                        localStorage.setItem(riderHistoryKey, JSON.stringify(completedCheckpoints));
                     }
+                    if (currentCheckpoint === "CP 00") { localStorage.setItem('startOdo_' + checkId, data.odometer); }
+                    localStorage.setItem('lastOdo_' + checkId, data.odometer); 
+
                     document.getElementById('odometer').value = "";
                     document.getElementById('notes').value = "";
-                    compressedPhotoBase64 = "";
-                    document.getElementById('photoPreview').style.display = "none";
+                    document.getElementById('checkpoint').selectedIndex = 0;
+                    compressedPhotoBase64 = ""; 
+                    if(document.getElementById('photoPreview')) document.getElementById('photoPreview').style.display = "none"; 
+                    
                     updateCheckpointCheckmarks(checkId);
+                    updateRiderProgress(); 
                 }
-                if (submitBtn) { submitBtn.textContent = "I-Submit ang Data"; submitBtn.disabled = false; }
-                isSubmitting = false;
+                if(submitBtn) { submitBtn.textContent = "I-Submit ang Data"; submitBtn.disabled = false; submitBtn.style.opacity = "1"; }
+                isSubmitting = false; 
             });
         }
 
@@ -812,38 +1196,236 @@
         function updateCheckpointCheckmarks(riderId) {
             const checklistDiv = document.getElementById('checklistItems');
             if (!checklistDiv) return;
-            if (!riderId) riderId = document.getElementById('idNum')?.value || "";
-            if (!riderId) return;
+            if (!riderId) {
+                const idBox = document.getElementById('idNum');
+                riderId = idBox && idBox.value ? idBox.value.trim() : "";
+            }
+            if (!riderId) {
+                checklistDiv.innerHTML = "<span style='color: #888;'>Paghulat og Rider ID...</span>";
+                return;
+            }
 
-            let history = JSON.parse(localStorage.getItem('history_' + riderId)) || [];
-            let cpData = window.routeConfigs[window.activeRiderLevel || "G5"] || [];
-            let html = "", firstUnfinished = "";
-
-            cpData.forEach(cp => {
-                if (history.includes(cp.val)) {
-                    html += `<span style="color: #00ff00; margin-right: 8px;">✓ ${cp.val}</span>`;
-                } else {
-                    html += `<span style="color: #555; margin-right: 8px;">✗ ${cp.val}</span>`;
-                    if (!firstUnfinished) firstUnfinished = cp.val;
+            let riderHistoryKey = 'history_' + riderId;
+            let completedCheckpoints = JSON.parse(localStorage.getItem(riderHistoryKey)) || [];
+            let offlineData = JSON.parse(localStorage.getItem('offlineData')) || [];
+            offlineData.forEach(item => {
+                if (item.idNum === riderId && item.checkpoint && !completedCheckpoints.includes(item.checkpoint)) {
+                    completedCheckpoints.push(item.checkpoint);
                 }
             });
-            checklistDiv.innerHTML = html || "Wala pa.";
+
+            let currentLevel = window.activeRiderLevel || "G5";
+            let cpData = window.routeConfigs[currentLevel] || window.routeConfigs["G5"] || [];
+
+            let htmlOutput = "";
+            let countCompleted = 0;
+            let firstUnfinishedCP = ""; 
+
+            if (Array.isArray(cpData)) {
+                cpData.forEach(cp => {
+                    if (completedCheckpoints.includes(cp.val)) {
+                        htmlOutput += `<span style="color: #00ff00; margin-right: 8px; display: inline-block; font-weight: bold;" title="${cp.name}">✓ ${cp.val}</span>`;
+                        countCompleted++;
+                    } else {
+                        htmlOutput += `<span style="color: #555; margin-right: 8px; display: inline-block;" title="${cp.name}">✗ ${cp.val}</span>`;
+                        if (firstUnfinishedCP === "") firstUnfinishedCP = cp.val;
+                    }
+                });
+            } else {
+                Object.entries(cpData).forEach(([cpVal, cpName]) => {
+                    if (completedCheckpoints.includes(cpVal)) {
+                        htmlOutput += `<span style="color: #00ff00; margin-right: 8px; display: inline-block; font-weight: bold;" title="${cpName}">✓ ${cpVal}</span>`;
+                        countCompleted++;
+                    } else {
+                        htmlOutput += `<span style="color: #555; margin-right: 8px; display: inline-block;" title="${cpName}">✗ ${cpVal}</span>`;
+                        if (firstUnfinishedCP === "") firstUnfinishedCP = cpVal;
+                    }
+                });
+            }
+            
+            checklistDiv.innerHTML = countCompleted === 0 ? "<span style='color: #888;'>Wala pay na-submit nga Checkpoint.</span>" : htmlOutput;
+
             const dropdown = document.getElementById('checkpoint');
-            if (dropdown && firstUnfinished) dropdown.value = firstUnfinished;
+            if (dropdown && firstUnfinishedCP !== "") {
+                setTimeout(() => { dropdown.value = firstUnfinishedCP; }, 100); 
+            }
         }
 
         function updateRiderProgress() {
-            let lvl = document.getElementById("level")?.value || "";
-            let odo = parseFloat(document.getElementById("odometer")?.value) || 0;
+            let lvlElem = document.getElementById("level");
+            let levelField = lvlElem && lvlElem.value ? lvlElem.value.trim() : "";
+            let odoElem = document.getElementById("odometer");
+            let typedOdo = (odoElem && odoElem.value !== "") ? parseFloat(odoElem.value) : NaN;
+            let idElem = document.getElementById("idNum");
+            let currentId = idElem && idElem.value ? idElem.value.trim() : ""; 
             let card = document.getElementById("progressCard");
-            if (!card || !window.routeTotalKm[lvl]) { if(card) card.style.display = "none"; return; }
-            card.style.display = "block";
-            let total = window.routeTotalKm[lvl];
-            document.getElementById("displayLevel").innerText = lvl;
-            document.getElementById("txtNadagan").innerText = odo + " KM";
-            document.getElementById("txtNabilin").innerText = Math.max(0, total - odo) + " KM";
+            if (!card) return;
+
+            let cpElem = document.getElementById("checkpoint");
+            let currentCP = cpElem ? cpElem.value : "";
+            let savedStartOdo = parseFloat(localStorage.getItem('startOdo_' + currentId));
+            
+            let activeStartOdo = savedStartOdo;
+            if (currentCP === "CP 00" && !isNaN(typedOdo)) activeStartOdo = typedOdo;
+            if (isNaN(activeStartOdo)) activeStartOdo = 0;
+
+            let savedLastOdo = parseFloat(localStorage.getItem('lastOdo_' + currentId)) || activeStartOdo;
+            let activeOdo = isNaN(typedOdo) ? savedLastOdo : typedOdo;
+
+            if (routeTotalKm[levelField]) {
+                let totalRoute = routeTotalKm[levelField];
+                let nadagan = 0;
+
+                if (currentCP === "CP 00") nadagan = 0; 
+                else if (activeStartOdo > 0 && activeOdo >= activeStartOdo) nadagan = activeOdo - activeStartOdo;
+                
+                let nabilin = totalRoute - nadagan;
+                if (nabilin < 0) nabilin = 0; 
+
+                let dispLevel = document.getElementById("displayLevel");
+                let txtNadagan = document.getElementById("txtNadagan");
+                let txtNabilin = document.getElementById("txtNabilin");
+
+                if (dispLevel) dispLevel.innerText = levelField;
+                if (txtNadagan) txtNadagan.innerText = nadagan.toLocaleString() + " KM";
+                if (txtNabilin) txtNabilin.innerText = nabilin.toLocaleString() + " KM";
+                
+                card.style.display = (activeOdo > 0 || activeStartOdo > 0) ? "block" : "none";
+            } else { card.style.display = "none"; }
         }
-        document.getElementById("odometer")?.addEventListener("input", updateRiderProgress);
+
+        let checkpointDropdown = document.getElementById("checkpoint");
+        if (checkpointDropdown) checkpointDropdown.addEventListener("change", updateRiderProgress);
+
+        let odometerInput = document.getElementById("odometer");
+        if (odometerInput) {
+            odometerInput.addEventListener("input", updateRiderProgress);
+            odometerInput.addEventListener("blur", function() {
+                let idElem = document.getElementById("idNum");
+                let currentId = idElem && idElem.value ? idElem.value.trim() : ""; 
+                let savedLastOdo = parseFloat(localStorage.getItem('lastOdo_' + currentId)) || 0;
+                let typedOdo = parseFloat(this.value);
+                if (typedOdo > 0 && savedLastOdo > 0 && typedOdo < savedLastOdo) {
+                    alert(`⚠️ WARNING: Ang Odometer (${typedOdo}) mas gamay kaysa miaging Odo (${savedLastOdo}).`);
+                    this.style.border = "2px solid #ff3333"; 
+                } else { this.style.border = "1px solid #444"; }
+            });
+        }
+
+        function searchDatabase(idToSearch) {
+            const nameBox = document.getElementById('name');
+            const lvlBox = document.getElementById('level');
+            try {
+                if (idToSearch && typeof riderDatabase !== 'undefined' && Array.isArray(riderDatabase)) {
+                    const foundRider = riderDatabase.find(r => r.idNum === idToSearch);
+                    if (foundRider) {
+                        let rLevel = foundRider.level || "G5";
+                        if(nameBox) nameBox.value = foundRider.fullname || "";
+                        if(lvlBox) lvlBox.value = routeNames[rLevel] || rLevel;
+                        window.activeRiderLevel = rLevel; 
+                        populateCheckpointsByLevel(rLevel);
+                        localStorage.setItem('offlineName_' + idToSearch, foundRider.fullname || "");
+                        localStorage.setItem('offlineLevel_' + idToSearch, rLevel);
+                    } else {
+                        if(nameBox) nameBox.value = "❌ Wala sa Masterlist";
+                        if(lvlBox) lvlBox.value = ""; 
+                        window.activeRiderLevel = "G5"; 
+                        populateCheckpointsByLevel("G5");
+                    }
+                }
+            } catch (err) {}
+            if (typeof updateRiderProgress === 'function') updateRiderProgress();
+        }
+
+        const idNumBox = document.getElementById('idNum');
+        if (idNumBox) {
+            idNumBox.addEventListener('dblclick', function() {
+                let isMarshal = localStorage.getItem("tourIsMarshal") === "true";
+                if (!isMarshal) { 
+                    alert("⚠️ RIDER MODE: Dili ka pwede mag-usab sa ID!"); 
+                    return; 
+                }
+                this.removeAttribute('readonly'); 
+                this.value = ""; 
+                document.getElementById('name').value = ""; 
+                document.getElementById('level').value = ""; 
+                updateRiderProgress();
+                this.focus(); 
+                this.style.border = "3px solid #ffcc00"; 
+            });
+
+            idNumBox.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, ''); 
+                updateCheckpointCheckmarks(this.value.trim());
+                if (this.value.length === 4) {
+                    this.setAttribute('readonly', true); 
+                    this.style.border = "1px solid #444"; 
+                    this.blur(); 
+                    searchDatabase(this.value); 
+                    localStorage.setItem('defaultRiderID', this.value); 
+                }
+            });
+        }
+
+        const scannerDiv = document.getElementById('reader');
+        const scanQrBtn = document.getElementById('scanQrBtn');
+        let globalQrScanner = null; 
+
+        if (scanQrBtn && scannerDiv) {
+            scanQrBtn.addEventListener('click', async function() {
+                if (scannerDiv.style.display === "block") {
+                    if (globalQrScanner) {
+                        try { await globalQrScanner.stop(); globalQrScanner.clear(); } catch(e) {}
+                        globalQrScanner = null;
+                    }
+                    scannerDiv.style.display = "none";
+                    scanQrBtn.textContent = "📷 I-SCAN ANG RIDER ID";
+                    scanQrBtn.style.backgroundColor = "#ff9900"; scanQrBtn.style.color = "black";
+                } else {
+                    scannerDiv.style.display = "block";
+                    scanQrBtn.textContent = "🛑 I-CANCEL ANG PAG-SCAN";
+                    scanQrBtn.style.backgroundColor = "#cc0000"; scanQrBtn.style.color = "white";
+
+                    try {
+                        globalQrScanner = new Html5Qrcode("reader");
+                        await globalQrScanner.start(
+                            { facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } },
+                            async (decodedText) => {
+                                if (globalQrScanner) {
+                                    try { await globalQrScanner.stop(); globalQrScanner.clear(); } catch(e) {}
+                                    globalQrScanner = null;
+                                }
+                                scannerDiv.style.display = "none";
+                                scanQrBtn.textContent = "📷 I-SCAN ANG RIDER ID";
+                                scanQrBtn.style.backgroundColor = "#ff9900"; scanQrBtn.style.color = "black";
+                                if (idNumBox) idNumBox.value = decodedText;
+                                localStorage.setItem('defaultRiderID', decodedText);
+                                searchDatabase(decodedText);
+                                updateCheckpointCheckmarks(decodedText);
+                            },
+                            (errorMessage) => {}
+                        );
+                    } catch (err) {
+                        alert("⚠️ Wala ma-access ang Camera.");
+                        scannerDiv.style.display = "none";
+                        scanQrBtn.textContent = "📷 I-SCAN ANG RIDER ID";
+                        scanQrBtn.style.backgroundColor = "#ff9900"; scanQrBtn.style.color = "black";
+                    }
+                }
+            });
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((reg) => {
+                        console.log('Service Worker registered successfully!', reg.scope);
+                    })
+                    .catch((err) => {
+                        console.log('Service Worker registration failed:', err);
+                    });
+            });
+        }
     </script>
 </body>
 </html>
