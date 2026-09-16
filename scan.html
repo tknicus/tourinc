@@ -651,7 +651,26 @@
                                 const riderID = idElem && idElem.value ? idElem.value : "WALA I-SCAN";
                                 const riderName = nameElem && nameElem.value ? nameElem.value : "Wala Kaila";
                                 
+                                // Paghimo og saktong YYYY-MM-DD HH:MM:SS format gamit ang local time sa selpon (PHT)
                                 const now = new Date();
+                                const year = now.getFullYear();
+                                const month = String(now.getMonth() + 1).padStart(2, '0');
+                                const day = String(now.getDate()).padStart(2, '0');
+                                const hours = String(now.getHours()).padStart(2, '0');
+                                const minutes = String(now.getMinutes()).padStart(2, '0');
+                                const seconds = String(now.getSeconds()).padStart(2, '0');
+                                
+                                const exactPhtTimestamp = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+
+                                const data = {
+                                    idNum: checkId, name: checkName, checkpoint: currentCheckpoint, 
+                                    odometer: document.getElementById('odometer') ? document.getElementById('odometer').value : "", 
+                                    notes: document.getElementById('notes') ? document.getElementById('notes').value : "",
+                                    photo: compressedPhotoBase64, 
+                                    timestamp: exactPhtTimestamp, // <--- Gamita kining hapsay ug walay libog nga PHT string format!
+                                    location: gpsData.link, latitude: gpsData.lat, longitude: gpsData.lon,
+                                    locationTime: gpsData.time, level: window.activeRiderLevel || "G5" 
+                                };
                                 const militaryDateTime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
 
                                 ctx.strokeText(`ID: ${riderID} (${riderName})`, canvas.width - 10, canvas.height - 55);
