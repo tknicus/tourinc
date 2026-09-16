@@ -130,7 +130,7 @@
             if (!targetId) { alert("Palihug isulod ang Rider ID!"); return; }
             if (!supabaseClient) { container.innerHTML = `<div class="no-data" style="color: #cc0000;">❌ Error: Wala na-initialize ang Supabase client.</div>`; return; }
 
-            container.innerHTML = `<div class="no-data">🔄 Gipangita ang ID #${targetId} sa Supabase table (rally_scans)...</div>`;
+            container.innerHTML = `<div class="no-data">🔄 Gipangita ang ID #${targetId} sa Database Table para i-evaluate...</div>`;
 
             try {
                 let targetNum = parseInt(targetId) || targetId;

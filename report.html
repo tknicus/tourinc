@@ -114,7 +114,7 @@
         <div class="control-panel">
             <label style="font-weight: bold;">RIDER ID:</label>
             <input type="text" id="searchIdInput" placeholder="Pananglitan: 0001 o 1604">
-            <button onclick="generateReport()">I-Generate gikan sa Supabase</button>
+            <button onclick="generateReport()">Generate gikan sa Database</button>
         </div>
 
         <!-- 📊 REPORT OUTPUT AREA -->
@@ -150,7 +150,7 @@
                 return;
             }
 
-            container.innerHTML = `<div class="no-data">🔄 Gipangita ang ID #${targetId} sa Supabase table (rally_scans)...</div>`;
+            container.innerHTML = `<div class="no-data">🔄 Gipangita ang ID #${targetId} sa Database Table (report)...</div>`;
 
             try {
                 let targetNum = parseInt(targetId) || targetId;
