@@ -166,7 +166,7 @@
                     .from('rally_scans')
                     .select('*')
                     .or(`qr_code.eq.${targetId},qr_code.eq.${targetNum}`)
-                    .order('scanned_at', { ascending: true });
+                    .order('time_submit', { ascending: true });
 
                 if (error) throw new Error(error.message);
 
@@ -190,8 +190,8 @@
                 }
 
                 // Pag-compute sa kabinete sa oras ug distansya (Summary)
-                let firstScanTime = new Date(scans[0].scanned_at);
-                let lastScanTime = new Date(scans[scans.length - 1].scanned_at);
+                let firstScanTime = new Date(scans[0].time_submit);
+                let lastScanTime = new Date(scans[scans.length - 1].time_submit);
                 let diffMs = lastScanTime - firstScanTime;
                 
                 let totalHours = Math.floor(diffMs / (1000 * 60 * 60));
@@ -247,7 +247,7 @@
                 `;
                 // Loop para sa kada scan row uban ang telemetry computation
                 scans.forEach((scan, index) => {
-                    let scanTime = new Date(scan.scanned_at);
+                    let scanTime = new Date(scan.time_submit);
                     let formattedDate = `${String(scanTime.getMonth() + 1).padStart(2,'0')}/${String(scanTime.getDate()).padStart(2,'0')}/${scanTime.getFullYear()} ${String(scanTime.getHours()).padStart(2,'0')}:${String(scanTime.getMinutes()).padStart(2,'0')}:${String(scanTime.getSeconds()).padStart(2,'0')}`;
                     
                     // 1. RUN (Elapsed time gikan sa CP 00)
@@ -273,7 +273,7 @@
                         let prevOdo = parseFloat(prevScan.odometer) || startOdo;
                         p2pKms = Math.max(0, currentOdo - prevOdo);
 
-                        let prevTime = new Date(prevScan.scanned_at);
+                        let prevTime = new Date(prevScan.time_submit);
                         let segMs = scanTime - prevTime;
                         let segHours = segMs / (1000 * 60 * 60);
                         
