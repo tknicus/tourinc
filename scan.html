@@ -438,15 +438,9 @@
         }
 
         // ==========================================
-        // SINGLE UNIFIED OWNTRACKS CONFIG FUNCTION
+        // FIXED OWNTRACKS CONFIG FUNCTION (ALWAYS VISIBLE FOR TESTING)
         // ==========================================
         function setupOwnTracksOneTapButton(riderId) {
-            if (localStorage.getItem("mmc_owntracks_configured_" + riderId) === "true") {
-                const setupContainer = document.getElementById("setupOwntracksContainer");
-                if (setupContainer) setupContainer.style.display = "none";
-                return;
-            }
-
             const configJson = {
                 "_type": "configuration", "mode": 3,
                 "url": "https://iilfklquzyxmdergwawh.supabase.co/rest/v1/rider_locations",
@@ -465,7 +459,7 @@
             
             if (oneTapBtn && setupContainer) {
                 oneTapBtn.href = oneTapConfigUrl;
-                setupContainer.style.display = "block";
+                setupContainer.style.display = "block"; // Siguraduha nga makita gyud kini
                 oneTapBtn.onclick = function(e) {
                     let userAgent = navigator.userAgent || navigator.vendor || window.opera;
                     if (!(/android|iphone|ipad|ipod/i.test(userAgent))) {
@@ -473,7 +467,6 @@
                         alert("⚠️ Ang OwnTracks One-Tap Config kay para ra sa Mobile Phone (Android/iOS). Palihug ablihi kini nga website sa imong selpon.");
                     }
                     localStorage.setItem("mmc_owntracks_configured_" + riderId, "true");
-                    setTimeout(() => { setupContainer.style.display = "none"; }, 500);
                 };
             }
         }
