@@ -24,6 +24,8 @@
             color: #f5f5f5;
             margin: 0;
             padding: 0;
+            display: flex;
+            justify-content: center;
         }
 
         .container {
@@ -232,13 +234,10 @@
         // 🛰️ SUPABASE CONFIGURATION
         // ==========================================
         const _supabaseUrl = 'https://iilfklquzyxmdergwawh.supabase.co';
-        const _supabaseAnonKey = 'sb_publishable_xO3twPzyDBLhdltnkwoS3w_xswYLyf_';
+        const _supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpbGZrbHF1enl4bWRlcmd3YXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MTkzMDcsImV4cCI6MjEwMzI5NTMwN30.jMctz666CGfTdODLqNr24O3dQ5SDM6K5GkmihCtDdBQ';
         
         const supabaseLiveClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
         
-        // 🛡️ COMPATIBILITY ALIAS: Gihimo namong pwedeng basahon ang routeConfigs gamit ang routeCheckpoints
-        //const routeConfigs = typeof routeCheckpoints !== 'undefined' ? routeCheckpoints : {};
-        // 🛡️ COMPATIBILITY ALIAS: Gihimo namong pwedeng basahon ang routeConfigs gamit ang routeCheckpoints
         window.routeConfigs = (typeof routeCheckpoints !== 'undefined') ? routeCheckpoints : {};
         
         // ==========================================
@@ -291,8 +290,6 @@
             }
         }
 
-
-        // 🛡️ SAFE & BULLETPROOF ROUTE CONFIGS (Dili gyud ma-stock o mo-pilit ang app)
         if (typeof window.routeNames === 'undefined') {
             window.routeNames = {
                 "AS26": "628 ALL STAR", "G5": "MAN OF STEEL", "G4": "4W RIDERS",
@@ -308,7 +305,7 @@
         if (Object.keys(window.routeConfigs).length === 0) {
             window.routeConfigs = {
                 "G1N": [
-                    { val: "CP 00", name: "#00 Starting Grid" }, 
+                    { val: "CP 00", name: "#00 StartingGrid" }, 
                     { val: "CP 01", name: "#01 San Fernando Municipal Plaza" }, 
                     { val: "CP 02", name: "#02 Iba Central Elementary School 25km" }, 
                     { val: "CP FL", name: "#FL Ending Grid" }
@@ -350,8 +347,6 @@
                 ]
             };
         }
-
-
 
         async function verifyAndLogin() {
             function checkOwnTracksRequirement() {
@@ -442,6 +437,9 @@
             }
         }
 
+        // ==========================================
+        // SINGLE UNIFIED OWNTRACKS CONFIG FUNCTION
+        // ==========================================
         function setupOwnTracksOneTapButton(riderId) {
             if (localStorage.getItem("mmc_owntracks_configured_" + riderId) === "true") {
                 const setupContainer = document.getElementById("setupOwntracksContainer");
@@ -451,28 +449,26 @@
 
             const configJson = {
                 "_type": "configuration", "mode": 3,
-                "url": "https://iilfklquzyxmdergwawh.supabase.co/functions/v1/owntracks-webhook?rider_id=" + riderId,
-                "username": "rider_" + riderId, "deviceId": "phone", "tid": riderId.slice(-2),
+                "url": "https://iilfklquzyxmdergwawh.supabase.co/rest/v1/rider_locations",
+                "username": "Rider_" + riderId, "device": String(riderId), "tid": String(riderId).slice(-2),
                 "autostartOnBoot": true, "extendedData": true,
                 "ignoreInaccurateLocations": 100, "ignoreStaleLocations": 0,
-                "locatorDisplacement": 50, "locatorInterval": 30,
+                "locatorDisplacement": 150, "locatorInterval": 180,
                 "locatorPriority": 0, "monitoring": 2,
                 "notificationLocation": true, "pegLocatorFastestIntervalToInterval": true
             };
 
             const base64Config = btoa(JSON.stringify(configJson));
-            const oneTapConfigUrl = `owntracks:///config?inline=${base64Config}`;
+            const oneTapConfigUrl = `owntracks://config?cfg=${base64Config}`;
             const oneTapBtn = document.getElementById("oneTapConfigBtn");
             const setupContainer = document.getElementById("setupOwntracksContainer");
             
             if (oneTapBtn && setupContainer) {
+                oneTapBtn.href = oneTapConfigUrl;
                 setupContainer.style.display = "block";
                 oneTapBtn.onclick = function(e) {
                     let userAgent = navigator.userAgent || navigator.vendor || window.opera;
-                    // Tsekon kung mobile phone ba gyud
-                    if (/android|iphone|ipad|ipod/i.test(userAgent)) {
-                        window.location.href = oneTapConfigUrl;
-                    } else {
+                    if (!(/android|iphone|ipad|ipod/i.test(userAgent))) {
                         e.preventDefault();
                         alert("⚠️ Ang OwnTracks One-Tap Config kay para ra sa Mobile Phone (Android/iOS). Palihug ablihi kini nga website sa imong selpon.");
                     }
@@ -560,27 +556,25 @@
                             alert("🔒 Naka-Rider Mode na ang app.");
                         }
                     }
-                }, 2000); // 2000 ms = 2 seconds nga tuplok para mogawas
+                }, 2000); 
             };
 
             const cancelPress = () => {
                 clearTimeout(pressTimer);
             };
 
-            // Para sa Mouse (Laptop/PC)
             logoElement.addEventListener('mousedown', startPress);
             logoElement.addEventListener('mouseup', cancelPress);
             logoElement.addEventListener('mouseleave', cancelPress);
             
-            // Para sa Touch (Cellphone)
             logoElement.addEventListener('touchstart', startPress, {passive: true});
             logoElement.addEventListener('touchend', cancelPress);
             logoElement.addEventListener('touchcancel', cancelPress);
         }
 
-
-
-
+        // ==========================================
+        // UNIFIED DOM CONTENT LOADED
+        // ==========================================
         document.addEventListener("DOMContentLoaded", function() {
             setupLogoLongPress(document.getElementById('loginLogo'));
             setupLogoLongPress(document.getElementById('masterMindsLogo'));
@@ -595,36 +589,30 @@
                 if (gatekeeperContainer) gatekeeperContainer.style.display = "flex";
                 if (loginContainer) loginContainer.style.display = "none";
                 if (scannerContainer) scannerContainer.style.display = "none";
-                return;
             } else {
                 if (gatekeeperContainer) gatekeeperContainer.style.display = "none";
+                let isLoggedIn = localStorage.getItem("tourIsLoggedIn");
+                let savedRiderID = localStorage.getItem("tourRiderID");
+                let isMarshal = localStorage.getItem("tourIsMarshal") === "true";
+
+                if (isLoggedIn === "true" && savedRiderID) {
+                    loginContainer.style.display = "none";
+                    scannerContainer.style.display = "flex";
+                    
+                    checkEventStatus(savedRiderID);
+                    initScannerApp(savedRiderID);
+                    setupOwnTracksOneTapButton(savedRiderID);
+
+                    const scanQrBtn = document.getElementById('scanQrBtn');
+                    if (scanQrBtn) scanQrBtn.style.display = isMarshal ? "block" : "none";
+                } else {
+                    loginContainer.style.display = "flex";
+                    scannerContainer.style.display = "none";
+                }
             }
 
-            let isLoggedIn = localStorage.getItem("tourIsLoggedIn");
-            let savedRiderID = localStorage.getItem("tourRiderID");
-            let isMarshal = localStorage.getItem("tourIsMarshal") === "true";
-
-            if (isLoggedIn === "true" && savedRiderID) {
-                loginContainer.style.display = "none";
-                scannerContainer.style.display = "flex";
-                
-                checkEventStatus(savedRiderID);
-                initScannerApp(savedRiderID);
-                setupOwnTracksOneTapButton(savedRiderID);
-
-                const scanQrBtn = document.getElementById('scanQrBtn');
-                if (scanQrBtn) scanQrBtn.style.display = isMarshal ? "block" : "none";
-            } else {
-                loginContainer.style.display = "flex";
-                scannerContainer.style.display = "none";
-            }
-        });
-
-        document.addEventListener("DOMContentLoaded", function() {
             const owntracksCheck = document.getElementById("owntracksCheck");
             const proceedBtn = document.getElementById("proceedToLoginBtn");
-            const gatekeeperContainer = document.getElementById("gatekeeperContainer");
-            const loginContainer = document.getElementById("loginScreenContainer");
 
             if (owntracksCheck && proceedBtn) {
                 owntracksCheck.addEventListener("change", function() {
@@ -650,41 +638,6 @@
                 });
             }
         });
-
-        function setupOwnTracksOneTapButton(riderId) {
-            if (localStorage.getItem("mmc_owntracks_configured_" + riderId) === "true") {
-                const setupContainer = document.getElementById("setupOwntracksContainer");
-                if (setupContainer) setupContainer.style.display = "none";
-                return;
-            }
-
-            const configJson = {
-                "_type": "configuration", "mode": 3,
-                "url": "https://iilfklquzyxmdergwawh.supabase.co/functions/v1/owntracks-webhook?rider_id=" + riderId,
-                "username": "rider_" + riderId, "deviceId": "phone", "tid": riderId.slice(-2),
-                "autostartOnBoot": true, "extendedData": true,
-                "ignoreInaccurateLocations": 100, "ignoreStaleLocations": 0,
-                "locatorDisplacement": 50, "locatorInterval": 30,
-                "locatorPriority": 0, "monitoring": 2,
-                "notificationLocation": true, "pegLocatorFastestIntervalToInterval": true
-            };
-
-            const base64Config = btoa(JSON.stringify(configJson));
-            const oneTapConfigUrl = `owntracks:///config?inline=${base64Config}`;
-            const oneTapBtn = document.getElementById("oneTapConfigBtn");
-            const setupContainer = document.getElementById("setupOwntracksContainer");
-            
-            if (oneTapBtn && setupContainer) {
-                oneTapBtn.href = oneTapConfigUrl;
-                setupContainer.style.display = "block";
-                oneTapBtn.onclick = function() {
-                    localStorage.setItem("mmc_owntracks_configured_" + riderId, "true");
-                    setTimeout(() => { setupContainer.style.display = "none"; }, 500);
-                };
-            }
-        }
-
-        
 
         function checkEventStatus(riderID) {
             let appStatus = localStorage.getItem('mmc_app_status');
@@ -777,10 +730,8 @@
             if (!dropdown) return;
             dropdown.innerHTML = '<option value="" disabled selected>-- PILIA ANG CHECKPOINT -- (I-scan usa ang Rider)</option>';
             
-            // Gamiton ang window.routeConfigs nga siguradong walay error
             let cpData = window.routeConfigs[riderLevel] || window.routeConfigs["G5"] || [];
 
-            // Bulletproof checker: kung Array ba siya o Object
             if (Array.isArray(cpData)) {
                 cpData.forEach(cp => {
                     let opt = document.createElement('option');
@@ -797,7 +748,6 @@
                 });
             }
         }
-
 
         function initBatteryMonitor() {
             const batStatus = document.getElementById('batteryStatus');
@@ -836,7 +786,6 @@
                             canvas.height = img.height * scaleSize;
                             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                            // Helper para sa DMS format
                             function convertToDMS(decimal, isLat) {
                                 if (decimal === "N/A") return "N/A";
                                 const val = parseFloat(decimal);
@@ -848,7 +797,6 @@
                                 return `${d}° ${m}' ${s}" ${dir}`;
                             }
 
-                            // Function para i-render ang text ug optional logo
                             const finalizeCanvas = () => {
                                 ctx.fillStyle = "white";
                                 ctx.strokeStyle = "black"; 
@@ -881,7 +829,6 @@
                                 }
                             };
 
-                            // Sulayan nato pag-load ang mmc.png logo sa ibabaw sa litrato
                             const logoImg = new Image();
                             logoImg.src = 'mmc.png';
                             logoImg.onload = function() {
@@ -891,7 +838,6 @@
                                 finalizeCanvas();
                             };
                             logoImg.onerror = function() {
-                                // Kung offline o walay makit-an nga logo, i-padayon gihapon ang pagbutang sa text!
                                 finalizeCanvas();
                             };
                         };
@@ -946,17 +892,14 @@
             } catch (error) { return false; }
         }
 
-        // 🚀 INSTANT & FROZEN-FREE OFFLINE DETECTOR
         function checkRealInternet() {
             const sigStatus = document.getElementById('signalStatus');
             if (!sigStatus) return;
 
-            // Gigamit ang pinaka-diretso ug kasaligan nga browser status (Walay network fetch nga mo-hang!)
             if (navigator.onLine) {
                 sigStatus.innerHTML = "🟢 ONLINE";
                 sigStatus.style.color = "#00ff00";
                 
-                // Sulayan nato pag-sync kung naa man gani pending offline data (async nga dili mo-block sa UI)
                 let offlineData = JSON.parse(localStorage.getItem('offlineData')) || [];
                 if (offlineData.length > 0 && !isSyncing) {
                     syncOfflineData();
@@ -967,19 +910,10 @@
             }
         }
 
-        // Diretsong paminaw sa tinuod nga estado sa network sa selpon (Instant mo-switch!)
         window.addEventListener('online', checkRealInternet);
         window.addEventListener('offline', checkRealInternet);
-
-        // Panagsa ra paminawon (kada 10 segundos) aron hapsay ug dili mag-load sa CPU
         setInterval(checkRealInternet, 10000);
 
-
-        // ==========================================
-        // 🚀 SUPABASE DATA SENDER & PHOTO UPLOADER
-        // ==========================================
-        
-        // Helper: I-convert ang Base64 Picture padulong Blob para ma-upload sa Supabase
         function b64toBlob(b64Data, contentType='', sliceSize=512) {
             const byteCharacters = atob(b64Data.split(',')[1]);
             const byteArrays = [];
@@ -995,12 +929,10 @@
             return new Blob(byteArrays, {type: contentType});
         }
 
-        // Gipulihan nato ang daan nga fetch paingon sa Google Sheet og Supabase client call
         async function sendDataToServer(dataPayload) {
             try {
                 let finalPhotoUrl = "Walay Ebidensya";
 
-                // 1. Upload Photo sa Supabase Storage (kon naay photo)
                 if (dataPayload.photo && dataPayload.photo.includes('base64')) {
                     const blob = b64toBlob(dataPayload.photo, 'image/jpeg');
                     const cleanCp = dataPayload.checkpoint.replace(/\s+/g, '');
@@ -1020,7 +952,6 @@
                     }
                 }
 
-                // 2. Isalibay ang data sa rally_scans table
                 const { error: dbError } = await supabaseLiveClient.from('rally_scans').insert([{
                     qr_code: dataPayload.idNum,
                     rider_name: dataPayload.name,
@@ -1128,7 +1059,6 @@
                     isSubmitting = false; return; 
                 }
 
-                // 🛑 DIRE NIMO ISINGIT ANG PHOTO VALIDATION CHECK:
                 if (!compressedPhotoBase64 || compressedPhotoBase64 === "" || !compressedPhotoBase64.includes('base64')) {
                     if (submitAudio) { submitAudio.pause(); submitAudio.currentTime = 0; }
                     alert("📸 DILI MA-SAVE! Palihug pagkuha una og Ebidensya/Picture.");
