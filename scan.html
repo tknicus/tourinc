@@ -796,7 +796,7 @@
                     longitude: dataPayload.longitude || 0,
                     location_address: dataPayload.location || "", 
                     photo_url: finalPhotoUrl,
-                    scanned_at: dataPayload.timestamp // <--- Diri nato i-salibay ang tinuod nga oras sa pag-scan!
+                    scan_time: dataPayload.timestamp // <--- Gigamit na nato ang bag-ong column nga "scan_time"!
                 }]);
 
                 if (dbError) { console.error("Sipyat sa database insert:", dbError.message); return false; }
