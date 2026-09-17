@@ -37,6 +37,13 @@
         .camera-btn:hover { background-color: #555; }
         .camera-btn-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; height: 100%; width: 100%; }
         #photoPreview { max-width: 100%; border: 2px dashed #cc0000; border-radius: 5px; margin-bottom: 15px; display: none; }
+        /* Kini ang sekreto aron dili mu-zoom, mu-highlight, o mu-pop up ang menu sa logo */
+        #secretLogo {
+            -webkit-touch-callout: none; /* iOS Safari */
+            -webkit-user-select: none;   /* Safari */
+            user-select: none;           /* Standard */
+            cursor: pointer;
+        }        
     </style>
 </head>
 <body>
@@ -1179,6 +1186,42 @@
                     .catch((err) => { console.log('Service Worker registration failed:', err); });
             });
         }
+
+        var pressTimer;
+        var logo = document.getElementById('secretLogo');
+
+        // 1. I-BLOCK ANG RIGHT-CLICK O "SAVE IMAGE" MENU
+        logo.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // 2. MAGSUGOD OG IHAP INIG TUSLOK
+        function startPress(e) {
+            pressTimer = window.setTimeout(function() {
+            
+            // DIRI IBUTANG ANG ACTION SA IMONG SECRET LINK
+            // Example kung mobalhin og page: window.location.href = "secret_admin.html";
+            
+            alert("Secret Link Activated!"); 
+            
+            }, 2000); // 2000 = 2 ka segundo nga long press
+        }
+
+        // 3. I-CANCEL ANG IHAP KUNG BUHIAN O MA-SLIDE ANG TUDLO
+        function cancelPress(e) {
+            clearTimeout(pressTimer);
+        }
+
+        // MGA EVENTS PARA SA MOBILE (TOUCH)
+        logo.addEventListener('touchstart', startPress, {passive: true});
+        logo.addEventListener('touchend', cancelPress);
+        logo.addEventListener('touchmove', cancelPress); // I-cancel kung ni-slide ang tudlo
+
+        // MGA EVENTS PARA SA LAPTOP/PC (MOUSE)
+        logo.addEventListener('mousedown', startPress);
+        logo.addEventListener('mouseup', cancelPress);
+        logo.addEventListener('mouseleave', cancelPress);
+
     </script>
 </body>
 </html>
