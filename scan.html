@@ -189,8 +189,6 @@
         </div>
     </div>
 
-    <div id="secretLogo" style="width: 160px; height: 60px; margin: 20px auto; background-image: url('mmc.png'); background-size: contain; background-repeat: no-repeat; background-position: center; cursor: pointer;"></div>
-    
     <audio id="submitMusic" src="./never_say_never.mp3" preload="auto"></audio> 
 
     <script src="database.js"></script>
@@ -1193,14 +1191,14 @@
 
         
         // ==========================================
-        // 🕵️‍♂️ 100% RELIABLE TRIPLE-TAP PARA SA menu.html
+        // 🕵️‍♂️ TRIPLE-TAP SA ORIHINAL NGA LOGO SA TAAS (PADULONG SA menu.html)
         // ==========================================
-        const secretLogo = document.getElementById('secretLogo');
-        if (secretLogo) {
+        const topLogo = document.getElementById('masterMindsLogo');
+        if (topLogo) {
             let tapCount = 0;
             let tapTimeout;
 
-            secretLogo.addEventListener('click', function() {
+            topLogo.addEventListener('click', function() {
                 tapCount++;
                 clearTimeout(tapTimeout);
                 tapTimeout = setTimeout(() => { 
@@ -1214,7 +1212,6 @@
                 }
             });
         }
-        
 
     </script>
 </body>
