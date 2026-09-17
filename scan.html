@@ -189,8 +189,10 @@
         </div>
     </div>
 
-    <!-- Ang imong Logo (Ilisi ang src kung unsa ang filename sa imong logo) -->
-    <img id="secretLogo" src="mmc.png" alt="App Logo" width="150">
+    <!-- SECURE SECRET LOGO WRAPPER -->
+    <div id="secretLogoWrapper" style="width: 150px; margin: 20px auto; position: relative; text-align: center; -webkit-touch-callout: none; user-select: none;">
+        <img id="secretLogo" src="mmc.png" alt="App Logo" width="150" style="pointer-events: none; display: block; margin: 0 auto;">
+    </div>
 
     <audio id="submitMusic" src="./never_say_never.mp3" preload="auto"></audio> 
 
@@ -1190,40 +1192,64 @@
             });
         }
 
-        var pressTimer;
-        var logo = document.getElementById('secretLogo');
+        // ==========================================
+        // 🕵️‍♂️ FIXED SECRET LOGO LONG PRESS (IPAD/ANDROID SAFE)
+        // ==========================================
+        const secretWrapper = document.getElementById('secretLogoWrapper');
+        if (secretWrapper) {
+            let pressTimer;
 
-        // 1. I-BLOCK ANG RIGHT-CLICK O "SAVE IMAGE" MENU
-        logo.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-        });
+            const startPress = (e) => {
+                // I-block ang default context menu o selection kung naa man
+                e.preventDefault();
+                clearTimeout(pressTimer);
+                
+                pressTimer = window.setTimeout(async () => {
+                    let currentMarshalStatus = localStorage.getItem('tourIsMarshal') === "true";
+                    const scanQrBtn = document.getElementById('scanQrBtn');
+                    
+                    if (!currentMarshalStatus) {
+                        let passcode = await customPinPrompt("🕵️‍♂️ ADMIN OVERRIDE", "Pagsulod og Admin/Marshal Passcode:");
+                        if (!passcode) return;
+                        if (typeof riderDatabase !== 'undefined') {
+                            let hashedInput = await sha256Hash(passcode); 
+                            let validMarshal = riderDatabase.find(r => r.passcode === hashedInput && r.isMarshal === true);     
+                            if (validMarshal) {
+                                localStorage.setItem('marshalMode', 'true'); 
+                                localStorage.setItem('tourIsMarshal', 'true');
+                                if (scanQrBtn) scanQrBtn.style.display = "block"; 
+                                alert(`🔓 ADMIN OVERRIDE ON! Welcome, Master ${validMarshal.fullname}!`);
+                            } else { alert("❌ Sayop nga Passcode!"); }
+                        }
+                    } else {
+                        if (confirm("🔒 Naka-Admin Mode na ka. Gusto nimo i-lock ug ibalik sa Regular Rider Mode?")) {
+                            localStorage.setItem('marshalMode', 'false');
+                            localStorage.setItem('tourIsMarshal', 'false');
+                            if (scanQrBtn) scanQrBtn.style.display = "none"; 
+                            alert("🔒 Naka-Rider Mode na ang app.");
+                        }
+                    }
+                }, 2000); // 2 ka segundo
+            };
 
-        // 2. MAGSUGOD OG IHAP INIG TUSLOK
-        function startPress(e) {
-            pressTimer = window.setTimeout(function() {
-            
-            // DIRI IBUTANG ANG ACTION SA IMONG SECRET LINK
-            // Example kung mobalhin og page: window.location.href = "secret_admin.html";
-            
-            alert("Secret Link Activated!"); 
-            
-            }, 2000); // 2000 = 2 ka segundo nga long press
+            const cancelPress = (e) => {
+                clearTimeout(pressTimer);
+            };
+
+            // Prevent right click menu on wrapper
+            secretWrapper.addEventListener('contextmenu', (e) => e.preventDefault());
+
+            // Touch events para sa mobile
+            secretWrapper.addEventListener('touchstart', startPress, { passive: false });
+            secretWrapper.addEventListener('touchend', cancelPress);
+            secretWrapper.addEventListener('touchmove', cancelPress);
+            secretWrapper.addEventListener('touchcancel', cancelPress);
+
+            // Mouse events para sa PC/Laptop
+            secretWrapper.addEventListener('mousedown', startPress);
+            secretWrapper.addEventListener('mouseup', cancelPress);
+            secretWrapper.addEventListener('mouseleave', cancelPress);
         }
-
-        // 3. I-CANCEL ANG IHAP KUNG BUHIAN O MA-SLIDE ANG TUDLO
-        function cancelPress(e) {
-            clearTimeout(pressTimer);
-        }
-
-        // MGA EVENTS PARA SA MOBILE (TOUCH)
-        logo.addEventListener('touchstart', startPress, {passive: true});
-        logo.addEventListener('touchend', cancelPress);
-        logo.addEventListener('touchmove', cancelPress); // I-cancel kung ni-slide ang tudlo
-
-        // MGA EVENTS PARA SA LAPTOP/PC (MOUSE)
-        logo.addEventListener('mousedown', startPress);
-        logo.addEventListener('mouseup', cancelPress);
-        logo.addEventListener('mouseleave', cancelPress);
 
     </script>
 </body>
