@@ -189,9 +189,9 @@
         </div>
     </div>
 
-    <!-- CSS Background Logo (Zero Image Menu sa Mobile) -->
+    <!-- SECURE LOGO CONTAINER (Wala nay Save Image menu) -->
     <div id="secretLogo" style="width: 160px; height: 60px; margin: 20px auto; background-image: url('mmc.png'); background-size: contain; background-repeat: no-repeat; background-position: center; cursor: pointer;"></div>
-
+    
     <audio id="submitMusic" src="./never_say_never.mp3" preload="auto"></audio> 
 
     <script src="database.js"></script>
@@ -1193,46 +1193,39 @@
         
 
         // ==========================================
-        // 🕵️‍♂️ 100% RELIABLE TRIPLE-TAP PARA SA LOGO
+        // 🕵️‍♂️ LONG PRESS PARA MOABLI SA menu.html
         // ==========================================
         const secretLogo = document.getElementById('secretLogo');
         if (secretLogo) {
-            let tapCount = 0;
-            let tapTimeout;
+            let pressTimer;
 
-            secretLogo.addEventListener('click', async function() {
-                tapCount++;
-                clearTimeout(tapTimeout);
-                tapTimeout = setTimeout(() => { tapCount = 0; }, 1000); // 1 segundo ang window para ma-complete ang 3 ka tap
+            const startPress = (e) => {
+                e.preventDefault(); // Gikansela ang default behavior
+                clearTimeout(pressTimer);
+                
+                pressTimer = window.setTimeout(() => {
+                    // DIRI NA NIYA TAWAGON ANG MENU.HTML
+                    window.location.href = "menu.html";
+                }, 2000); // 2 ka segundo nga long press
+            };
 
-                if (tapCount === 3) {
-                    tapCount = 0;
-                    let currentMarshalStatus = localStorage.getItem('tourIsMarshal') === "true";
-                    const scanQrBtn = document.getElementById('scanQrBtn');
-                    
-                    if (!currentMarshalStatus) {
-                        let passcode = await customPinPrompt("🕵️‍♂️ ADMIN OVERRIDE", "Pagsulod og Admin/Marshal Passcode:");
-                        if (!passcode) return;
-                        if (typeof riderDatabase !== 'undefined') {
-                            let hashedInput = await sha256Hash(passcode); 
-                            let validMarshal = riderDatabase.find(r => r.passcode === hashedInput && r.isMarshal === true);     
-                            if (validMarshal) {
-                                localStorage.setItem('marshalMode', 'true'); 
-                                localStorage.setItem('tourIsMarshal', 'true');
-                                if (scanQrBtn) scanQrBtn.style.display = "block"; 
-                                alert(`🔓 ADMIN OVERRIDE ON! Welcome, Master ${validMarshal.fullname}!`);
-                            } else { alert("❌ Sayop nga Passcode!"); }
-                        }
-                    } else {
-                        if (confirm("🔒 Naka-Admin Mode na ka. Gusto nimo i-lock ug ibalik sa Regular Rider Mode?")) {
-                            localStorage.setItem('marshalMode', 'false');
-                            localStorage.setItem('tourIsMarshal', 'false');
-                            if (scanQrBtn) scanQrBtn.style.display = "none"; 
-                            alert("🔒 Naka-Rider Mode na ang app.");
-                        }
-                    }
-                }
-            });
+            const cancelPress = (e) => {
+                clearTimeout(pressTimer);
+            };
+
+            // I-block ang context menu
+            secretLogo.addEventListener('contextmenu', (e) => e.preventDefault());
+
+            // Touch events para sa mobile
+            secretLogo.addEventListener('touchstart', startPress, { passive: false });
+            secretLogo.addEventListener('touchend', cancelPress);
+            secretLogo.addEventListener('touchmove', cancelPress);
+            secretLogo.addEventListener('touchcancel', cancelPress);
+
+            // Mouse events para sa laptop/PC
+            secretLogo.addEventListener('mousedown', startPress);
+            secretLogo.addEventListener('mouseup', cancelPress);
+            secretLogo.addEventListener('mouseleave', cancelPress);
         }
         
 
