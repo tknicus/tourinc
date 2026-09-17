@@ -190,7 +190,7 @@
     </div>
 
     <!-- CSS Background Logo (Zero Image Menu sa Mobile) -->
-    <div id="secretLogo" style="width: 160px; height: 60px; margin: 20px auto; background-image: url('mmc.png'); background-size: contain; background-repeat: no-repeat; background-position: center; cursor: pointer; -webkit-touch-callout: none; user-select: none;"></div>
+    <div id="secretLogo" style="width: 160px; height: 60px; margin: 20px auto; background-image: url('mmc.png'); background-size: contain; background-repeat: no-repeat; background-position: center; cursor: pointer;"></div>
 
     <audio id="submitMusic" src="./never_say_never.mp3" preload="auto"></audio> 
 
@@ -1193,17 +1193,20 @@
         
 
         // ==========================================
-        // 🕵️‍♂️ BULLETPROOF LONG PRESS PARA SA CSS DIV LOGO
+        // 🕵️‍♂️ 100% RELIABLE TRIPLE-TAP PARA SA LOGO
         // ==========================================
         const secretLogo = document.getElementById('secretLogo');
         if (secretLogo) {
-            let pressTimer;
+            let tapCount = 0;
+            let tapTimeout;
 
-            const startPress = (e) => {
-                e.preventDefault(); // Gikansela ang default behavior sa mobile
-                clearTimeout(pressTimer);
-                
-                pressTimer = window.setTimeout(async () => {
+            secretLogo.addEventListener('click', async function() {
+                tapCount++;
+                clearTimeout(tapTimeout);
+                tapTimeout = setTimeout(() => { tapCount = 0; }, 1000); // 1 segundo ang window para ma-complete ang 3 ka tap
+
+                if (tapCount === 3) {
+                    tapCount = 0;
                     let currentMarshalStatus = localStorage.getItem('tourIsMarshal') === "true";
                     const scanQrBtn = document.getElementById('scanQrBtn');
                     
@@ -1228,26 +1231,8 @@
                             alert("🔒 Naka-Rider Mode na ang app.");
                         }
                     }
-                }, 2000); // 2 ka segundo nga long press
-            };
-
-            const cancelPress = (e) => {
-                clearTimeout(pressTimer);
-            };
-
-            // I-block ang context menu kon naa man
-            secretLogo.addEventListener('contextmenu', (e) => e.preventDefault());
-
-            // Touch events para sa mobile phone
-            secretLogo.addEventListener('touchstart', startPress, { passive: false });
-            secretLogo.addEventListener('touchend', cancelPress);
-            secretLogo.addEventListener('touchmove', cancelPress);
-            secretLogo.addEventListener('touchcancel', cancelPress);
-
-            // Mouse events para sa laptop/PC
-            secretLogo.addEventListener('mousedown', startPress);
-            secretLogo.addEventListener('mouseup', cancelPress);
-            secretLogo.addEventListener('mouseleave', cancelPress);
+                }
+            });
         }
         
 
