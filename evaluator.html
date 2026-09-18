@@ -178,7 +178,7 @@
             const hashedInput = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
             
             // Gitugotan lang ang mga ID 0001, 0002, o 0003 nga Admin
-            let validAdmin = riderDatabase.find(r => r.passcode === hashedInput && (r.idNum === "0001" || r.idNum === "0002" || r.idNum === "0003"));
+            let validAdmin = riderDatabase.find(r => r.passcode === hashedInput && (r.idNum === "0001" || r.idNum === "0002" || r.idNum === "1636"));
             
             if (validAdmin) {
                 sessionStorage.setItem("admin_authenticated", "true");
