@@ -240,11 +240,11 @@
                     riderInfo = riderDatabase.find(r => String(r.idNum) === String(targetId) || String(r.idNum) === String(targetNum));
                 }
 
+                // Kuhaon ang tanang scans nga walay labot ang pagka-strict sa order sa Supabase
                 let { data: scans, error } = await supabaseClient
                     .from('rally_scans')
                     .select('*')
-                    .or(`qr_code.eq.${targetId},qr_code.eq.${targetNum}`)
-                    .order('time_submit', { ascending: true });
+                    .or(`qr_code.eq.${targetId},qr_code.eq.${targetNum}`);
 
                 if (error) throw new Error(error.message);
 
@@ -252,6 +252,9 @@
                     container.innerHTML = `<div class="no-data" style="color: #cc0000;">❌ Walay nakit-an nga record sa rally_scans para sa Rider ID #${targetId}.</div>`;
                     return;
                 }
+
+                // 🛠️ GI-SORT DIREKTA SA JS PARA MASIGURO NGA SUNOD-SUNOD GYUD ANG ORAS (CHRONOLOGICAL)
+                scans.sort((a, b) => new Date(a.time_submit) - new Date(b.time_submit));
 
                 let fullName = riderInfo ? (riderInfo.fullname || riderInfo.name) : (scans[0].rider_name || 'Wala sa Masterlist');
                 let riderLevel = riderInfo ? riderInfo.level : (scans[0].rider_level || 'AS26');
