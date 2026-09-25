@@ -293,6 +293,17 @@
                 } else { isPasscodeValid = true; }
 
                 if (isPasscodeValid) {
+                    // 🛑 SUGOD SA EXPIRY CHECK SA LOGIN 🛑
+                    if (rider.expiry) {
+                        // Atong ibutang ang oras nga 23:59:59 aron taman sa tungang gabii sa maong petsa ang bisa
+                        let riderExpiry = new Date(rider.expiry + "T23:59:59");
+                        let today = new Date();
+                        if (today > riderExpiry) {
+                            alert(`ACCESS DENIED: Pasensya Master ${rider.fullname}, expired na ang imong account (Kutob ra sa ${rider.expiry}).`);
+                            return; // Dili padayunon ang login
+                        }
+                    }
+                    // 🛑 KATAPUSAN SA EXPIRY CHECK 🛑
                     localStorage.setItem("tourRiderID", rider.idNum);
                     localStorage.setItem("defaultRiderID", rider.idNum);
                     localStorage.setItem("tourRiderName", rider.fullname);
@@ -506,7 +517,15 @@
         function checkEventStatus(riderID) {
             let appStatus = localStorage.getItem('mmc_app_status');
             if (!appStatus) { localStorage.setItem('mmc_app_status', 'T'); appStatus = 'T'; }
-            const eventExpiryDate = new Date('2026-10-01T00:00:00'); 
+
+            // 🛑 PANGITAA ANG RIDER SA DATABASE PARA KUHAON ANG IYANG EXPIRY 🛑
+            let currentRider = (typeof riderDatabase !== 'undefined') ? riderDatabase.find(r => r.idNum === riderID) : null;
+            // Kung walay expiry nabutang, mag-set ta og default universal expiry isip backup
+            let expiryDateStr = (currentRider && currentRider.expiry) ? currentRider.expiry : '2026-10-01'; 
+            
+            // I-set ang oras sa alas 11:59:59 sa gabii sa maong petsa
+            const eventExpiryDate = new Date(expiryDateStr + 'T23:59:59');
+
             const today = new Date();
             if (today > eventExpiryDate || appStatus === 'F') {
                 localStorage.setItem('mmc_app_status', 'F');
@@ -1188,9 +1207,6 @@
             });
         }
 
-        
-
-        
         // ==========================================
         // 🕵️‍♂️ TRIPLE-TAP SA ORIHINAL NGA LOGO SA TAAS (PADULONG SA menu.html)
         // ==========================================
@@ -1214,7 +1230,6 @@
             });
         }
 
-
         // ==========================================
         // 🕵️‍♂️ FOOTER COPYRIGHT TRIPLE-TAP (3 taps -> menu.html)
         // ==========================================
@@ -1237,9 +1252,6 @@
                 }
             });
         }
-
-
-        
 
     </script>
 </body>
