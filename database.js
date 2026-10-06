@@ -512,7 +512,9 @@ const routeCheckpoints = {
         "CP 64": "Mamaon Border Control Point",
         "CP 65": "JABLA store",
         "CP 66": "Jollibee Quezon",
-        "CP 67": "PLDT Calinane",
+        "CP 67": "Dacudao Covered Court",
+        "CP 68": "Callawa Covered Court",
+        "CP 69": "Mahayag National High School",
         "CP FL": "Finish Line Bunawan Grid"
     },
 
