@@ -49,6 +49,7 @@ const riderDatabase = [
     { idNum: "1671", fullname: "Artiaga, Dell John", nickname: "DELL ", level: "G8", category: "LONEWOLF", classification: "ELITE", vehicle: "YAMAHA NMAX 155", passcode: "950ee8b03a9a512207e9ec31f41e3ea3ea374b2f6f68d53f8398eabb1e5f3d56", isMarshal: false, expiry: "2026-10-28" },
     { idNum: "1672", fullname: "Baluyot, Marc Emman", nickname: "iammarccc 94", level: "G8", category: "LONEWOLF", classification: "MASTER", vehicle: "CF MOTO (NK) 450", passcode: "95d4361a36944b766410d2e8b0835fb195992e18d6522c653efb90cb1a98b2d0", isMarshal: false, expiry: "2026-10-28" },
     { idNum: "1673", fullname: "Oculam, CRIZEL", nickname: "TAKAHASHI 23", level: "G8", category: "LONEWOLF", classification: "ELITE", vehicle: "SUZUKI 150CC", passcode: "63075cf5a34e6685ffb9be2e009b5ece6efae26232223575ac382fafa6ae335a", isMarshal: false, expiry: "2026-10-28" }
+    { idNum: "1674", fullname: "Resurreccion, Ram", nickname: "Asher", level: "G8", category: "LONEWOLF", classification: "ELITE", vehicle: "YAMAHA 155", passcode: "8fc750f6d387270884c52388abf261efa9e0b55854fdd27020113b47fcc766c0", isMarshal: false, expiry: "2026-10-28" },
 ];
 
 
