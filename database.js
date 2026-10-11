@@ -398,8 +398,9 @@ const routeCheckpoints = {
         "CP 178": "Fe Misa Ayala Seniors Park",
         "CP 179": "ELKAPITAN's Burial Ground",
         "CP 180": "DavNor Signage",
-        "CP 181": "Bugsay Landmark",
-        "CP 182": "Panabo City Seawall & Park",
+        "CP 181": "Laureta Elementary School",
+        "CP 182": "Bugsay Landmark",
+        "CP 183": "Panabo City Seawall & Park",
         "CP FL": "Finish Line Bunawan Grid", 
     },
 
