@@ -113,8 +113,15 @@
         <!-- 🔍 SEARCH BAR -->
         <div class="control-panel">
             <label style="font-weight: bold;">RIDER ID:</label>
-            <input type="text" id="searchIdInput" placeholder="Pananglitan: 0001 o 1604">
-            <button onclick="generateReport()">Generate gikan sa Database</button>
+            <input type="text" id="searchIdInput" placeholder="Pananglitan: 0001">
+            
+            <label style="font-weight: bold;">ISUNOD SA:</label>
+            <select id="sortByDropdown" style="padding: 10px 12px; font-size: 16px; border: 1px solid #444; border-radius: 4px; background: #2a2a2a; color: white; cursor: pointer;">
+                <option value="time_submit">⏰ Oras (Date/Time)</option>
+                <option value="checkpoint">🚩 Checkpoint (CP 00 - FL)</option>
+            </select>
+
+            <button onclick="generateReport()">Generate Report</button>
         </div>
 
         <!-- 📊 REPORT OUTPUT AREA -->
@@ -162,11 +169,15 @@
                 }
 
                 // 2. QUERY GIKAN SA SUPABASE TABLE (rally_scans)
+                // Kuhaon kung unsa ang gipili sa admin: 'time_submit' ba o 'checkpoint'
+                let sortOption = document.getElementById('sortByDropdown').value;
+
                 let { data: scans, error } = await supabaseClient
                     .from('rally_scans')
                     .select('*')
                     .or(`qr_code.eq.${targetId},qr_code.eq.${targetNum}`)
-                    .order('time_submit', { ascending: true });
+                    .order(sortOption, { ascending: true }) // Kini ang mo-sort base sa imong gipili
+                    .order('time_submit', { ascending: true }); // Back-up sort kung parehas ang Checkpoint
 
                 if (error) throw new Error(error.message);
 
