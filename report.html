@@ -170,14 +170,35 @@
 
                 // 2. QUERY GIKAN SA SUPABASE TABLE (rally_scans)
                 // Kuhaon kung unsa ang gipili sa admin: 'time_submit' ba o 'checkpoint'
+                // 2. QUERY GIKAN SA SUPABASE TABLE (rally_scans)
                 let sortOption = document.getElementById('sortByDropdown').value;
 
                 let { data: scans, error } = await supabaseClient
                     .from('rally_scans')
                     .select('*')
-                    .or(`qr_code.eq.${targetId},qr_code.eq.${targetNum}`)
-                    .order(sortOption, { ascending: true }) // Kini ang mo-sort base sa imong gipili
-                    .order('time_submit', { ascending: true }); // Back-up sort kung parehas ang Checkpoint
+                    .or(`qr_code.eq.${targetId},qr_code.eq.${targetNum}`);
+                    // Wala na ang .order() sa Supabase kay kita na ang mo-sort gamit ang Javascript
+
+                if (error) throw new Error(error.message);
+
+                if (!scans || scans.length === 0) {
+                    container.innerHTML = `<div class="no-data" style="color: #cc0000;">❌ Walay nakit-an nga record sa rally_scans para sa Rider ID #${targetId}.</div>`;
+                    return;
+                }
+
+                // TINUOD NGA DATE/TIME SORTING GAMIT ANG JAVASCRIPT
+                if (sortOption === 'time_submit') {
+                    scans.sort((a, b) => new Date(a.time_submit) - new Date(b.time_submit));
+                } else if (sortOption === 'checkpoint') {
+                    scans.sort((a, b) => {
+                        let cpA = String(a.checkpoint || "");
+                        let cpB = String(b.checkpoint || "");
+                        if (cpA === cpB) {
+                            return new Date(a.time_submit) - new Date(b.time_submit);
+                        }
+                        return cpA.localeCompare(cpB);
+                    });
+                }
 
                 if (error) throw new Error(error.message);
 
