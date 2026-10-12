@@ -264,6 +264,22 @@
         }
 
         async function verifyAndLogin() {
+            // 🛑 1. LOCKOUT CHECK (Susiha kung naka-lock pa ba ang user)
+            let lockoutUntil = localStorage.getItem("mmc_lockout_time");
+            if (lockoutUntil) {
+                let now = new Date().getTime();
+                if (now < parseInt(lockoutUntil)) {
+                    let remainingMinutes = Math.ceil((parseInt(lockoutUntil) - now) / 60000);
+                    alert(`🚨 ACCOUNT LOCKED!\n\nNasayop ka og 3 ka beses. Palihug paghulat og ${remainingMinutes} ka minuto una ka mosulay usab.`);
+                    return; // Ihunong ang pag-login
+                } else {
+                    // Kung lapas na sa 5 mins, i-reset ang ilang penalty
+                    localStorage.removeItem("mmc_lockout_time");
+                    localStorage.setItem("mmc_failed_attempts", "0");
+                }
+            }
+
+            // 🛑 2. OWNTRACKS CHECK
             let isOwnTracksInstalled = localStorage.getItem("mmc_owntracks_ready");
             if (isOwnTracksInstalled !== "true") {
                 let confirmInstall = confirm("⚠️ MAHINUNGDANONG PAHIBALO:\n\nPara sa Life360-style Live Tracking sa MasterMinds'CUP, kinahanglan una nimo i-install ang 'OwnTracks' app.\n\nNa-install na ba nimo ang OwnTracks?");
@@ -284,26 +300,33 @@
             if (typeof riderDatabase === 'undefined') { alert("CRITICAL ERROR: Wala makit-an ang database.js!"); return; }
 
             let rider = riderDatabase.find(r => r.idNum === inputtedID);
+            
+            // 🛑 3. VERIFICATION PROCESS
             if (rider) {
                 let isPasscodeValid = false;
                 if (rider.passcode) {
                     let hashedInputPass = await sha256Hash(inputtedPass);
-                    if (hashedInputPass === rider.passcode) isPasscodeValid = true;
-                    else { alert("ACCESS DENIED: Sayop ang imong Passcode!"); return; }
+                    if (hashedInputPass === rider.passcode) {
+                        isPasscodeValid = true;
+                    } else { 
+                        handleFailedAttempt(); // TAWAGON ANG PENALTY KUNG SAYOP ANG PASSCODE
+                        return; 
+                    }
                 } else { isPasscodeValid = true; }
 
                 if (isPasscodeValid) {
-                    // 🛑 SUGOD SA EXPIRY CHECK SA LOGIN 🛑
+                    // ✅ SUCCESS LOGIN! I-reset ang mga sayop.
+                    localStorage.setItem("mmc_failed_attempts", "0");
+                    
                     if (rider.expiry) {
-                        // Atong ibutang ang oras nga 23:59:59 aron taman sa tungang gabii sa maong petsa ang bisa
                         let riderExpiry = new Date(rider.expiry + "T23:59:59");
                         let today = new Date();
                         if (today > riderExpiry) {
                             alert(`ACCESS DENIED: Pasensya Master ${rider.fullname}, expired na ang imong account (Kutob ra sa ${rider.expiry}).`);
-                            return; // Dili padayunon ang login
+                            return; 
                         }
                     }
-                    // 🛑 KATAPUSAN SA EXPIRY CHECK 🛑
+                    
                     localStorage.setItem("tourRiderID", rider.idNum);
                     localStorage.setItem("defaultRiderID", rider.idNum);
                     localStorage.setItem("tourRiderName", rider.fullname);
@@ -317,15 +340,38 @@
                         localStorage.setItem("tourIsMarshal", "false");
                         localStorage.setItem("marshalMode", "false");
                     }
+                    
                     document.getElementById("loginScreenContainer").style.display = "none";
                     document.getElementById("scannerScreenContainer").style.display = "flex";
                     initScannerApp(rider.idNum);
+                    
                     const scanQrBtn = document.getElementById('scanQrBtn');
                     if (scanQrBtn) scanQrBtn.style.display = (rider.isMarshal === true) ? "block" : "none";
                 }
             } else {
-                alert("ACCESS DENIED: Ang maong ID# kay walay labot o dili rehistrado.");
+                handleFailedAttempt(); // TAWAGON ANG PENALTY KUNG WALA ANG ID SA DATABASE
+            }
+        }
+
+        // ==========================================
+        // 🚨 SECURITY: TAGA-DUMALA SA FAILED ATTEMPTS
+        // ==========================================
+        function handleFailedAttempt() {
+            let attempts = parseInt(localStorage.getItem("mmc_failed_attempts")) || 0;
+            attempts++;
+            localStorage.setItem("mmc_failed_attempts", attempts.toString());
+
+            if (attempts >= 3) {
+                let lockoutTime = new Date().getTime() + (5 * 60 * 1000); // Ma-lock og 5 minutes (300,000 ms)
+                localStorage.setItem("mmc_lockout_time", lockoutTime.toString());
+                
+                alert("🚨 SECURITY ALERT: Nasayop ka og 3 ka beses!\n\nNa-lock ang imong app aron protektahan ang sistema. Palihug paghulat og 5 ka minuto una ka mosulay usab.");
+                
                 document.getElementById("riderIdInput").value = "";
+                document.getElementById("riderPassInput").value = "";
+            } else {
+                let remaining = 3 - attempts;
+                alert(`❌ ACCESS DENIED: Sayop ang imong ID o Passcode!\n\nNaa na lang kay ${remaining} ka attempt(s) nabilin usa ka ma-lock.`);
                 document.getElementById("riderPassInput").value = "";
             }
         }
