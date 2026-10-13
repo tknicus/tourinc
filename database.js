@@ -215,7 +215,7 @@ const routeCheckpoints = {
 "CP 104": "ELKAPITAN 's Burial Ground",
 "CP 105": "Bugsay Landmark",
 "CP 106": "Panabo City Seawall & Park",
-"CP FL": "Finish Line Bunawan Grid",
+"CP 107": "Finish Line Bunawan Grid",
     },
     // --- Route 4 Wheels---
     "G4": {
