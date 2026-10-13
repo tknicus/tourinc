@@ -243,11 +243,11 @@
         }
 
         if (typeof window.routeNames === 'undefined') {
-            window.routeNames = { "AS26": "628 ALL STAR", "G5": "MAN OF STEEL", "G4": "4W RIDERS", "G3": "Mindanao Coastal Gaming", "G1N": "NORTH - MaKahulogan", "G1E": "EASTT - LoCoCaMaMa", "G1W": "WEST - DaDiPaPi", "G1S": "SOUTH - JAS-T'Boli" };
+            window.routeNames = { "AS26": "628 ALL STAR", "G5": "MAN OF STEEL", "G4": "4W RIDERS", "G3": "Mindanao Coastal Gaming", "G1N": "NORTH - MaKahulogan", "G1E": "EASTT - LoCoCaMaMa", "G1W": "WEST - DaDiPaPi", "G1S": "SOUTH - JAS-T'Boli", "G7": "7777 TOUR de FILIPINAS", "G81": "888 THE LANAO ABYSS", "G82": "888 Route 2", "G83": "888 Route 3" };
         }
 
         if (typeof window.routeTotalKm === 'undefined') {
-            window.routeTotalKm = { "G1N": 777, "G1E": 777, "G1W": 777, "G1S": 777, "G3": 3333, "G4": 444, "G5": 5555, "AS26": 628 };
+            window.routeTotalKm = { "G1N": 777, "G1E": 777, "G1W": 777, "G1S": 777, "G3": 3333, "G4": 444, "G5": 5555, "AS26": 628, "G7": 7777, "G81": 888, "G82": 888, "G83": 888 };
         }
 
         if (Object.keys(window.routeConfigs).length === 0) {
@@ -1105,8 +1105,10 @@
             let savedLastOdo = parseFloat(localStorage.getItem('lastOdo_' + currentId)) || activeStartOdo;
             let activeOdo = isNaN(typedOdo) ? savedLastOdo : typedOdo;
 
-            if (routeTotalKm[levelField]) {
-                let totalRoute = routeTotalKm[levelField];
+            // Gi-fix: Gamiton nato ang activeRiderLevel ("G81") imbes nga ang levelField ("888 THE LANAO ABYSS")
+            let currentLvlCode = window.activeRiderLevel || levelField;
+            if (routeTotalKm[currentLvlCode]) {
+                let totalRoute = routeTotalKm[currentLvlCode];
                 let nadagan = 0;
                 if (currentCP === "CP 00") nadagan = 0; 
                 else if (activeStartOdo > 0 && activeOdo >= activeStartOdo) nadagan = activeOdo - activeStartOdo;
