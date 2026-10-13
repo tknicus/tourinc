@@ -50,7 +50,7 @@ const riderDatabase = [
     { idNum: "1672", fullname: "Baluyot, Marc Emman", nickname: "iammarccc 94", level: "G81", category: "LONEWOLF", classification: "MASTER", vehicle: "CF MOTO (NK) 450", passcode: "95d4361a36944b766410d2e8b0835fb195992e18d6522c653efb90cb1a98b2d0", isMarshal: false, expiry: "2026-10-28" },
     { idNum: "1673", fullname: "Oculam, CRIZEL", nickname: "TAKAHASHI 23", level: "G81", category: "LONEWOLF", classification: "ELITE", vehicle: "SUZUKI 150CC", passcode: "63075cf5a34e6685ffb9be2e009b5ece6efae26232223575ac382fafa6ae335a", isMarshal: false, expiry: "2026-10-28" },
     { idNum: "1674", fullname: "Resurreccion, Ram", nickname: "Asher", level: "G81", category: "LONEWOLF", classification: "ELITE", vehicle: "YAMAHA 155", passcode: "8fc750f6d387270884c52388abf261efa9e0b55854fdd27020113b47fcc766c0", isMarshal: false, expiry: "2026-10-28" },
-    { idNum: "1675", fullname: "Perez, Daniel Julie", nickname: "Daniel / 31", level: "G8", category: "LONEWOLF", classification: "ELITE", vehicle: "YAMAHA 155", passcode: "e9c15acddd2bbb3144f2bf481443dfd75d5205573b89cb455604f646e321d5f4", isMarshal: false, expiry: "2026-10-29" },
+    { idNum: "1675", fullname: "Perez, Daniel Julie", nickname: "Daniel / 31", level: "G81", category: "LONEWOLF", classification: "ELITE", vehicle: "YAMAHA 155", passcode: "e9c15acddd2bbb3144f2bf481443dfd75d5205573b89cb455604f646e321d5f4", isMarshal: false, expiry: "2026-10-29" },
 ];
 
 
