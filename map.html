@@ -126,7 +126,8 @@
             <div id="distanceBadge" class="distance-badge" style="display: none;">Total: 0 KM</div>
 
             <!--button class="action-btn" onclick="switchRoute()">🔄 Refresh Live Riders</button-->
-            <button class="action-btn" onclick="loadRidersToMap(document.getElementById('routeSelect').value)">🔄 Refresh Live Riders</button>
+            <!--button class="action-btn" onclick="loadRidersToMap(document.getElementById('routeSelect').value)">🔄 Refresh Live Riders</button-->
+            <button class="action-btn" onclick="let sel = document.getElementById('routeSelect').value; if(sel==='none'){ markerLayer.clearLayers(); routePolylineLayer.clearLayers(); document.getElementById('distanceBadge').style.display='none'; } else { loadRidersToMap(sel); }">🔄 Refresh Live Riders</button>
             <button class="action-btn back-btn" onclick="window.location.href='scan.html'">🔙 Scanner</button>
         </div>
     </header>
