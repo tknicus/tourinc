@@ -125,7 +125,8 @@
             <!-- 📏 KUNG ASA MOGAWAS ANG TOTAL KILOMETERS -->
             <div id="distanceBadge" class="distance-badge" style="display: none;">Total: 0 KM</div>
 
-            <button class="action-btn" onclick="switchRoute()">🔄 Refresh Live Riders</button>
+            <!--button class="action-btn" onclick="switchRoute()">🔄 Refresh Live Riders</button-->
+            <button class="action-btn" onclick="loadRidersToMap(document.getElementById('routeSelect').value)">🔄 Refresh Live Riders</button>
             <button class="action-btn back-btn" onclick="window.location.href='scan.html'">🔙 Scanner</button>
         </div>
     </header>
@@ -975,7 +976,7 @@
                     let routeKey = rider.rider_level || "G5";
                     
                     // Filter base sa napili sa dropdown kung dili "all"
-                    if (selectedRoute !== "all") {
+                    if (selectedRoute.toLowerCase() !== "all") {
                         if (routeKey.toUpperCase() !== selectedRoute.toUpperCase()) {
                             return; 
                         }
