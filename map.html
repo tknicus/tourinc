@@ -97,6 +97,17 @@
             border: 1px solid #444;
             font-size: 12px;
         }
+
+        .rider-count-badge {
+            background: #ffaa00; /* Orange color para klaro */
+            color: #121212;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            border: 1px solid #cc8800;
+            font-size: 12px;
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
@@ -124,6 +135,9 @@
 
             <!-- 📏 KUNG ASA MOGAWAS ANG TOTAL KILOMETERS -->
             <div id="distanceBadge" class="distance-badge" style="display: none;">Total: 0 KM</div>
+
+            <!-- 👥 KUNG ASA MOGAWAS ANG RIDER COUNT -->
+            <div id="riderCountBadge" class="rider-count-badge">Riders: 0</div>
 
             <!--button class="action-btn" onclick="switchRoute()">🔄 Refresh Live Riders</button-->
             <!--button class="action-btn" onclick="loadRidersToMap(document.getElementById('routeSelect').value)">🔄 Refresh Live Riders</button-->
@@ -971,6 +985,8 @@
                     }
                 });
 
+                let validRiderCount = 0; // Idugang ni para sa atong counter
+
                 Object.values(latestRidersMap).forEach(rider => {
                     let lat = parseFloat(rider.latitude);
                     let lon = parseFloat(rider.longitude);
@@ -986,6 +1002,9 @@
                     let pinColor = routeColors[routeKey] || "#ff9900"; 
 
                     if (!isNaN(lat) && !isNaN(lon) && lat !== 0 && lon !== 0) {
+
+                        validRiderCount++; // Idugang ni! I-ihap ang rider kung sakto ang iyang location
+
                         let formattedTime = "Wala";
                         if (rider.scanned_at || rider.created_at) {
                             let d = new Date(rider.scanned_at || rider.created_at);
@@ -1014,6 +1033,9 @@
                         markerLayer.addLayer(marker);
                     }
                 });
+
+                // I-update ang display sa screen!
+                document.getElementById('riderCountBadge').innerText = `Riders: ${validRiderCount}`;
 
             } catch (err) {
                 console.error("Critical error sa pag-load sa map markers:", err);
