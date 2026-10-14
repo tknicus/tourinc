@@ -287,8 +287,8 @@ const routeCheckpoints = {
 "CP 057": "Rizal Shrine",
 "CP 058": "Taguilon Elementary School",
 "CP 059": "Dakak National High School",
-"CP 060": "Tag-ulo Elementary School",
-"CP 061": "DJ LAYLA BEACH",
+"CP 060": "DJ LAYLA BEACH",
+"CP 061": "Tag-ulo Elementary School",
 "CP 062": "EDU'S BEACH HUTS",
 "CP 063": "SINONOK",
 "CP 064": "SIBUTAD",
@@ -413,7 +413,7 @@ const routeCheckpoints = {
 "CP 183": "Laureta Elementary School",
 "CP 184": "Bugsay Landmark",
 "CP 185": "Panabo City Seawall & Park",
-"CP FL": "Finish Line Bunawan Grid", 
+"CP 186": "Finish Line Bunawan Grid", 
     },
 
     // --- RUTA 8: AS26 ---
