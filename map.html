@@ -141,7 +141,8 @@
 
             <!--button class="action-btn" onclick="switchRoute()">🔄 Refresh Live Riders</button-->
             <!--button class="action-btn" onclick="loadRidersToMap(document.getElementById('routeSelect').value)">🔄 Refresh Live Riders</button-->
-            <button class="action-btn" onclick="let sel = document.getElementById('routeSelect').value; if(sel==='none'){ markerLayer.clearLayers(); routePolylineLayer.clearLayers(); document.getElementById('distanceBadge').style.display='none'; } else { loadRidersToMap(sel); }">🔄 Refresh Live Riders</button>
+            <!--button class="action-btn" onclick="let sel = document.getElementById('routeSelect').value; if(sel==='none'){ markerLayer.clearLayers(); routePolylineLayer.clearLayers(); document.getElementById('distanceBadge').style.display='none'; } else { loadRidersToMap(sel); }">🔄 Refresh Live Riders</button-->
+            <button class="action-btn" onclick="refreshLiveRiders()">🔄 Refresh Live Riders</button>
             <button class="action-btn back-btn" onclick="window.location.href='scan.html'">🔙 Scanner</button>
         </div>
     </header>
@@ -952,19 +953,35 @@
         }
 
 
+        // 🔄 SAKTONG REFRESH LOGIC PARA SA BUTTON
+        function refreshLiveRiders() {
+            let sel = document.getElementById('routeSelect').value;
+            if (sel === 'none') {
+                markerLayer.clearLayers();
+                routePolylineLayer.clearLayers();
+                document.getElementById('distanceBadge').style.display = 'none';
+                document.getElementById('riderCountBadge').innerText = 'Riders: 0';
+            } else {
+                loadRidersToMap(sel);
+            }
+        }
+
+
 
 
         // 4. KUHAON ANG LIVE RIDERS DIREKTA GIKAN SA SUPABASE TABLE (rally_scans)
         async function loadRidersToMap(selectedRoute = "all") {
-            markerLayer.clearLayers();
-
-            if (selectedRoute === "none") return;
+            if (selectedRoute === "none") {
+                markerLayer.clearLayers();
+                document.getElementById('riderCountBadge').innerText = "Riders: 0";
+                return;
+            }
 
             try {
                 let { data, error } = await supabaseLiveClient
                     .from('rally_scans')
                     .select('*')
-                    .order('scanned_at', { ascending: true }); // 👈 KINI ANG SAKTONG SEKRETO!
+                    .order('scanned_at', { ascending: true });
 
                 if (error) {
                     console.error("Error sa pagkuha gikan sa Supabase:", error.message);
@@ -973,10 +990,12 @@
 
                 if (!data || data.length === 0) {
                     console.log("Walay nakit-an nga data sa rally_scans table.");
+                    markerLayer.clearLayers();
+                    document.getElementById('riderCountBadge').innerText = "Riders: 0";
                     return;
                 }
 
-                // Aron makuha ang pinakabag-o nga log sa matag rider
+                // Deduplicate: Kuhaon ang pinakabag-o nga log sa matag rider
                 let latestRidersMap = {};
                 data.forEach(rider => {
                     let rId = rider.qr_code || rider.idNum;
@@ -985,7 +1004,10 @@
                     }
                 });
 
-                let validRiderCount = 0; // Idugang ni para sa atong counter
+                // 🛑 GI-BALHIN DIRI: Limpyohan lang ang mapa inig kahuman ug kuha sa bag-ong data!
+                markerLayer.clearLayers();
+
+                let validRiderCount = 0;
 
                 Object.values(latestRidersMap).forEach(rider => {
                     let lat = parseFloat(rider.latitude);
@@ -999,11 +1021,8 @@
                         }
                     }
 
-                    let pinColor = routeColors[routeKey] || "#ff9900"; 
-
                     if (!isNaN(lat) && !isNaN(lon) && lat !== 0 && lon !== 0) {
-
-                        validRiderCount++; // Idugang ni! I-ihap ang rider kung sakto ang iyang location
+                        validRiderCount++; // I-ihap ang rider
 
                         let formattedTime = "Wala";
                         if (rider.scanned_at || rider.created_at) {
@@ -1015,6 +1034,7 @@
                             });
                         }
                         
+                        let pinColor = routeColors[routeKey] || "#ff9900"; 
                         let marker = L.marker([lat, lon], { icon: createColoredIcon(pinColor) });
                         
                         marker.bindPopup(`
@@ -1034,13 +1054,15 @@
                     }
                 });
 
-                // I-update ang display sa screen!
+                // I-update ang Rider Count display!
                 document.getElementById('riderCountBadge').innerText = `Riders: ${validRiderCount}`;
 
             } catch (err) {
                 console.error("Critical error sa pag-load sa map markers:", err);
             }
         }
+
+
 
         // Auto-load tanan riders inig abli sa map
         document.addEventListener("DOMContentLoaded", () => {
