@@ -108,6 +108,13 @@
             font-size: 12px;
             display: inline-block;
         }
+
+        /* 🌫️ POPUP BOX TRANSPARENCY & GLASS EFFECT */
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+            background: rgba(255, 255, 255, 0.82) !important; /* 0.82 = 82% opacity / semi-transparent */
+            backdrop-filter: blur(5px); /* Unobtrusive frosted glass blur effect sa luyo */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
     </style>
 </head>
 <body>
