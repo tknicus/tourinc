@@ -1071,9 +1071,18 @@
 
 
 
-        // Auto-load tanan riders inig abli sa map
+        // Auto-load tanan riders inig abli sa map ug Auto-Refresh kada 30 segundos
         document.addEventListener("DOMContentLoaded", () => {
+            // 1. I-load dayon ang riders inig abli sa mapa
             loadRidersToMap("all");
+
+            // 2. Auto-refresh kada 30 seconds (30000 milliseconds)
+            setInterval(() => {
+                let sel = document.getElementById('routeSelect').value;
+                if (sel !== 'none') {
+                    loadRidersToMap(sel);
+                }
+            }, 30000);
         });
     </script>
 
