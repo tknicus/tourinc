@@ -195,6 +195,7 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
+        // 🔐 PASSCODE CHECKER LOGIC (NAKA-SYNC SA MENU.HTML UG DATABASE.JS)
         async function checkAccessCode() {
             let inputCode = document.getElementById('accessCodeInput').value.trim();
             let errorMsg = document.getElementById('passcodeError');
@@ -206,28 +207,39 @@
                 return;
             }
 
-            let inputHash = await sha256(inputCode);
+            // 1. Susiha kung nabasa ba ang database.js
+            if (typeof riderDatabase === 'undefined') {
+                errorMsg.innerText = "⚠️ Error: Dili ma-read ang riderDatabase!";
+                errorMsg.style.display = 'block';
+                return;
+            }
 
-            // Pangitaon sa database.js array
-            let dbArray = (typeof RIDERS_DATABASE !== 'undefined') ? RIDERS_DATABASE : 
-                          (typeof ridersDatabase !== 'undefined') ? ridersDatabase : 
-                          (typeof database !== 'undefined') ? database : [];
-            
-            let foundUser = dbArray.find(r => r.passcode === inputHash || r.passcode === inputCode);
+            // 2. SHA-256 Hashing (Eksakto sa gihimo sa menu.html)
+            const encoder = new TextEncoder();
+            const data = encoder.encode(inputCode);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashedInput = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+            // 3. Pangitaon ang user sa riderDatabase
+            let foundUser = riderDatabase.find(r => r.passcode === hashedInput);
 
             if (foundUser) {
+                // Tagoan ang Login Screen
                 document.getElementById('passcodeModal').style.display = 'none';
                 errorMsg.style.display = 'none';
 
-                if (foundUser.isMarshal === true) {
-                    // Marshals / CEO -> Makita tanang routes
+                let isMarshalUser = (foundUser.isMarshal === true || String(foundUser.isMarshal).toLowerCase() === 'true');
+
+                if (isMarshalUser) {
+                    // 👑 MARSHALS & CEO: Ipakita tanang dropdown options
                     for (let option of selectElem.options) {
                         option.style.display = "";
                     }
                     selectElem.value = "all";
                     switchRoute();
                 } else {
-                    // Non-Marshal (e.g. ID 1242 -> DO01) -> Makita ra iyang route ug 'none'
+                    // 👤 SUB-ADMIN (e.g. ID 1242 -> level: "DO01"): Ipakita ra ang iyang Level ug 'NONE'
                     let userLevel = (foundUser.level || "").toUpperCase();
 
                     for (let option of selectElem.options) {
@@ -239,12 +251,14 @@
                         }
                     }
 
+                    // Auto-select sa iyang rota ug auto-load sa mapa
                     selectElem.value = userLevel;
                     switchRoute();
                 }
             } else {
-                errorMsg.innerText = "❌ Mali nga passcode! Sukad pag-usab.";
+                errorMsg.innerText = "❌ Sayop nga Passcode o dili ka awtorisado!";
                 errorMsg.style.display = 'block';
+                document.getElementById('accessCodeInput').value = "";
             }
         }
 
