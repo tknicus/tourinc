@@ -207,39 +207,60 @@
                 return;
             }
 
-            // 1. Susiha kung nabasa ba ang database.js
             if (typeof riderDatabase === 'undefined') {
                 errorMsg.innerText = "⚠️ Error: Dili ma-read ang riderDatabase!";
                 errorMsg.style.display = 'block';
                 return;
             }
 
-            // 2. SHA-256 Hashing (Eksakto sa gihimo sa menu.html)
+            // SHA-256 Hashing
             const encoder = new TextEncoder();
             const data = encoder.encode(inputCode);
             const hashBuffer = await crypto.subtle.digest('SHA-256', data);
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             const hashedInput = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-            // 3. Pangitaon ang user sa riderDatabase
+            // Pangitaon ang user sa riderDatabase
             let foundUser = riderDatabase.find(r => r.passcode === hashedInput);
 
             if (foundUser) {
-                // Tagoan ang Login Screen
                 document.getElementById('passcodeModal').style.display = 'none';
                 errorMsg.style.display = 'none';
 
+                let isAdminUser = (foundUser.isAdmin === true || String(foundUser.isAdmin).toLowerCase() === 'true');
                 let isMarshalUser = (foundUser.isMarshal === true || String(foundUser.isMarshal).toLowerCase() === 'true');
 
-                if (isMarshalUser) {
-                    // 👑 MARSHALS & CEO: Ipakita tanang dropdown options
+                // -------------------------------------------------------------
+                // 1️⃣ KUNG ADMIN: MAKABLI SA TANANG ROUTES
+                // -------------------------------------------------------------
+                if (isAdminUser) {
                     for (let option of selectElem.options) {
-                        option.style.display = "";
+                        option.style.display = ""; // Ipakita tanan
                     }
                     selectElem.value = "all";
                     switchRoute();
-                } else {
-                    // 👤 SUB-ADMIN (e.g. ID 1242 -> level: "DO01"): Ipakita ra ang iyang Level ug 'NONE'
+                } 
+                // -------------------------------------------------------------
+                // 2️⃣ KUNG MARSHAL: G81, G3, UG G5 LANG ANG MAKITA SA DROPDOWN
+                // -------------------------------------------------------------
+                else if (isMarshalUser) {
+                    const marshalRoutes = ["ALL", "G81", "G3", "G5", "NONE"];
+
+                    for (let option of selectElem.options) {
+                        let optVal = option.value.toUpperCase();
+                        if (marshalRoutes.includes(optVal)) {
+                            option.style.display = "";
+                        } else {
+                            option.style.display = "none";
+                        }
+                    }
+                    selectElem.value = "all";
+                    switchRoute();
+                } 
+                // -------------------------------------------------------------
+                // 3️⃣ KUNG REGULAR USER / EVENT ADMIN (e.g. DO01 RA)
+                // -------------------------------------------------------------
+                else {
                     let userLevel = (foundUser.level || "").toUpperCase();
 
                     for (let option of selectElem.options) {
@@ -251,7 +272,6 @@
                         }
                     }
 
-                    // Auto-select sa iyang rota ug auto-load sa mapa
                     selectElem.value = userLevel;
                     switchRoute();
                 }
