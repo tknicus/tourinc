@@ -119,6 +119,20 @@
 </head>
 <body>
 
+    <!-- 🔐 PASSCODE MODAL OVERLAY -->
+    <div id="passcodeModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.88); backdrop-filter: blur(8px); z-index: 9999; display: flex; justify-content: center; align-items: center;">
+        <div style="background: #1e1e1e; border: 2px solid #0088ff; padding: 25px; border-radius: 10px; text-align: center; max-width: 320px; width: 90%; box-shadow: 0 0 20px rgba(0,136,255,0.4);">
+            <h3 style="margin-top: 0; color: #fff; letter-spacing: 1px;">🔐 COMMAND CENTER ACCESS</h3>
+            <p style="font-size: 13px; color: #ccc;">I-enter ang imong Passcode:</p>
+            
+            <input type="password" id="accessCodeInput" placeholder="Enter Passcode" onkeyup="if(event.key==='Enter') checkAccessCode()" style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #444; background: #2a2a2a; color: white; text-align: center; font-size: 16px; box-sizing: border-box;">
+            
+            <button onclick="checkAccessCode()" style="width: 100%; padding: 10px; background: #0088ff; color: white; border: none; font-weight: bold; border-radius: 5px; cursor: pointer; text-transform: uppercase;">Open Map</button>
+            
+            <p id="passcodeError" style="color: #ff4444; font-size: 12px; margin-top: 10px; display: none;">❌ Mali nga passcode! Sukad pag-usab.</p>
+        </div>
+    </div>
+    
     <header>
         <h2>🗺️ Command Center, Routes & Checkpoints</h2>
         <div class="header-controls">
@@ -160,6 +174,7 @@
     <!-- 🗺️ LEAFLET JS SCRIPT 🗺️ -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="database.js"></script>
     <script>
         // ==========================================
         // 🛰️ SUPABASE CONFIGURATION
@@ -169,6 +184,72 @@
         
         const supabaseLiveClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
 
+        
+        // ==========================================
+        // 🔐 PASSCODE CHECKER LOGIC (ISINGIT DIRI)
+        // ==========================================
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function checkAccessCode() {
+            let inputCode = document.getElementById('accessCodeInput').value.trim();
+            let errorMsg = document.getElementById('passcodeError');
+            let selectElem = document.getElementById('routeSelect');
+
+            if (!inputCode) {
+                errorMsg.innerText = "❌ Palihug og enter sa passcode!";
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            let inputHash = await sha256(inputCode);
+
+            // Pangitaon sa database.js array
+            let dbArray = (typeof RIDERS_DATABASE !== 'undefined') ? RIDERS_DATABASE : 
+                          (typeof ridersDatabase !== 'undefined') ? ridersDatabase : 
+                          (typeof database !== 'undefined') ? database : [];
+            
+            let foundUser = dbArray.find(r => r.passcode === inputHash || r.passcode === inputCode);
+
+            if (foundUser) {
+                document.getElementById('passcodeModal').style.display = 'none';
+                errorMsg.style.display = 'none';
+
+                if (foundUser.isMarshal === true) {
+                    // Marshals / CEO -> Makita tanang routes
+                    for (let option of selectElem.options) {
+                        option.style.display = "";
+                    }
+                    selectElem.value = "all";
+                    switchRoute();
+                } else {
+                    // Non-Marshal (e.g. ID 1242 -> DO01) -> Makita ra iyang route ug 'none'
+                    let userLevel = (foundUser.level || "").toUpperCase();
+
+                    for (let option of selectElem.options) {
+                        let optVal = option.value.toUpperCase();
+                        if (optVal === userLevel || optVal === "NONE") {
+                            option.style.display = "";
+                        } else {
+                            option.style.display = "none";
+                        }
+                    }
+
+                    selectElem.value = userLevel;
+                    switchRoute();
+                }
+            } else {
+                errorMsg.innerText = "❌ Mali nga passcode! Sukad pag-usab.";
+                errorMsg.style.display = 'block';
+            }
+        }
+
+
+        
         // 1. I-center ang mapa sa Mindanao
         const map = L.map('map').setView([7.4392, 125.7956], 8);
 
