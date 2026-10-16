@@ -184,7 +184,7 @@
         
         const supabaseLiveClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
 
-        
+
         // ==========================================
         // 🔐 PASSCODE CHECKER LOGIC (ISINGIT DIRI)
         // ==========================================
@@ -1190,14 +1190,20 @@
 
         // Auto-load tanan riders inig abli sa map ug Auto-Refresh kada 30 segundos
         document.addEventListener("DOMContentLoaded", () => {
-            // 1. I-load dayon ang riders inig abli sa mapa
-            loadRidersToMap("all");
+            // Tagoan usa ang dropdown options samtang wala pa naka-passcode
+            let selectElem = document.getElementById('routeSelect');
+            for (let option of selectElem.options) {
+                option.style.display = "none";
+            }
 
-            // 2. Auto-refresh kada 30 seconds (30000 milliseconds)
+            // Auto-refresh loop kada 30 seconds (mo-load ra kung naka-unlock na)
             setInterval(() => {
-                let sel = document.getElementById('routeSelect').value;
-                if (sel !== 'none') {
-                    loadRidersToMap(sel);
+                let modal = document.getElementById('passcodeModal');
+                if (modal && modal.style.display === 'none') {
+                    let sel = document.getElementById('routeSelect').value;
+                    if (sel !== 'none') {
+                        loadRidersToMap(sel);
+                    }
                 }
             }, 30000);
         });
