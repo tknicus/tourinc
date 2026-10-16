@@ -559,4 +559,23 @@ const routeCheckpoints = {
         "CP xx": "Stand By Me"
     },
 
+    // --- Route Mindanao Adventourrally L3 by SMB---
+    "DO01": {
+"CP 00": "Balutan sa Pantukan",
+"CP 01": "Laak Municipal Hall",
+"CP 02": "Loreto Municipal Hall",
+"CP 03": "Talacogon",
+"CP 04": "Esperanza Bridge",
+"CP 05": "Mainit, Surigao del Norte",
+"CP 06": "Carrascal, Surigao del Sur",
+"CP 07": "Tandag, Surigao del Sur",
+"CP 08": "Enchanted Kingdom",
+"CP 09": "Hinatuan, Surigaao del Sur",
+"CP 10": "Aliwagwag Falls, Cateel, Davao Oriental",
+"CP 11": "Pusan Point, Davao Oriental",
+"CP 12": "Mati, Davao Oriental",
+"CP 13": "Cape San Agustin, Governor Generoso, Davao Oriental",
+"CP 14": "Pantukan, Davao Oriental",
+    },
+
 };
