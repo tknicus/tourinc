@@ -20,7 +20,6 @@
         /* 📊 DTR TABLE & STICKY COLUMNS */
         .table-container { width: 100%; max-height: 80vh; overflow: auto; border: 1px solid #000; position: relative; }
         
-        /* SECRETO ARON DILI MA-SQUEEZE ANG TABLE */
         table { border-collapse: separate; border-spacing: 0; font-size: 11px; font-family: Arial, sans-serif; width: max-content; min-width: 100%; }
         
         th, td { border-right: 1px solid #ccc; border-bottom: 1px solid #ccc; padding: 6px; text-align: center; white-space: nowrap; box-sizing: border-box; }
@@ -121,8 +120,6 @@
                 if(key === "AS26") option.selected = true;
                 select.add(option);
             }
-            
-            // 👉 GITANGTANG NA ANG generateDTR() DINHI ARON DILI MO-ABLI DIRITSU
         };
 
         async function generateDTR() {
@@ -187,7 +184,7 @@
                                 <tr>
                                     <th class="sticky-col-1">#</th>
                                     <th class="sticky-col-2">QR</th>
-                                    <th class="sticky-col-3">VEST NAME</th>
+                                    <th class="sticky-col-3">NAME</th>
                                     <th class="col-duration">DURATION</th>
                                     <th class="col-distance">DISTANCE</th>
                                     <th class="col-t">T</th>
@@ -270,7 +267,7 @@
                         <tr>
                             <td class="sticky-col-1">${index + 1}</td>
                             <td class="sticky-col-2">${rider.idNum}</td>
-                            <td class="sticky-col-3">${rider.fullname || rider.nickname}</td>
+                            <td class="sticky-col-3">${rider.nickname || rider.fullname}</td>
                             <td class="col-duration">${durationText}</td>
                             <td class="col-distance">${distanceText}</td>
                             <td class="col-t">${tDisplay}</td>
