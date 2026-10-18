@@ -1111,6 +1111,7 @@
 
 
         // 4. KUHAON ANG LIVE RIDERS DIREKTA GIKAN SA SUPABASE TABLE (rally_scans)
+        // 4. KUHAON ANG LIVE RIDERS DIREKTA GIKAN SA SUPABASE TABLE (rally_scans)
         async function loadRidersToMap(selectedRoute = "all") {
             if (selectedRoute === "none") {
                 markerLayer.clearLayers();
@@ -1119,9 +1120,11 @@
             }
 
             try {
+                // 🛠️ FIX: Gidugang ang .range(0, 9999) aron makuha ang PINAKABAG-O nga scans lapas sa 1,000 limit!
                 let { data, error } = await supabaseLiveClient
                     .from('rally_scans')
                     .select('*')
+                    .range(0, 9999)
                     .order('scanned_at', { ascending: true });
 
                 if (error) {
@@ -1141,31 +1144,23 @@
                 data.forEach(rider => {
                     let rId = rider.qr_code || rider.idNum;
                     if (rId) {
-                        latestRidersMap[rId] = rider;
+                        latestRidersMap[rId] = rider; // Ang pinaka-uwahing scan maoy mo-overwrite sa daan
                     }
                 });
 
-                // 🛑 GI-BALHIN DIRI: Limpyohan lang ang mapa inig kahuman ug kuha sa bag-ong data!
+                // Limpyohan lang ang mapa inig kahuman ug kuha sa bag-ong data!
                 markerLayer.clearLayers();
 
                 let validRiderCount = 0;
 
-                // 🛑 KINING TULO RA KA ROTA ANG IPAGAWAS SA KARON (G81, G3, G5)
+                // KINING TULO RA KA ROTA ANG IPAGAWAS SA KARON (G81, G3, G5)
                 const activeRoutes = ["G81", "G3", "G5"];
 
                 Object.values(latestRidersMap).forEach(rider => {
                     let lat = parseFloat(rider.latitude);
                     let lon = parseFloat(rider.longitude);
-                 // let routeKey = rider.rider_level || "G5";
                     let routeKey = (rider.rider_level || "G5").toUpperCase();
                     
-                    // Filter base sa napili sa dropdown kung dili "all"
-                    //if (selectedRoute.toLowerCase() !== "all") {
-                    //    if (routeKey.toUpperCase() !== selectedRoute.toUpperCase()) {
-                    //        return; 
-                    //    }
-                    //}
-
                     // 1. Kung "ALL" ang napili: dawaton ra ang G81, G3, ug G5 (I-skip ang AS26)
                     if (selectedRoute.toLowerCase() === "all") {
                         if (!activeRoutes.includes(routeKey)) {
