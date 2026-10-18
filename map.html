@@ -1108,11 +1108,6 @@
         }
 
 
-
-
-        // 4. KUHAON ANG LIVE RIDERS DIREKTA GIKAN SA SUPABASE TABLE (rally_scans)
-        // 4. KUHAON ANG LIVE RIDERS DIREKTA GIKAN SA SUPABASE TABLE (rally_scans)
-        // 4. KUHAON ANG LIVE RIDERS DIREKTA GIKAN SA SUPABASE TABLE (rally_scans)
         // 4. KUHAON ANG LIVE RIDERS DIREKTA GIKAN SA SUPABASE TABLE (rally_scans)
         async function loadRidersToMap(selectedRoute = "all") {
             if (selectedRoute === "none") {
@@ -1179,6 +1174,7 @@
                 const activeRoutes = ["G81", "G3", "G5"];
 
                 Object.values(latestRidersMap).forEach(rider => {
+                    let rId = rider.qr_code || rider.idNum;
                     let lat = parseFloat(rider.latitude);
                     let lon = parseFloat(rider.longitude);
                     let routeKey = (rider.rider_level || "G5").toUpperCase();
@@ -1199,6 +1195,15 @@
                     if (!isNaN(lat) && !isNaN(lon) && lat !== 0 && lon !== 0) {
                         validRiderCount++; // I-ihap ang rider
 
+                        // 👇 PANGITAON ANG VEHICLE SA riderDatabase 👇
+                        let vehicleName = "Wala Gibutang";
+                        if (typeof riderDatabase !== 'undefined') {
+                            let matchingRider = riderDatabase.find(r => String(r.idNum) === String(rId));
+                            if (matchingRider && matchingRider.vehicle) {
+                                vehicleName = matchingRider.vehicle;
+                            }
+                        }
+
                         let formattedTime = "Wala";
                         if (rider.scanned_at || rider.created_at) {
                             let d = new Date(rider.scanned_at || rider.created_at);
@@ -1212,10 +1217,12 @@
                         let pinColor = routeColors[routeKey] || "#ff9900"; 
                         let marker = L.marker([lat, lon], { icon: createColoredIcon(pinColor) });
                         
+                        // 👇 GI-DUGANG ANG 🛵 MOTOR DIRI SA POPUP 👇
                         marker.bindPopup(`
                             <div style="color: black; font-family: Arial; font-size: 13px;">
-                                <b>🏍️ ID: ${rider.qr_code || rider.idNum}</b><br>
+                                <b>🏍️ ID: ${rId}</b><br>
                                 👤 Pangalan: <b>${rider.rider_name || "Rider"}</b><br>
+                                🛵 Motor: <b style="color:#0066cc;">${vehicleName}</b><br>
                                 📍 Checkpoint: <b>${rider.checkpoint}</b><br>
                                 🛣️ Rota: <b style="background: #222; padding: 2px 5px; border-radius: 3px; color:white;">${routeKey}</b><br>
                                 ⚙️ Odometer: ${rider.odometer} KM<br>
