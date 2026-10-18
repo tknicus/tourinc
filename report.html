@@ -115,7 +115,7 @@
            ========================================== */
         @media print {
             @page { 
-                size: landscape; /* Pugson nga higda (landscape) ang papel aron masulod ang lapad nga table */
+                size: landscape; 
                 margin: 10mm; 
             }
             body { 
@@ -123,7 +123,7 @@
                 margin: 0; 
                 padding: 0; 
                 color: #000;
-                -webkit-print-color-adjust: exact; /* Para mogawas ang color sa table */
+                -webkit-print-color-adjust: exact; 
                 print-color-adjust: exact;
             }
             .report-wrapper { 
@@ -133,13 +133,13 @@
                 max-width: 100%; 
             }
             .control-panel { 
-                display: none !important; /* Tagoan ang search box ug button inig print */
+                display: none !important; 
             }
             .excel-header { 
-                break-inside: avoid; /* Aron dili maputol sa tunga ang header kon molapas sa laing page */
+                break-inside: avoid; 
             }
             .table-container { 
-                overflow-x: visible; /* Wagtangon ang scrollbar sa print */
+                overflow-x: visible; 
             }
             table { 
                 page-break-inside: auto; 
@@ -148,7 +148,6 @@
                 page-break-inside: avoid; 
                 page-break-after: auto; 
             }
-            /* Siguruha nga makita ang table header colors */
             th { 
                 background-color: #d9d9d9 !important; 
             }
@@ -209,7 +208,6 @@
             const container = document.getElementById('reportContent');
             const printBtn = document.getElementById('printBtn');
 
-            // Itago daan ang print button kada generate
             if (printBtn) printBtn.style.display = "none";
 
             if (!targetId) {
@@ -227,13 +225,11 @@
             try {
                 let targetNum = parseInt(targetId) || targetId;
 
-                // 1. PANGITAON ANG RIDER SA MASTERLIST (database.js)
                 let riderInfo = null;
                 if (typeof riderDatabase !== 'undefined' && Array.isArray(riderDatabase)) {
                     riderInfo = riderDatabase.find(r => String(r.idNum) === String(targetId) || String(r.idNum) === String(targetNum));
                 }
 
-                // 2. QUERY GIKAN SA SUPABASE TABLE (rally_scans)
                 let sortOption = document.getElementById('sortByDropdown').value;
 
                 let { data: scans, error } = await supabaseClient
@@ -248,7 +244,6 @@
                     return;
                 }
 
-                // TINUOD NGA DATE/TIME SORTING GAMIT ANG JAVASCRIPT
                 if (sortOption === 'time_submit') {
                     scans.sort((a, b) => new Date(a.time_submit) - new Date(b.time_submit));
                 } else if (sortOption === 'checkpoint') {
@@ -262,23 +257,16 @@
                     });
                 }
 
-                if (error) throw new Error(error.message);
-
-                // Kuhaon ang mga detalye
                 let fullName = riderInfo ? riderInfo.fullname : (scans[0].rider_name || 'Wala sa Masterlist');
                 let riderLevel = riderInfo ? riderInfo.level : (scans[0].rider_level || 'AS26');
                 let codeName = riderInfo ? riderInfo.nickname : 'RIDER';
-
-                // 👉 KUHAON ANG MOTOR VEHICLE GIKAN SA database.js
                 let vehicleName = riderInfo ? (riderInfo.vehicle || 'N/A') : (scans[0].vehicle || 'N/A');
 
-                // Ngalan sa Ruta
                 let routeFullName = riderLevel;
                 if (typeof routeNames !== 'undefined' && routeNames[riderLevel]) {
                     routeFullName = routeNames[riderLevel];
                 }
 
-                // Pag-compute sa kabinete sa oras ug distansya (Summary)
                 let firstScanTime = new Date(scans[0].time_submit);
                 let lastScanTime = new Date(scans[scans.length - 1].time_submit);
                 let diffMs = lastScanTime - firstScanTime;
@@ -294,7 +282,6 @@
 
                 let speedVal = totalHours > 0 ? (totalDistance / (diffMs / (1000 * 60 * 60))).toFixed(2) : "0.00";
 
-                // Himoon ang Excel-like professional table HTML
                 let html = `
                     <div class="excel-header">
                         <div class="profile-side">
@@ -334,25 +321,22 @@
                             </thead>
                             <tbody>
                 `;
-                // Loop para sa kada scan row uban ang telemetry computation
+                
                 scans.forEach((scan, index) => {
                     let scanTime = new Date(scan.time_submit);
                     let formattedDate = `${String(scanTime.getMonth() + 1).padStart(2,'0')}/${String(scanTime.getDate()).padStart(2,'0')}/${scanTime.getFullYear()} ${String(scanTime.getHours()).padStart(2,'0')}:${String(scanTime.getMinutes()).padStart(2,'0')}:${String(scanTime.getSeconds()).padStart(2,'0')}`;
                     
-                    // 1. RUN (Elapsed time gikan sa CP 00)
                     let runDiffMs = scanTime - firstScanTime;
                     let rH = Math.floor(runDiffMs / (1000 * 60 * 60));
                     let rM = Math.floor((runDiffMs % (1000 * 60 * 60)) / (1000 * 60));
                     let rS = Math.floor((runDiffMs % (1000 * 60)) / 1000);
                     let runStr = `${rH}:${String(rM).padStart(2,'0')}:${String(rS).padStart(2,'0')}`;
 
-                    // 2. ODO & RUNNING (Cumulative)
                     let currentOdo = parseFloat(scan.odometer) || 0;
                     let runningKms = index === 0 ? 0 : Math.max(0, currentOdo - startOdo);
                     let runningHoursTotal = runDiffMs / (1000 * 60 * 60);
                     let runningKmh = runningHoursTotal > 0 ? (runningKms / runningHoursTotal).toFixed(2) : "0.00";
 
-                    // 3. POINT TO POINT (Segment gikan sa miaging checkpoint)
                     let p2pKms = 0;
                     let p2pKmh = "0.00";
                     let p2pHoursStr = "00:00";
@@ -373,7 +357,6 @@
                         p2pKmh = segHours > 0 ? (p2pKms / segHours).toFixed(2) : "0.00";
                     }
 
-                    // Kuhaon ang ngalan sa checkpoint gikan sa database.js
                     let rLevel = riderInfo ? riderInfo.level : (scan.rider_level || 'AS26');
                     let cpCode = String(scan.checkpoint || '').trim();
                     let locationName = '';
@@ -406,13 +389,13 @@
                 });
 
                 html += `
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
+                    </div>
                 `;
 
                 container.innerHTML = html;
 
-                // Ipapakita ang "I-Print / PDF" button kon nakahuman na og generate
                 if (printBtn) printBtn.style.display = "block";
 
             } catch (err) {
