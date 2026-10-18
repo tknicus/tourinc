@@ -1112,6 +1112,7 @@
 
         // 4. KUHAON ANG LIVE RIDERS DIREKTA GIKAN SA SUPABASE TABLE (rally_scans)
         // 4. KUHAON ANG LIVE RIDERS DIREKTA GIKAN SA SUPABASE TABLE (rally_scans)
+        // 4. KUHAON ANG LIVE RIDERS DIREKTA GIKAN SA SUPABASE TABLE (rally_scans)
         async function loadRidersToMap(selectedRoute = "all") {
             if (selectedRoute === "none") {
                 markerLayer.clearLayers();
@@ -1120,12 +1121,11 @@
             }
 
             try {
-                // 🛠️ FIX: Gidugang ang .range(0, 9999) aron makuha ang PINAKABAG-O nga scans lapas sa 1,000 limit!
+                // 🛠️ GI-UPDATE: Gidugang ang range para malikayan ang 1000 limit error gihapon
                 let { data, error } = await supabaseLiveClient
                     .from('rally_scans')
                     .select('*')
-                    .range(0, 9999)
-                    .order('scanned_at', { ascending: true });
+                    .range(0, 9999); //  <-- Dugang nga safety measure, just in case
 
                 if (error) {
                     console.error("Error sa pagkuha gikan sa Supabase:", error.message);
@@ -1139,12 +1139,22 @@
                     return;
                 }
 
-                // Deduplicate: Kuhaon ang pinakabag-o nga log sa matag rider
+                // 🛠️ FIX: Saktong pamaagi pagkuha sa pinakabag-ong log base sa DATETIME
                 let latestRidersMap = {};
                 data.forEach(rider => {
                     let rId = rider.qr_code || rider.idNum;
                     if (rId) {
-                        latestRidersMap[rId] = rider; // Ang pinaka-uwahing scan maoy mo-overwrite sa daan
+                        let currentRiderTime = new Date(rider.scanned_at || rider.created_at).getTime();
+                        
+                        // Kung wala pa sa map, o kung ang kasamtangang scan MAS BAG-O kaysa sa natipigan na
+                        if (!latestRidersMap[rId]) {
+                             latestRidersMap[rId] = rider;
+                        } else {
+                             let existingRiderTime = new Date(latestRidersMap[rId].scanned_at || latestRidersMap[rId].created_at).getTime();
+                             if (currentRiderTime > existingRiderTime) {
+                                  latestRidersMap[rId] = rider; // I-overwrite kon mas bag-o
+                             }
+                        }
                     }
                 });
 
