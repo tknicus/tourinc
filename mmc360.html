@@ -1049,6 +1049,10 @@
                                     actualSpeed = calcSpeed < 300 ? calcSpeed : 0; 
                                 }
                                 prev.speed = Math.round(actualSpeed);
+
+                                // 💡 KINI ANG GIDUGANG: Kung moving siya pero 0 ang speed, pugson og 1 KM/H aron dili libog.
+                                if (prev.speed === 0) prev.speed = 1;
+
                                 prev.lat = latitude;
                                 prev.lon = longitude;
                             } else {
