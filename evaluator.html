@@ -6,6 +6,8 @@
     <title>MasterMinds'CUP - Supabase Rider Report (Evaluate)</title>
     <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- HTML2Canvas (Para ma-download as Picture) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 10px; color: #111; }
         
@@ -21,16 +23,26 @@
 
         .report-wrapper { max-width: 1300px; margin: 0 auto; background: #ffffff; padding: 15px; border: 1px solid #b5b5b5; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: none; } /* Gitaguan sa sinugdanan hangtod ma-authenticate */
         
+        /* CONTROL PANEL */
         .control-panel { background: #1e1e1e; padding: 15px; border-radius: 6px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; color: white; }
         .control-panel label { font-weight: bold; }
         .control-panel input[type="text"] { padding: 10px 12px; font-size: 16px; border: 1px solid #444; border-radius: 4px; flex: 1; min-width: 180px; background: #2a2a2a; color: white; text-align: left; letter-spacing: normal; font-weight: normal; }
         .control-panel button { padding: 10px 20px; background: #cc0000; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; text-transform: uppercase; width: 100%; }
-        .control-panel button.pdf-btn { background: #0077cc; }
-        .control-panel button.pdf-btn:hover { background: #005599; }
         
         @media (min-width: 600px) { .control-panel button { width: auto; } }
         .control-panel button:hover { background: #990000; }
 
+        /* ACTION BUTTONS (PRINT & PICTURE) */
+        .action-buttons { display: flex; gap: 10px; flex-wrap: wrap; width: 100%; }
+        @media (min-width: 600px) { .action-buttons { width: auto; margin-left: auto; } }
+        
+        #printBtn { background: #0077cc; flex: 1; }
+        #printBtn:hover { background: #005599; }
+        
+        #picBtn { background: #28a745; flex: 1; }
+        #picBtn:hover { background: #218838; }
+
+        /* EXCEL HEADER */
         .excel-header { display: flex; flex-direction: column; gap: 12px; border: 2px solid #000; padding: 12px; background: #fdfdfd; margin-bottom: 15px; }
         .profile-side { width: 100%; font-size: 13px; font-family: Arial, sans-serif; color: #000000; }
         .profile-side div { margin-bottom: 6px; word-break: break-word; font-weight: normal; color: #000000; }
@@ -48,6 +60,10 @@
             .summary-side { width: 280px; min-width: 280px; flex-shrink: 0; }
         }
 
+        /* AREA NGA I-CAPTURE PARA SA PICTURE */
+        #captureArea { padding: 10px; background-color: #ffffff; }
+
+        /* TABLE */
         .table-container { width: 100%; overflow-x: auto; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; font-family: Arial, sans-serif; min-width: 1050px; }
         th, td { border: 1px solid #000; padding: 6px 8px; text-align: left; vertical-align: middle; }
@@ -56,6 +72,7 @@
         .no-data { text-align: center; padding: 40px; font-size: 16px; color: #666; font-style: italic; }
         .photo-link { color: #0066cc; text-decoration: none; font-weight: bold; }
 
+        /* EVALUATION CONTROLS */
         .status-dropdown { padding: 4px; font-weight: bold; border-radius: 4px; border: 1px solid #000; cursor: pointer; outline: none; width: 90px; }
         .status-Pending { background-color: #ffc107; color: #000; }
         .status-Valid { background-color: #28a745; color: #fff; }
@@ -78,6 +95,7 @@
             .control-panel { display: none !important; }
             .admin-remark { border: none; background: transparent; font-weight: bold; padding: 0; }
             .status-dropdown { border: none; background: transparent; -webkit-appearance: none; appearance: none; font-weight: bold; padding: 0; }
+            #captureArea { padding: 0; }
         }
     </style>
 </head>
@@ -99,7 +117,12 @@
             <label style="font-weight: bold;">RIDER ID:</label>
             <input type="text" id="searchIdInput" placeholder="Pananglitan: 0001 o 1604" onkeypress="if(event.key === 'Enter') generateReport();">
             <button onclick="generateReport()">Generate gikan sa Database</button>
-            <button onclick="window.print()" class="pdf-btn">📄 Save as PDF / Print</button>
+            
+            <!-- BUTTONS PARA PRINT UG PICTURE (Nakatago sa sinugdanan) -->
+            <div class="action-buttons">
+                <button onclick="window.print()" id="printBtn" style="display: none;">🖨️ I-Print (Papel)</button>
+                <button onclick="downloadAsPicture()" id="picBtn" style="display: none;">📸 Download Picture</button>
+            </div>
         </div>
 
         <div id="reportContent">
@@ -117,7 +140,7 @@
         // ⏱️ AUTO SESSION TIMEOUT (1 MINUTE IDLE)
         // ==========================================
         let idleTimer;
-        const IDLE_TIME_LIMIT = 300000; // 60,000 milliseconds = 1 minuto
+        const IDLE_TIME_LIMIT = 300000; // 60,000 milliseconds = 1 minuto (Wait, 300,000 ms is actually 5 minutes. As is sa imong code.)
 
         function resetIdleTimer() {
             clearTimeout(idleTimer);
@@ -177,7 +200,7 @@
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             const hashedInput = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
             
-            // Gitugotan lang ang mga ID 0001, 0002, o 0003 nga Admin
+            // Gitugotan lang ang mga ID 0001, 0002, o 1636 nga Admin
             let validAdmin = riderDatabase.find(r => r.passcode === hashedInput && (r.idNum === "0001" || r.idNum === "0002" || r.idNum === "1636"));
             
             if (validAdmin) {
@@ -226,6 +249,11 @@
         async function generateReport() {
             const targetId = document.getElementById('searchIdInput').value.trim();
             const container = document.getElementById('reportContent');
+            const printBtn = document.getElementById('printBtn');
+            const picBtn = document.getElementById('picBtn');
+
+            if (printBtn) printBtn.style.display = "none";
+            if (picBtn) picBtn.style.display = "none";
 
             if (!targetId) { alert("Palihug isulod ang Rider ID!"); return; }
             if (!supabaseClient) { container.innerHTML = `<div class="no-data" style="color: #cc0000;">❌ Error: Wala na-initialize ang Supabase client.</div>`; return; }
@@ -240,7 +268,6 @@
                     riderInfo = riderDatabase.find(r => String(r.idNum) === String(targetId) || String(r.idNum) === String(targetNum));
                 }
 
-                // Kuhaon ang tanang scans nga walay labot ang pagka-strict sa order sa Supabase
                 let { data: scans, error } = await supabaseClient
                     .from('rally_scans')
                     .select('*')
@@ -253,7 +280,6 @@
                     return;
                 }
 
-                // 🛠️ GI-SORT DIREKTA SA JS PARA MASIGURO NGA SUNOD-SUNOD GYUD ANG ORAS (CHRONOLOGICAL)
                 scans.sort((a, b) => new Date(a.time_submit) - new Date(b.time_submit));
 
                 let fullName = riderInfo ? (riderInfo.fullname || riderInfo.name) : (scans[0].rider_name || 'Wala sa Masterlist');
@@ -281,7 +307,8 @@
 
                 let speedVal = totalHours > 0 ? (totalDistance / (diffMs / (1000 * 60 * 60))).toFixed(2) : "0.00";
 
-                let html = `
+                // GI-WRAP NATO ANG TIBUOK REPORT SULOD SA captureArea
+                let html = `<div id="captureArea">
                     <div class="excel-header">
                         <div class="profile-side">
                             <div><b>id number</b> <span style="font-size: 16px; font-weight: bold; color: #0000cc;">${targetId}</span></div>
@@ -374,10 +401,14 @@
                 html += `
                             </tbody>
                         </table>
-                    </div>
+                    </div> <!-- End of table-container -->
+                </div> <!-- End of captureArea -->
                 `;
 
                 container.innerHTML = html;
+
+                if (printBtn) printBtn.style.display = "block";
+                if (picBtn) picBtn.style.display = "block";
 
             } catch (err) {
                 console.error("Report Generation Error:", err);
@@ -424,6 +455,38 @@
             const x = document.getElementById("snackbar");
             x.className = "toast show";
             setTimeout(function(){ x.className = x.className.replace("toast show", "toast"); }, 3000);
+        }
+
+        // FUNCTION PARA MAG-CAPTURE UG MO-DOWNLOAD OG PICTURE
+        function downloadAsPicture() {
+            const captureDiv = document.getElementById('captureArea');
+            const targetId = document.getElementById('searchIdInput').value.trim() || 'EvalReport';
+            const picBtn = document.getElementById('picBtn');
+            
+            if (!captureDiv) return;
+
+            const originalText = picBtn.innerHTML;
+            picBtn.innerHTML = "⏳ Nag-capture...";
+            picBtn.disabled = true;
+
+            html2canvas(captureDiv, {
+                scale: 2, 
+                backgroundColor: "#ffffff",
+                useCORS: true
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `Evaluation_${targetId}_Report.png`; 
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+                picBtn.innerHTML = originalText;
+                picBtn.disabled = false;
+            }).catch(err => {
+                console.error("Naay error sa pag-capture: ", err);
+                alert("Pasayloa, adunay error sa paghimo sa picture.");
+                picBtn.innerHTML = originalText;
+                picBtn.disabled = false;
+            });
         }
     </script>
 </body>
