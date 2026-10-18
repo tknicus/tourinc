@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MasterMinds'CUP - Supabase Rider Report</title>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 10px; color: #111; }
+        .report-wrapper { max-width: 1250px; margin: 0 auto; background: #ffffff; padding: 15px; border: 1px solid #b5b5b5; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
+        
+        /* SEARCH CONTROL PANEL */
+        .control-panel { background: #1e1e1e; padding: 15px; border-radius: 6px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; color: white; }
+        .control-panel label { font-weight: bold; }
+        .control-panel input { padding: 10px 12px; font-size: 16px; border: 1px solid #444; border-radius: 4px; flex: 1; min-width: 180px; background: #2a2a2a; color: white; }
+        .control-panel select { padding: 10px 12px; font-size: 16px; border: 1px solid #444; border-radius: 4px; background: #2a2a2a; color: white; cursor: pointer; }
+        .control-panel button { padding: 10px 20px; background: #cc0000; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; text-transform: uppercase; width: 100%; }
+        
+        @media (min-width: 600px) {
+            .control-panel button { width: auto; }
+        }
+        .control-panel button:hover { background: #990000; }
+        
+        /* PRINT BUTTON STYLING */
+        #printBtn { background: #0066cc; }
+        #printBtn:hover { background: #004c99; }
+
+        /* 📱 RESPONSIVE EXCEL HEADER */
+        .excel-header { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+            border: 2px solid #000; 
+            padding: 12px; 
+            background: #fdfdfd; 
+            margin-bottom: 15px; 
+        }
+        .profile-side { 
+            width: 100%; 
+            font-size: 13px; 
+            font-family: Arial, sans-serif; 
+            color: #000000;
+            -webkit-font-smoothing: antialiased; 
+        }
+        .profile-side div { 
+            margin-bottom: 6px; 
+            word-break: break-word; 
+            font-weight: normal; 
+            color: #000000;
+        }
+        .profile-side b { 
+            display: inline-block; 
+            width: 150px; 
+            font-weight: normal; 
+            color: #555555; 
+        }
+        
+        /* Summary Box */
+        .summary-side { 
+            border: 2px solid #000000; 
+            width: 100%; 
+            background: #ffffff; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between; 
+            font-size: 13px; 
+            font-family: Arial, sans-serif; 
+        }
+        .summary-row { 
+            display: flex; 
+            justify-content: space-between; 
+            border-bottom: 1px solid #000000; 
+            padding: 8px 12px; 
+        }
+        .summary-row:last-child { 
+            border-bottom: none; 
+        }
+        .summary-row span {
+            color: #555555;
+        }
+        .summary-row b { 
+            text-align: right; 
+            color: #000000;
+        }
+
+        /* 🖥️ DESKTOP VIEW */
+        @media (min-width: 768px) {
+            .excel-header { 
+                flex-direction: row; 
+                justify-content: space-between; 
+                align-items: stretch; 
+            }
+            .profile-side { 
+                flex: 1; 
+                width: auto;
+            }
+            .summary-side { 
+                width: 280px; 
+                min-width: 280px;
+                flex-shrink: 0;
+            }
+        }
+
+        /* TABLE RESPONSIVE WRAPPER */
+        .table-container { width: 100%; overflow-x: auto; margin-top: 10px; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; font-family: Arial, sans-serif; min-width: 750px; }
+        th, td { border: 1px solid #000; padding: 6px 8px; text-align: left; }
+        th { background-color: #d9d9d9; text-align: center; font-weight: bold; color: #000; }
+        .center { text-align: center; }
+        .no-data { text-align: center; padding: 40px; font-size: 16px; color: #666; font-style: italic; }
+
+        /* ==========================================
+           🖨️ PDF & PRINT CONFIGURATION (SECRET SA PAG-PRINT)
+           ========================================== */
+        @media print {
+            @page { 
+                size: landscape; /* Pugson nga higda (landscape) ang papel aron masulod ang lapad nga table */
+                margin: 10mm; 
+            }
+            body { 
+                background-color: #ffffff; 
+                margin: 0; 
+                padding: 0; 
+                color: #000;
+                -webkit-print-color-adjust: exact; /* Para mogawas ang color sa table */
+                print-color-adjust: exact;
+            }
+            .report-wrapper { 
+                box-shadow: none; 
+                border: none; 
+                padding: 0; 
+                max-width: 100%; 
+            }
+            .control-panel { 
+                display: none !important; /* Tagoan ang search box ug button inig print */
+            }
+            .excel-header { 
+                break-inside: avoid; /* Aron dili maputol sa tunga ang header kon molapas sa laing page */
+            }
+            .table-container { 
+                overflow-x: visible; /* Wagtangon ang scrollbar sa print */
+            }
+            table { 
+                page-break-inside: auto; 
+            }
+            tr { 
+                page-break-inside: avoid; 
+                page-break-after: auto; 
+            }
+            /* Siguruha nga makita ang table header colors */
+            th { 
+                background-color: #d9d9d9 !important; 
+            }
+            th[style*="background-color: #d9e1f2"] { 
+                background-color: #d9e1f2 !important; 
+            }
+            th[style*="background-color: #e2efda"] { 
+                background-color: #e2efda !important; 
+            }
+            th[style*="background-color: #eaeff8"] { 
+                background-color: #eaeff8 !important; 
+            }
+            th[style*="background-color: #ebf5e9"] { 
+                background-color: #ebf5e9 !important; 
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="report-wrapper">
+        <!-- 🔍 SEARCH BAR -->
+        <div class="control-panel">
+            <label style="font-weight: bold;">RIDER ID:</label>
+            <input type="text" id="searchIdInput" placeholder="Pananglitan: 0001">
+            
+            <label style="font-weight: bold;">ISUNOD SA:</label>
+            <select id="sortByDropdown">
+                <option value="time_submit">⏰ Oras (Date/Time)</option>
+                <option value="checkpoint">🚩 Checkpoint (CP 00 - FL)</option>
+            </select>
+
+            <button onclick="generateReport()">Generate Report</button>
+            <button onclick="window.print()" id="printBtn" style="display: none;">🖨️ I-Print / PDF</button>
+        </div>
+
+        <!-- 📊 REPORT OUTPUT AREA -->
+        <div id="reportContent">
+            <div class="no-data">I-type ang Rider ID sa ibabaw ug i-klik ang button aron kuhaon ang live data gikan sa Supabase.</div>
+        </div>
+    </div>
+
+    <script src="database.js"></script>
+    <script>
+        // Supabase Credentials
+        const _supabaseUrl = 'https://iilfklquzyxmdergwawh.supabase.co';
+        const _supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpbGZrbHF1enl4bWRlcmd3YXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MTkzMDcsImV4cCI6MjEwMzI5NTMwN30.jMctz666CGfTdODLqNr24O3dQ5SDM6K5GkmihCtDdBQ';
+        
+        let supabaseClient = null;
+        try {
+            supabaseClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
+        } catch (e) {
+            console.error("Supabase init error:", e);
+        }
+
+        async function generateReport() {
+            const targetId = document.getElementById('searchIdInput').value.trim();
+            const container = document.getElementById('reportContent');
+            const printBtn = document.getElementById('printBtn');
+
+            // Itago daan ang print button kada generate
+            if (printBtn) printBtn.style.display = "none";
+
+            if (!targetId) {
+                alert("Palihug isulod ang Rider ID!");
+                return;
+            }
+
+            if (!supabaseClient) {
+                container.innerHTML = `<div class="no-data" style="color: #cc0000;">❌ Error: Wala na-initialize ang Supabase client.</div>`;
+                return;
+            }
+
+            container.innerHTML = `<div class="no-data">🔄 Gipangita ang ID #${targetId} sa Database Table (report)...</div>`;
+
+            try {
+                let targetNum = parseInt(targetId) || targetId;
+
+                // 1. PANGITAON ANG RIDER SA MASTERLIST (database.js)
+                let riderInfo = null;
+                if (typeof riderDatabase !== 'undefined' && Array.isArray(riderDatabase)) {
+                    riderInfo = riderDatabase.find(r => String(r.idNum) === String(targetId) || String(r.idNum) === String(targetNum));
+                }
+
+                // 2. QUERY GIKAN SA SUPABASE TABLE (rally_scans)
+                let sortOption = document.getElementById('sortByDropdown').value;
+
+                let { data: scans, error } = await supabaseClient
+                    .from('rally_scans')
+                    .select('*')
+                    .or(`qr_code.eq.${targetId},qr_code.eq.${targetNum}`);
+
+                if (error) throw new Error(error.message);
+
+                if (!scans || scans.length === 0) {
+                    container.innerHTML = `<div class="no-data" style="color: #cc0000;">❌ Walay nakit-an nga record sa rally_scans para sa Rider ID #${targetId}.</div>`;
+                    return;
+                }
+
+                // TINUOD NGA DATE/TIME SORTING GAMIT ANG JAVASCRIPT
+                if (sortOption === 'time_submit') {
+                    scans.sort((a, b) => new Date(a.time_submit) - new Date(b.time_submit));
+                } else if (sortOption === 'checkpoint') {
+                    scans.sort((a, b) => {
+                        let cpA = String(a.checkpoint || "");
+                        let cpB = String(b.checkpoint || "");
+                        if (cpA === cpB) {
+                            return new Date(a.time_submit) - new Date(b.time_submit);
+                        }
+                        return cpA.localeCompare(cpB);
+                    });
+                }
+
+                if (error) throw new Error(error.message);
+
+                // Kuhaon ang mga detalye
+                let fullName = riderInfo ? riderInfo.fullname : (scans[0].rider_name || 'Wala sa Masterlist');
+                let riderLevel = riderInfo ? riderInfo.level : (scans[0].rider_level || 'AS26');
+                let codeName = riderInfo ? riderInfo.nickname : 'RIDER';
+
+                // 👉 KUHAON ANG MOTOR VEHICLE GIKAN SA database.js
+                let vehicleName = riderInfo ? (riderInfo.vehicle || 'N/A') : (scans[0].vehicle || 'N/A');
+
+                // Ngalan sa Ruta
+                let routeFullName = riderLevel;
+                if (typeof routeNames !== 'undefined' && routeNames[riderLevel]) {
+                    routeFullName = routeNames[riderLevel];
+                }
+
+                // Pag-compute sa kabinete sa oras ug distansya (Summary)
+                let firstScanTime = new Date(scans[0].time_submit);
+                let lastScanTime = new Date(scans[scans.length - 1].time_submit);
+                let diffMs = lastScanTime - firstScanTime;
+                
+                let totalHours = Math.floor(diffMs / (1000 * 60 * 60));
+                let totalMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                let runningTimeFormatted = `${String(totalHours).padStart(2, '0')}:${String(totalMinutes).padStart(2, '0')}:00 hms`;
+
+                let startOdo = parseFloat(scans[0].odometer) || 0;
+                let endOdo = parseFloat(scans[scans.length - 1].odometer) || startOdo;
+                let totalDistance = endOdo >= startOdo ? (endOdo - startOdo) : endOdo;
+                if (totalDistance === 0) totalDistance = 655;
+
+                let speedVal = totalHours > 0 ? (totalDistance / (diffMs / (1000 * 60 * 60))).toFixed(2) : "0.00";
+
+                // Himoon ang Excel-like professional table HTML
+                let html = `
+                    <div class="excel-header">
+                        <div class="profile-side">
+                            <div><b>id number</b> <span style="font-size: 16px; font-weight: bold; color: #0000cc;">${targetId}</span></div>
+                            <div><b>code name</b> ${codeName}</div>
+                            <div><b>fullname</b> ${fullName}</div>
+                            <div><b>motor vehicle</b> ${vehicleName}</div>
+                            <div><b>Route Name</b> ${routeFullName}</div>
+                            <div><b>Total Checkpoints</b> ${scans.length}</div>
+                        </div>
+                        <div class="summary-side">
+                            <div class="summary-row"><span>running time</span><b>${runningTimeFormatted}</b></div>
+                            <div class="summary-row"><span>distance</span><b>${totalDistance} km</b></div>
+                            <div class="summary-row"><span>average speed</span><b>${speedVal} kph</b></div>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" style="width: 40px;">#</th>
+                                    <th rowspan="2">CHECKPOINTS</th>
+                                    <th rowspan="2" style="width: 150px;">TIME</th>
+                                    <th rowspan="2" style="width: 85px;">RUN</th>
+                                    <th rowspan="2" style="width: 80px;">ODO</th>
+                                    <th colspan="2" style="background-color: #d9e1f2;">RUNNING</th>
+                                    <th colspan="3" style="background-color: #e2efda;">point to point</th>
+                                </tr>
+                                <tr>
+                                    <th style="background-color: #eaeff8; width: 65px;">kms</th>
+                                    <th style="background-color: #eaeff8; width: 75px;">km/h</th>
+                                    <th style="background-color: #ebf5e9; width: 65px;">kms</th>
+                                    <th style="background-color: #ebf5e9; width: 75px;">ave km/h</th>
+                                    <th style="background-color: #ebf5e9; width: 75px;">hours</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                // Loop para sa kada scan row uban ang telemetry computation
+                scans.forEach((scan, index) => {
+                    let scanTime = new Date(scan.time_submit);
+                    let formattedDate = `${String(scanTime.getMonth() + 1).padStart(2,'0')}/${String(scanTime.getDate()).padStart(2,'0')}/${scanTime.getFullYear()} ${String(scanTime.getHours()).padStart(2,'0')}:${String(scanTime.getMinutes()).padStart(2,'0')}:${String(scanTime.getSeconds()).padStart(2,'0')}`;
+                    
+                    // 1. RUN (Elapsed time gikan sa CP 00)
+                    let runDiffMs = scanTime - firstScanTime;
+                    let rH = Math.floor(runDiffMs / (1000 * 60 * 60));
+                    let rM = Math.floor((runDiffMs % (1000 * 60 * 60)) / (1000 * 60));
+                    let rS = Math.floor((runDiffMs % (1000 * 60)) / 1000);
+                    let runStr = `${rH}:${String(rM).padStart(2,'0')}:${String(rS).padStart(2,'0')}`;
+
+                    // 2. ODO & RUNNING (Cumulative)
+                    let currentOdo = parseFloat(scan.odometer) || 0;
+                    let runningKms = index === 0 ? 0 : Math.max(0, currentOdo - startOdo);
+                    let runningHoursTotal = runDiffMs / (1000 * 60 * 60);
+                    let runningKmh = runningHoursTotal > 0 ? (runningKms / runningHoursTotal).toFixed(2) : "0.00";
+
+                    // 3. POINT TO POINT (Segment gikan sa miaging checkpoint)
+                    let p2pKms = 0;
+                    let p2pKmh = "0.00";
+                    let p2pHoursStr = "00:00";
+
+                    if (index > 0) {
+                        let prevScan = scans[index - 1];
+                        let prevOdo = parseFloat(prevScan.odometer) || startOdo;
+                        p2pKms = Math.max(0, currentOdo - prevOdo);
+
+                        let prevTime = new Date(prevScan.time_submit);
+                        let segMs = scanTime - prevTime;
+                        let segHours = segMs / (1000 * 60 * 60);
+                        
+                        let sH = Math.floor(segMs / (1000 * 60 * 60));
+                        let sM = Math.floor((segMs % (1000 * 60 * 60)) / (1000 * 60));
+                        p2pHoursStr = `${String(sH).padStart(2,'0')}:${String(sM).padStart(2,'0')}`;
+
+                        p2pKmh = segHours > 0 ? (p2pKms / segHours).toFixed(2) : "0.00";
+                    }
+
+                    // Kuhaon ang ngalan sa checkpoint gikan sa database.js
+                    let rLevel = riderInfo ? riderInfo.level : (scan.rider_level || 'AS26');
+                    let cpCode = String(scan.checkpoint || '').trim();
+                    let locationName = '';
+
+                    if (typeof routeCheckpoints !== 'undefined') {
+                        if (routeCheckpoints[rLevel] && routeCheckpoints[rLevel][cpCode]) {
+                            locationName = routeCheckpoints[rLevel][cpCode];
+                        } else if (routeCheckpoints["AS26"] && routeCheckpoints["AS26"][cpCode]) {
+                            locationName = routeCheckpoints["AS26"][cpCode];
+                        }
+                    }
+                    if (!locationName) {
+                        locationName = scan.notes || '';
+                    }
+
+                    html += `
+                        <tr>
+                            <td class="center">${String(index + 1).padStart(2, '0')}</td>
+                            <td><b>${scan.checkpoint}</b> - ${locationName}</td>
+                            <td class="center">${formattedDate}</td>
+                            <td class="center">${runStr}</td>
+                            <td class="center">${currentOdo}</td>
+                            <td class="center">${runningKms}</td>
+                            <td class="center">${runningKmh}</td>
+                            <td class="center">${p2pKms}</td>
+                            <td class="center">${p2pKmh}</td>
+                            <td class="center">${p2pHoursStr}</td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                        </tbody>
+                    </table>
+                `;
+
+                container.innerHTML = html;
+
+                // Ipapakita ang "I-Print / PDF" button kon nakahuman na og generate
+                if (printBtn) printBtn.style.display = "block";
+
+            } catch (err) {
+                console.error("Report Generation Error:", err);
+                container.innerHTML = `<div class="no-data" style="color: #cc0000;">❌ Naay error nga nahitabo: <b>${err.message}</b></div>`;
+            }
+        }
+    </script>
+</body>
+</html>
