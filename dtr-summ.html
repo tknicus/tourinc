@@ -11,7 +11,7 @@
         .report-wrapper { max-width: 100%; margin: 0 auto; background: #ffffff; padding: 15px; border: 1px solid #b5b5b5; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
         
         /* 📱 SEARCH CONTROL PANEL */
-        .control-panel { background: #1e1e1e; padding: 15px; border-radius: 6px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; color: white; }
+        .control-panel { background: #1e1e1e; padding: 15px; border-radius: 6px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; color: white; justify-content: space-between; }
         .control-panel label { font-weight: bold; }
         .control-panel select { padding: 10px; font-size: 16px; border: 1px solid #444; border-radius: 4px; background: #2a2a2a; color: white; min-width: 200px; }
         .control-panel button { padding: 10px 20px; background: #cc0000; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
@@ -53,11 +53,14 @@
     <div class="report-wrapper">
         <!-- 🔍 CONTROL PANEL -->
         <div class="control-panel">
-            <label>ROUTE LEVEL:</label>
-            <select id="routeSelect">
-                <!-- Awtomatikong sudlan sa JS -->
-            </select>
-            <button onclick="generateDTR()">I-GENERATE DTR</button>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <label>ROUTE LEVEL:</label>
+                <select id="routeSelect">
+                    <!-- Awtomatikong sudlan sa JS -->
+                </select>
+                <button onclick="generateDTR()">I-GENERATE DTR</button>
+            </div>
+            <div id="lastUpdatedTag" style="font-size: 12px; color: #aaa;"></div>
         </div>
 
         <!-- 📊 REPORT OUTPUT AREA -->
@@ -117,7 +120,7 @@
                 let option = document.createElement('option');
                 option.value = key;
                 option.text = `${key} - ${activeRoutes[key]}`;
-                if(key === "AS26") option.selected = true;
+                if(key === "G3") option.selected = true;
                 select.add(option);
             }
         };
@@ -134,10 +137,11 @@
             container.innerHTML = `<div class="no-data">🔄 Gikuha ang data para sa rutang <b>${selectedRoute}</b> gikan sa Supabase...</div>`;
 
             try {
-                // 1. KUHAON ANG SCANS
+                // 1. KUHAON ANG SCANS (Range 0-9999 aron dili ma-cut off sa 1,000 rows limit)
                 let { data: allScans, error } = await supabaseClient
                     .from('rally_scans')
                     .select('*')
+                    .range(0, 9999)
                     .order('scanned_at', { ascending: true });
 
                 if (error) throw new Error(error.message);
@@ -184,7 +188,7 @@
                                 <tr>
                                     <th class="sticky-col-1">#</th>
                                     <th class="sticky-col-2">QR</th>
-                                    <th class="sticky-col-3">NAME</th>
+                                    <th class="sticky-col-3">VEST NAME</th>
                                     <th class="col-duration">DURATION</th>
                                     <th class="col-distance">DISTANCE</th>
                                     <th class="col-t">T</th>
@@ -230,14 +234,29 @@
                         let startOdo = parseFloat(riderScans[0].odometer) || 0;
                         let endOdo = parseFloat(riderScans[riderScans.length - 1].odometer) || startOdo;
                         let dist = endOdo >= startOdo ? (endOdo - startOdo) : endOdo;
-                        distanceText = dist > 0 ? dist : "";
+                        distanceText = dist > 0 ? Math.round(dist) : "";
 
+                        // FLEXIBLE CHECKPOINT MATCHING LOGIC
                         riderScans.forEach(scan => {
-                            let cpCode = String(scan.checkpoint || '').trim();
-                            if (cpCounts[cpCode] !== undefined) {
-                                cpCounts[cpCode]++;
-                            } else if (cpCounts[`CP ${cpCode}`] !== undefined) {
-                                cpCounts[`CP ${cpCode}`]++;
+                            let rawCp = String(scan.checkpoint || '').trim();
+                            let cleanCp = rawCp.replace(/^CP\s*/i, '');
+
+                            if (cpCounts[rawCp] !== undefined) {
+                                cpCounts[rawCp]++;
+                            } else if (cpCounts[cleanCp] !== undefined) {
+                                cpCounts[cleanCp]++;
+                            } else if (cpCounts[`CP ${cleanCp}`] !== undefined) {
+                                cpCounts[`CP ${cleanCp}`]++;
+                            } else {
+                                let matchKey = expectedCPs.find(k => {
+                                    let kClean = k.replace(/^CP\s*/i, '');
+                                    return kClean === cleanCp || 
+                                           parseInt(kClean, 10) === parseInt(cleanCp, 10) ||
+                                           kClean.padStart(3, '0') === cleanCp.padStart(3, '0');
+                                });
+                                if (matchKey && cpCounts[matchKey] !== undefined) {
+                                    cpCounts[matchKey]++;
+                                }
                             }
                         });
 
@@ -312,6 +331,7 @@
                 `;
 
                 container.innerHTML = html;
+                document.getElementById('lastUpdatedTag').innerText = `Updated: ${new Date().toLocaleTimeString()}`;
 
             } catch (err) {
                 console.error("DTR Generation Error:", err);
