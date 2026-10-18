@@ -1114,7 +1114,6 @@
         // 4. KUHAON ANG LIVE RIDERS DIREKTA GIKAN SA SUPABASE TABLE (rally_scans)
         // 4. KUHAON ANG LIVE RIDERS DIREKTA GIKAN SA SUPABASE TABLE (rally_scans)
         // 4. KUHAON ANG LIVE RIDERS DIREKTA GIKAN SA SUPABASE TABLE (rally_scans)
-        // 4. KUHAON ANG LIVE RIDERS DIREKTA GIKAN SA SUPABASE TABLE (rally_scans)
         async function loadRidersToMap(selectedRoute = "all") {
             if (selectedRoute === "none") {
                 markerLayer.clearLayers();
@@ -1123,20 +1122,19 @@
             }
 
             try {
-                // 🔄 TIBUOK PAGINATION LOOP 🔄
+                // 🔄 TIBUOK PAGINATION LOOP (Parehas gayud sa dtr.html) 🔄
+                // Masiguro niini nga makuha ang TIBUOK liboan ka scans una ta mangita sa pinakabag-o.
                 let allScans = [];
                 let fetchStart = 0;
                 let fetchLimit = 1000;
                 let isFetching = true;
 
                 while (isFetching) {
-                    // 🛑 FIX 1: ORDER BY 'created_at' (Server Time). 
-                    // Likayan nato ang 'scanned_at' kay basig sayop ang orasan sa Finish Line scanner.
                     let { data, error } = await supabaseLiveClient
                         .from('rally_scans')
                         .select('*')
                         .range(fetchStart, fetchStart + fetchLimit - 1)
-                        .order('created_at', { ascending: true }); 
+                        .order('scanned_at', { ascending: true }); // Gi-siguro nga naka-order sa saktong oras
 
                     if (error) {
                         console.error("Error sa pagkuha gikan sa Supabase:", error.message);
@@ -1156,57 +1154,54 @@
                 }
 
                 if (allScans.length === 0) {
+                    console.log("Walay nakit-an nga data sa rally_scans table.");
                     markerLayer.clearLayers();
                     document.getElementById('riderCountBadge').innerText = "Riders: 0";
                     return;
                 }
 
-                // 🛑 FIX 2: DUAL-TRACKING DEDUPLICATION 🛑
-                let latestStatusMap = {}; // Tracker 1: Para sa text/status nga ipagawas sa popup
-                let latestLocationMap = {}; // Tracker 2: Para sa katapusang sakto nga GPS coordinates
-
-                allScans.forEach(scan => {
-                    let rId = scan.qr_code || scan.idNum;
-                    if (!rId) return;
-
-                    // Kanunay i-update ang status (kay nag-ascending order man ta sa server time)
-                    latestStatusMap[rId] = scan;
-
-                    // I-update lang ang location map KUNG naay sakto nga coordinates
-                    let lat = parseFloat(scan.latitude);
-                    let lon = parseFloat(scan.longitude);
-                    if (!isNaN(lat) && !isNaN(lon) && lat !== 0 && lon !== 0) {
-                        latestLocationMap[rId] = scan;
+                // Deduplicate: Tungod kay na-sort na nato gikan karaan padulong bag-o,
+                // ang pinaka-uwahing scan maoy mo-overwrite sa variables ug maoy mabilin sa map.
+                let latestRidersMap = {};
+                allScans.forEach(rider => {
+                    let rId = rider.qr_code || rider.idNum;
+                    if (rId) {
+                        latestRidersMap[rId] = rider; 
                     }
                 });
 
+                // Limpyohan lang ang mapa inig kahuman ug kuha sa bag-ong data!
                 markerLayer.clearLayers();
+
                 let validRiderCount = 0;
+
+                // KINING TULO RA KA ROTA ANG IPAGAWAS SA KARON (G81, G3, G5)
                 const activeRoutes = ["G81", "G3", "G5"];
 
-                Object.keys(latestStatusMap).forEach(rId => {
-                    let statusScan = latestStatusMap[rId];
-                    // Gamiton ang locationScan kung naa, kon wala kay adto siya mo-base sa statusScan
-                    let locScan = latestLocationMap[rId] || statusScan;
-
-                    let lat = parseFloat(locScan.latitude);
-                    let lon = parseFloat(locScan.longitude);
-                    let routeKey = (statusScan.rider_level || "G5").toUpperCase();
+                Object.values(latestRidersMap).forEach(rider => {
+                    let lat = parseFloat(rider.latitude);
+                    let lon = parseFloat(rider.longitude);
+                    let routeKey = (rider.rider_level || "G5").toUpperCase();
                     
-                    // Route Filtering
+                    // 1. Kung "ALL" ang napili: dawaton ra ang G81, G3, ug G5 (I-skip ang AS26)
                     if (selectedRoute.toLowerCase() === "all") {
-                        if (!activeRoutes.includes(routeKey)) return; 
-                    } else {
-                        if (routeKey !== selectedRoute.toUpperCase()) return; 
+                        if (!activeRoutes.includes(routeKey)) {
+                            return; 
+                        }
+                    } 
+                    // 2. Kung nag-select og tiwas nga specific route sa dropdown
+                    else {
+                        if (routeKey !== selectedRoute.toUpperCase()) {
+                            return; 
+                        }
                     }
 
-                    // Kung aduna na gayuy valid nga coordinates nga nakuha sukad-sukad
                     if (!isNaN(lat) && !isNaN(lon) && lat !== 0 && lon !== 0) {
-                        validRiderCount++;
+                        validRiderCount++; // I-ihap ang rider
 
                         let formattedTime = "Wala";
-                        if (statusScan.scanned_at || statusScan.created_at) {
-                            let d = new Date(statusScan.scanned_at || statusScan.created_at);
+                        if (rider.scanned_at || rider.created_at) {
+                            let d = new Date(rider.scanned_at || rider.created_at);
                             formattedTime = d.toLocaleString('en-PH', {
                                 timeZone: 'Asia/Manila',
                                 month: 'short', day: 'numeric',
@@ -1217,31 +1212,30 @@
                         let pinColor = routeColors[routeKey] || "#ff9900"; 
                         let marker = L.marker([lat, lon], { icon: createColoredIcon(pinColor) });
                         
-                        // I-bind ang popup gamit ang STATUS data apan sa LOCATION coordinates gi-pin
                         marker.bindPopup(`
                             <div style="color: black; font-family: Arial; font-size: 13px;">
-                                <b>🏍️ ID: ${statusScan.qr_code || statusScan.idNum}</b><br>
-                                👤 Pangalan: <b>${statusScan.rider_name || "Rider"}</b><br>
-                                📍 Checkpoint: <b style="color:#cc0000; font-size:14px; text-transform:uppercase;">${statusScan.checkpoint}</b><br>
+                                <b>🏍️ ID: ${rider.qr_code || rider.idNum}</b><br>
+                                👤 Pangalan: <b>${rider.rider_name || "Rider"}</b><br>
+                                📍 Checkpoint: <b>${rider.checkpoint}</b><br>
                                 🛣️ Rota: <b style="background: #222; padding: 2px 5px; border-radius: 3px; color:white;">${routeKey}</b><br>
-                                ⚙️ Odometer: ${statusScan.odometer} KM<br>
+                                ⚙️ Odometer: ${rider.odometer} KM<br>
                                 🕒 Oras: ${formattedTime}<br>
-                                📝 Notes: <b>${statusScan.notes || 'Wala'}</b><br>
-                                📸 <a href="${statusScan.photo_url}" target="_blank" style="color:blue; font-weight:bold;">Tan-awa ang Ebidensya</a><br>
-                                <a href="${locScan.location_address || statusScan.location_address}" target="_blank">🗺️ Google Maps</a>
+                                📝 Notes: <b>${rider.notes || 'Wala'}</b><br>
+                                📸 <a href="${rider.photo_url}" target="_blank" style="color:blue; font-weight:bold;">Tan-awa ang Ebidensya</a><br>
+                                <a href="${rider.location_address}" target="_blank">🗺️ Google Maps</a>
                             </div>
                         `);
                         markerLayer.addLayer(marker);
                     }
                 });
 
+                // I-update ang Rider Count display!
                 document.getElementById('riderCountBadge').innerText = `Riders: ${validRiderCount}`;
 
             } catch (err) {
                 console.error("Critical error sa pag-load sa map markers:", err);
             }
         }
-
 
 
 
