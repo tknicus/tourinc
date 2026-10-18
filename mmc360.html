@@ -156,7 +156,7 @@
         }
     </style>
 </head>
-<body>
+activeIdsThisFetch<body>
 
     <!-- 🔐 PASSCODE MODAL OVERLAY -->
     <div id="passcodeModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.88); backdrop-filter: blur(8px); z-index: 9999; display: flex; justify-content: center; align-items: center;">
@@ -986,10 +986,19 @@
                 let standbyCount = 0;
                 let staleCount = 0;
                 let activeIdsThisFetch = new Set(); 
-
                 const activeMMC26Routes = ["G81", "G3", "G5"];
 
-                data.forEach(rider => {
+                // 🛠️ FIX 1: DUPLICATE FILTER (Kuhuon lang ang pinakabag-o)
+                let latestLocations = {};
+                data.sort((a, b) => new Date(a.updated_at || a.timestamp || 0) - new Date(b.updated_at || b.timestamp || 0));
+                data.forEach(row => {
+                    let id = String(row.rider_id || row.riderId || row.id);
+                    latestLocations[id] = row;
+                });
+                let cleanData = Object.values(latestLocations);
+
+                // Imbis data.forEach, gamiton nato ang cleanData
+                cleanData.forEach(rider => {
                     const rider_id = String(rider.rider_id || rider.riderId || rider.id);
                     const latitude = parseFloat(rider.latitude || rider.lat);
                     const longitude = parseFloat(rider.longitude || rider.lon);
@@ -1041,20 +1050,25 @@
                             const timeDiffHours = (new Date(updated_at).getTime() - new Date(prev.updated_at).getTime()) / (1000 * 60 * 60);
 
                             if (distanceMeters >= 15) {
-                                prev.isMoving = true;
-                                prev.angle = getBearing(prev.lat, prev.lon, latitude, longitude);
-                                let actualSpeed = rider.vel !== undefined ? rider.vel : (rider.velocity !== undefined ? rider.velocity : 0);
-                                if (actualSpeed === 0 && timeDiffHours > 0) {
-                                    let calcSpeed = (distanceMeters / 1000) / timeDiffHours;
-                                    actualSpeed = calcSpeed < 300 ? calcSpeed : 0; 
+                                let calcSpeed = timeDiffHours > 0 ? (distanceMeters / 1000) / timeDiffHours : 0;
+                                
+                                // 🛠️ FIX 2: TELEPORT PROTECTOR (>250 kph i-ignore)
+                                if (calcSpeed > 250) {
+                                    latitude = prev.lat;   // Ibalik sa karaan nga location
+                                    longitude = prev.lon;  // Ibalik sa karaan nga location
+                                } else {
+                                    prev.isMoving = true;
+                                    prev.angle = getBearing(prev.lat, prev.lon, latitude, longitude);
+                                    let actualSpeed = rider.vel !== undefined ? rider.vel : (rider.velocity !== undefined ? rider.velocity : 0);
+                                    if (actualSpeed === 0 && timeDiffHours > 0) {
+                                        actualSpeed = calcSpeed; 
+                                    }
+                                    prev.speed = Math.round(actualSpeed);
+                                    if (prev.speed === 0) prev.speed = 1;
+
+                                    prev.lat = latitude;
+                                    prev.lon = longitude;
                                 }
-                                prev.speed = Math.round(actualSpeed);
-
-                                // 💡 KINI ANG GIDUGANG: Kung moving siya pero 0 ang speed, pugson og 1 KM/H aron dili libog.
-                                if (prev.speed === 0) prev.speed = 1;
-
-                                prev.lat = latitude;
-                                prev.lon = longitude;
                             } else {
                                 prev.isMoving = false;
                                 prev.speed = 0;
