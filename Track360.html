@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MasterMinds'CUP - Live Rider Command Center</title>
+
+    <!-- 🎨 STYLES, LEAFLET MAP & MARKER CLUSTER CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <link rel="icon" type="image/png" href="scan.png">
+    
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-color: #121212;
+            color: #f5f5f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: #1e1e1e;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid #cc0000;
+            min-height: 55px;
+            box-sizing: border-box;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        h2 {
+            margin: 0;
+            color: #ffffff;
+            font-size: 15px;
+            font-style: italic;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* SEARCH BAR STYLING */
+        .search-box {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            background: #2a2a2a;
+            padding: 3px 6px;
+            border-radius: 4px;
+            border: 1px solid #444;
+        }
+        .search-box input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 11px;
+            outline: none;
+            width: 110px;
+        }
+        .search-box input::placeholder { color: #888; }
+
+        /* FILTER BUTTONS STYLING */
+        .filter-container {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            max-width: 100%;
+            padding-bottom: 4px;
+        }
+
+        .filter-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .filter-btn {
+            background-color: #333;
+            color: white;
+            border: 1px solid #555;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .filter-btn:hover { background-color: #555; }
+        .filter-btn.active { background-color: #cc0000; border-color: #ff0000; }
+
+        .back-btn {
+            background-color: #444;
+            color: white;
+            padding: 5px 10px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 10px;
+            text-transform: uppercase;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            transition: 0.2s;
+        }
+        .back-btn:hover { background-color: #666; }
+
+        #map {
+            width: 100%;
+            height: calc(100vh - 95px);
+            background-color: #2b2b2b;
+        }
+
+        .status-bar {
+            background: #1e1e1e;
+            padding: 8px 20px;
+            font-size: 11px;
+            color: #ccc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #333;
+            height: 40px;
+            box-sizing: border-box;
+            font-weight: bold;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .stats-badges {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* 🪟 TRANSPARENT GLASS POP-UP BOX */
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+            background-color: rgba(255, 255, 255, 0.0) !important;
+            backdrop-filter: blur(2px) !important; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+            border-radius: 12px !important;
+        }
+        .leaflet-popup-content {
+            margin: 10px 12px !important;
+        }
+        .leaflet-container a.leaflet-popup-close-button {
+            color: #333 !important; 
+            font-weight: bold;
+        }
+    </style>
+</head>
+activeIdsThisFetch<body>
+
+    <!-- 🔐 PASSCODE MODAL OVERLAY -->
+    <div id="passcodeModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.88); backdrop-filter: blur(8px); z-index: 9999; display: flex; justify-content: center; align-items: center;">
+        <div style="background: #1e1e1e; border: 2px solid #cc0000; padding: 25px; border-radius: 10px; text-align: center; max-width: 320px; width: 90%; box-shadow: 0 0 20px rgba(204,0,0,0.4);">
+            <h3 style="margin-top: 0; color: #fff; letter-spacing: 1px;">🔐 COMMAND CENTER ACCESS</h3>
+            <p style="font-size: 13px; color: #ccc;">I-enter ang imong Passcode:</p>
+            
+            <input type="password" id="accessCodeInput" placeholder="Enter Passcode" onkeyup="if(event.key==='Enter') checkAccessCode()" style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #444; background: #2a2a2a; color: white; text-align: center; font-size: 16px; box-sizing: border-box;">
+            
+            <button onclick="checkAccessCode()" style="width: 100%; padding: 10px; background: #cc0000; color: white; border: none; font-weight: bold; border-radius: 5px; cursor: pointer; text-transform: uppercase;">Open Map</button>
+            
+            <p id="passcodeError" style="color: #ff4444; font-size: 12px; margin-top: 10px; display: none;">❌ Sayop nga Passcode o dili ka awtorisado!</p>
+        </div>
+    </div>
+
+    <!-- NAVIGATION HEADER WITH ROUTE FILTERS & SEARCH -->
+    <header>
+        <h2>🛰️ MMC360 Command Center</h2>
+        
+        <div class="search-box">
+            <span>🔍</span>
+            <input type="text" id="riderSearchInput" placeholder="Search ID / Name..." onkeydown="if(event.key==='Enter') searchAndTrackRider()">
+            <button onclick="searchAndTrackRider()" style="background:#cc0000; color:white; border:none; border-radius:3px; padding:2px 6px; font-size:9px; cursor:pointer;">Go</button>
+        </div>
+
+        <div class="filter-container">
+            <span style="font-size: 11px; color: #aaa;">Ruta:</span>
+            <button class="filter-btn active" data-route="ALL" onclick="setRouteFilter('ALL', this)">Tanan</button>
+            <button class="filter-btn" data-route="G81" onclick="setRouteFilter('G81', this)">0888</button>
+            <button class="filter-btn" data-route="G3" onclick="setRouteFilter('G3', this)">3333</button>
+            <button class="filter-btn" data-route="G5" onclick="setRouteFilter('G5', this)">5555</button>
+            <button class="filter-btn" data-route="AS26" onclick="setRouteFilter('AS26', this)" style="display:none;">AS26</button>
+            <button class="filter-btn" data-route="DO01" onclick="setRouteFilter('DO01', this)" style="display:none;">DO01</button>
+        </div>
+
+        <a href="scan.html" class="back-btn">Scanner</a>
+    </header>
+
+    <!-- MAP CONTAINER -->
+    <div id="map"></div>
+
+    <!-- STATUS FOOTER -->
+    <div class="status-bar">
+        <span id="connectionStatus">🟢 Nakakonekta sa Supabase Live Feed</span>
+        
+        <div class="stats-badges">
+            <span style="color: #00cc66;">⚡ Moving: <b id="movingCount">0</b></span>
+            <span style="color: #ff9900;">🛑 Standby: <b id="standbyCount">0</b></span>
+            <span style="color: #ff4d4d;">⚠️ Stale: <b id="staleCount">0</b></span>
+            <span style="color: #ffffff;" id="activeCountBadge">Total: 0</span>
+        </div>
+    </div>
+
+    <!-- LEAFLET JS, MARKER CLUSTER JS, SUPABASE JS & DATABASE -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="database.js"></script>
+    
+    <script>
+        // ==========================================
+        // 🔐 PASSCODE CHECKER LOGIC
+        // ==========================================
+        async function checkAccessCode() {
+            let inputCode = document.getElementById('accessCodeInput').value.trim();
+            let errorMsg = document.getElementById('passcodeError');
+
+            if (!inputCode) {
+                errorMsg.innerText = "❌ Palihug og enter sa passcode!";
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            if (typeof riderDatabase === 'undefined') {
+                errorMsg.innerText = "⚠️ Error: Dili ma-read ang riderDatabase!";
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            // SHA-256 Hashing
+            const encoder = new TextEncoder();
+            const data = encoder.encode(inputCode);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashedInput = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+            let foundUser = riderDatabase.find(r => r.passcode === hashedInput);
+
+            if (foundUser) {
+                document.getElementById('passcodeModal').style.display = 'none';
+                errorMsg.style.display = 'none';
+
+                let isAdminUser = (foundUser.isAdmin === true || String(foundUser.isAdmin).toLowerCase() === 'true');
+                let isMarshalUser = (foundUser.isMarshal === true || String(foundUser.isMarshal).toLowerCase() === 'true');
+
+                let filterBtns = document.querySelectorAll('.filter-btn');
+
+                // 1️⃣ ADMIN: Makita tanang route filter buttons
+                if (isAdminUser) {
+                    filterBtns.forEach(btn => btn.style.display = "inline-block");
+                    let allBtn = Array.from(filterBtns).find(b => b.getAttribute('data-route') === 'ALL');
+                    setRouteFilter('ALL', allBtn || filterBtns[0]);
+                } 
+                // 2️⃣ MARSHAL: MMC '26 routes lang (ALL, G81, G3, G5)
+                else if (isMarshalUser) {
+                    const marshalRoutes = ["ALL", "G81", "G3", "G5"];
+                    filterBtns.forEach(btn => {
+                        let r = btn.getAttribute('data-route');
+                        if (marshalRoutes.includes(r)) btn.style.display = "inline-block";
+                        else btn.style.display = "none";
+                    });
+                    let allBtn = Array.from(filterBtns).find(b => b.getAttribute('data-route') === 'ALL');
+                    setRouteFilter('ALL', allBtn || filterBtns[0]);
+                } 
+                // 3️⃣ REGULAR USER / EVENT ADMIN: Iya ra nga route
+                else {
+                    let userLevel = (foundUser.level || "").toUpperCase();
+                    let targetBtn = null;
+
+                    filterBtns.forEach(btn => {
+                        let r = btn.getAttribute('data-route');
+                        if (r === userLevel) {
+                            btn.style.display = "inline-block";
+                            targetBtn = btn;
+                        } else {
+                            btn.style.display = "none";
+                        }
+                    });
+
+                    if (targetBtn) {
+                        setRouteFilter(userLevel, targetBtn);
+                    } else {
+                        // Kung wala sa static buttons, i-load gihapon iyang route
+                        currentRouteFilter = userLevel;
+                        drawRoutePath(userLevel);
+                        fetchLiveRiders();
+                    }
+                }
+
+                // Sugdan ang auto-fetch pagkahuman ug login
+                fetchLiveRiders();
+            } else {
+                errorMsg.innerText = "❌ Sayop nga Passcode o dili ka awtorisado!";
+                errorMsg.style.display = 'block';
+                document.getElementById('accessCodeInput').value = "";
+            }
+        }
+
+        // ==========================================
+        // 🗺️ MAP INITIALIZATION WITH BASE LAYERS (Street & Satellite)
+        // ==========================================
+        const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        });
+
+        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19,
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+        });
+
+        const map = L.map('map', {
+            center: [7.4474, 125.8093],
+            zoom: 10,
+            layers: [streetLayer]
+        });
+
+        L.control.layers({
+            "🗺️ Street Map": streetLayer,
+            "🛰️ Satellite View": satelliteLayer
+        }, {}, { position: 'topright' }).addTo(map);
+
+        const markersCluster = L.markerClusterGroup({
+            maxClusterRadius: 50,
+            spiderfyOnMaxZoom: true,
+            showCoverageOnHover: false,
+            zoomToBoundsOnClick: true
+        });
+        map.addLayer(markersCluster);
+
+        // ==========================================
+        // 🔌 SUPABASE CONNECTION CONFIG
+        // ==========================================
+        const _supabaseUrl = 'https://iilfklquzyxmdergwawh.supabase.co';
+        const _supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpbGZrbHF1enl4bWRlcmd3YXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MTkzMDcsImV4cCI6MjEwMzI5NTMwN30.jMctz666CGfTdODLqNr24O3dQ5SDM6K5GkmihCtDdBQ';
+        const supabaseMapClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
+
+        // ==========================================
+        // 🚀 GLOBAL VARIABLES & DICTIONARY
+        // ==========================================
+        let currentRouteFilter = 'ALL';
+        let activeRoutePolyline = null;
+        let trackedRiderId = null;
+        const riderMarkers = {}; 
+        if (!window.riderHistory) window.riderHistory = {};
+
+        const riderDict = {};
+        if (typeof riderDatabase !== 'undefined' && Array.isArray(riderDatabase)) {
+            riderDatabase.forEach(r => {
+                riderDict[String(r.idNum)] = r;
+            });
+        }
+
+        // ==========================================
+        // 🗺️ ROUTE COORDINATES
+        // ==========================================
+        const routeCoordinates = {
+            'AS26': [
+                [7.465233, 125.802874], [7.309068, 125.683234], [7.369117, 125.494739], [7.369998, 125.493554],
+                [7.473203, 125.469189], [7.556771, 125.460192], [7.700307, 125.392155], [7.823998, 125.392453],
+                [7.848564, 125.436973], [7.829528, 125.479180], [7.832514, 125.486269], [7.832963, 125.485834],
+                [7.832432, 125.486355], [7.832132, 125.486768], [7.831940, 125.487251], [7.831728, 125.487505],
+                [7.831502, 125.487607], [7.831422, 125.487701], [7.831165, 125.488436], [7.831090, 125.488565],
+                [7.830731, 125.488721], [7.830386, 125.488962], [7.830219, 125.489040], [7.829918, 125.489064],
+                [7.829793, 125.489091], [7.829682, 125.489136], [7.829589, 125.489219], [7.829536, 125.489319],
+                [7.829528, 125.489426], [7.829557, 125.489565], [7.829804, 125.489866], [7.829884, 125.490113],
+                [7.829979, 125.490239], [7.830094, 125.490338], [7.830179, 125.490510], [7.830322, 125.490595],
+                [7.830413, 125.490695], [7.830458, 125.490842], [7.830460, 125.491062], [7.830490, 125.491180],
+                [7.830556, 125.491293], [7.830689, 125.491330], [7.830822, 125.491352], [7.830920, 125.491432],
+                [7.830963, 125.491505], [7.830976, 125.491647], [7.831013, 125.491781], [7.831103, 125.491869],
+                [7.831297, 125.491982], [7.831433, 125.492052], [7.831611, 125.492068], [7.831691, 125.492130],
+                [7.831707, 125.492213], [7.831630, 125.492524], [7.831576, 125.492846], [7.831595, 125.493044],
+                [7.831646, 125.493194], [7.831723, 125.493310], [7.831890, 125.493487], [7.832015, 125.493677],
+                [7.832052, 125.493846], [7.832028, 125.493962], [7.831850, 125.494286], [7.831749, 125.494340],
+                [7.831542, 125.494383], [7.831388, 125.494560], [7.831297, 125.494608], [7.831191, 125.494597],
+                [7.831061, 125.494503], [7.830928, 125.494509], [7.830827, 125.494557], [7.830731, 125.494688],
+                [7.830460, 125.495453], [7.830386, 125.495579], [7.828810, 125.496451], [7.828688, 125.496585],
+                [7.828568, 125.496834], [7.828215, 125.497135], [7.827705, 125.497379], [7.827604, 125.497481],
+                [7.827588, 125.497585], [7.827848, 125.497950], [7.828133, 125.498393], [7.828351, 125.498854],
+                [7.828359, 125.499026], [7.828082, 125.499632], [7.828064, 125.499913], [7.828101, 125.500174],
+                [7.828226, 125.500495], [7.828675, 125.501153], [7.828954, 125.501418], [7.829212, 125.501539],
+                [7.829451, 125.501614], [7.830003, 125.501724], [7.830139, 125.501791], [7.830184, 125.501912],
+                [7.830195, 125.502008], [7.830136, 125.502115], [7.829780, 125.502317], [7.829719, 125.502405],
+                [7.829743, 125.502537], [7.829809, 125.502673], [7.829809, 125.502824], [7.829801, 125.502936],
+                [7.829639, 125.503210], [7.829618, 125.503309], [7.829639, 125.503454], [7.829692, 125.503596],
+                [7.829889, 125.503709], [7.830014, 125.503837], [7.830072, 125.504006], [7.830072, 125.504183],
+                [7.830054, 125.504358], [7.829844, 125.504744], [7.829738, 125.504859], [7.829549, 125.504980],
+                [7.829392, 125.505055], [7.829299, 125.505122], [7.829283, 125.505211], [7.829344, 125.505444],
+                [7.829480, 125.505613], [7.829836, 125.505828], [7.829971, 125.505940], [7.830083, 125.506141],
+                [7.831731, 125.506493], [7.841551, 125.512050], [7.818524, 125.621125], [7.843550, 125.675869],
+                [7.799224, 125.755219], [7.818617, 125.791668], [8.021254, 125.950122], [7.984346, 126.031418],
+                [7.945039, 126.022862], [7.948591, 125.999651], [7.951709, 125.998588], [7.945502, 125.983800],
+                [7.943545, 125.981246], [7.841199, 126.051154], [7.816971, 126.168793], [7.815850, 126.170731],
+                [7.818699, 126.183408], [7.822456, 126.182801], [7.827113, 126.194734], [7.864365, 126.376395],
+                [7.740164, 126.301830], [7.532219, 126.220990], [7.457856, 126.171785], [7.316591, 126.128411],
+                [7.237106, 126.160260], [7.236311, 126.129235], [7.260547, 126.091783], [7.150455, 125.998509],
+                [7.133989, 125.894490], [7.465980, 125.805213]
+            ],
+            'G1N': [], 'G1E': [], 'G1W': [], 'G1S': [],
+            'G3': [
+[7.234178, 125.638275], // Starting Grid Bunawan
+[7.043106, 125.592236], // Davao Coastal Road
+[6.758336, 125.374106], // McDo Petron Cogon Digos
+[6.583752, 125.353667], // Flying V Otsenta
+[6.414104, 125.610734], // Malita Municipal Plaza
+[5.962200, 125.677730], // Joyce Paradise
+[5.912361, 125.644716], // JAS Municipal Hall
+[5.917779, 125.261381], // TOUR Town Glan
+[6.112778, 125.171704], // Plaza Heneral Santos
+[6.060941, 124.495366], // Maitum Municipal Hall
+[6.201760, 124.201921], // Baywalk Palimbang
+[6.632881, 124.066264], // Lebak Roundball
+[7.202208, 124.165781], // Grand Mosque of Cotabato
+[7.693000, 123.898571], // Picung Tunnel
+[7.839766, 123.434328], // Rotunda Park Pagadian
+[7.782186, 122.586832], // Ipil Rotunda Obelisk
+[6.908028, 122.066590], // Zamboanga City Signage
+[6.907908, 122.067197], // Boyscout of the Philippines
+[7.149160, 121.906102], // Limpana TRUSS Bridge
+[7.262423, 122.010534], // Pangian Bridge
+[7.292146, 122.067158], // Sibuco Municipality
+[7.706414, 122.136040], // Siocon Rotonda Plaza
+[7.784736, 122.147530], // Baliguian Eadle Landmark
+[7.981155, 122.405122], // I Love Gutalac Landmard
+[8.121497, 122.673597], // Liloy Municipal Hall
+[8.515856, 123.091864], // Giant Chicken Statue
+[8.583686, 123.350568], // Dipolog Rotonda
+[8.636358, 123.414675], // Dapitan Park
+[8.667023, 123.417460], // Rizal Shrine
+[8.697983, 123.404497], // Taguilon Elementary School
+[8.705627, 123.399248], // Dakak National High School
+[8.703885, 123.385305], // DJ LAYLA BEACH
+[8.725497, 123.380482], // Tag-ulo Elementary School
+[8.726010, 123.382371], // EDU'S BEACH HUTS
+[8.681372, 123.448960], // SINONOK
+[8.642502, 123.485548], // SIBUTAD
+[8.616021, 123.529426], // Sebaca National High School
+[8.525773, 123.551382], // Rizal Municipal Plaza
+[8.619221, 123.713468], // Plaridel
+[8.486836, 123.807432], // I Love Oroquieta
+[8.055804, 123.777740], // Panguil Bay Bridge
+[8.242362, 124.249512], // Iligan City (711/Petron)
+[8.622755, 124.460243], // MV Beach & Pool Resort
+[8.559750, 124.527164], // El Salvador City Hall
+[8.547543, 124.527930], // Divine Mercy Statue
+[8.522764, 124.572130], // RMC PETROL OPOL BRANCH
+[8.512947, 124.615840], // Auto Profile Test Center
+[8.510747, 124.638775], // Korte Dos CDO
+[8.508023, 124.648509], // Bonbon Elementary School
+[8.479369, 124.675898], // Gusa coastal road
+[8.506642, 124.753727], // Bugo CDO Shell Gasoline Station
+[8.956178, 124.788208], // Sugbongcogon Municipal Hall
+[8.829911, 125.098814], // The Bay Gingoog
+[9.019331, 125.180553], // Magsaysay Munipal Park
+[9.085202, 125.213286], // Cervantina Elementary School
+[9.086882, 125.218741], // Vinapor Beach Park
+[9.056090, 125.225894], // San Agustin Centennial Tree
+[8.973806, 125.337639], // World War II Marker
+[8.988275, 125.341617], // Nasipit Plaza
+[8.991148, 125.350535], // PUNTA BRGY HALL
+[8.986018, 125.367907], // LARIOSA BEACH RESORT
+[8.980120, 125.401560], // SAN ANDREAS PLAZA
+[8.979585, 125.409088], // BUENAVISTA PLAZA
+[8.975347, 125.422105], // TINAGO ELEMENTARY SCHOOL
+[8.979040, 125.438647], // FORTEZZA DE PAULA
+[8.964625, 125.436117], // CABEZA DE BUENAVISTA
+[8.953270, 125.460493], // DAPHNIE STORE
+[8.983858, 125.462081], // San Juan
+[8.999450, 125.484315], // MAGELLAN LANDING
+[9.000770, 125.510265], // LUMBOCAN BRIDGE
+[9.003743, 125.522133], // TOWER OF WAWAY ILHI
+[8.978170, 125.524258], // PUROK LILOAN
+[8.968377, 125.534502], // BADING BRGY HALL
+[8.953070, 125.541688], // BLACK CAT
+[8.972087, 125.538525], // BANZA CHURCH RUIN
+[8.986092, 125.547510], // BANZA BRIDGE 2
+[8.980672, 125.607782], // COCA COLA WH 
+[9.119127, 125.538743], // Jollibee Cabadbaran
+[9.342503, 125.516115], // Jabonga People's Park
+[9.591765, 125.408315], // Hanagdong Project
+[9.820277, 125.438962], // Looc Landmark
+[9.823334, 125.440294], // Punta Bilar Lighthouse
+[9.788233, 125.498986], // I Love Surigao
+[9.734852, 125.564048], // Nabago Elementary School
+[9.571717, 125.732264], // Claver 711
+[9.491631, 125.883257], // Noventa View Deck
+[9.073816, 126.201001], // Tandag City Baywalk Boulevard
+[8.530122, 126.243860], // Gamut
+[8.512769, 126.383689], // Harip Beach
+[8.458943, 126.355000], // Enchanted River
+[8.366159, 126.336001], // Hinatuan Centro
+[8.380646, 126.311969], // Hinatuan Signage
+[7.789203, 126.450988], // Petron Cateel
+[7.651229, 126.556137], // Baganga Sunrise Boulevard
+[7.293932, 126.602529], // Pusan Point Caraga
+[7.209469, 126.537839], // WOW Manay Landmark
+[6.945694, 126.254798], // Dahican Rotunda
+[6.950450, 126.217086], // Mati Baywalk Park
+[6.653820, 126.072068], // 711/SeaOil Governor Generoso
+[6.540034, 126.100154], // Centennial Tree (dedo na :-(  )
+[6.270747, 126.192732], // Cape San Agustin
+[6.882409, 126.087062], // Manikling Rotonda
+[7.077718, 125.952056], // Davao Oriental Welcome Park
+[7.364908, 125.856480], // Diocesan Shrine of Our Mother of Pertual Help
+[7.439382, 125.826637], // Fe Misa Ayala Seniors Park
+[7.465994, 125.805252], // ELKAPITAN 's Burial Ground
+[7.374672, 125.750864], // Bugsay Landmark
+[7.287518, 125.692839], // Panabo City Seawall & Park
+[7.234178, 125.638275], // Finish Line Bunawan Grid
+            ],
+            'G4': [],
+            'G5': [
+[7.234178, 125.638275], // Starting Grid Bunawan
+[7.040916, 125.584024], // Davao City Coastal Road
+[6.757975, 125.374107], // McDo Cogon Digos
+[7.038376, 125.025967], // Esso Gasoline Station, Paco, Kidapawan
+[7.358184, 125.167098], // White Hills View, Sitio Dao Road, Arakan
+[7.474030, 125.243380], // Philippine Eagle Monument
+[7.540019, 125.243566], // Greek Hills
+[7.602510, 125.148410], // OverView Nature & Culture Park
+[7.735197, 125.095071], // 3J Gazz, Quezon, Bukidnon
+[7.892021, 125.064979], // Diversion Road Valencia
+[7.952894, 125.095289], // Valencia - Lantapan Road
+[8.053858, 124.831758], // Lantaw 360 Camp & Cafe
+[8.036833, 124.625100], // Junction Tikalaan (turn left)
+[7.831300, 124.828770], // 711 Pangantukan
+[7.615108, 125.006242], // Discovery Hotel Dangcagan
+[7.193296, 124.796704], // Buagas Machine Shop, Carmen
+[7.191313, 124.797071], // crash site atbang sa Special Village
+[6.880249, 124.900187], // Bagontapay Roundball
+[6.808242, 125.086638], // Tacul Elementary School
+[6.751019, 125.149747], // Magsaysay Municipality
+[6.705054, 125.212863], // Matanao, turn right to Savoy
+[6.678305, 124.960899], // Columbio Municipal Hall
+[6.635307, 124.597396], // Isulan Roundball
+[6.367918, 124.735379], // 711 Surallah
+[6.500383, 124.843535], // Marbel Roundball
+[6.224334, 125.075272], // BK's Kitchen @ Ondeng’s Food Park
+[6.145759, 125.133755], // Bangkapayapaan Monument
+[6.583764, 125.353571], // Flying V Otsenta Junction
+[6.414104, 125.610734], // Malita Municipal Plaza
+[5.962200, 125.677730], // Joyce Paradise
+[5.912509, 125.644337], // JAS Municipal Hall
+[5.917700, 125.261579], // TOUR Town Glan
+[5.861378, 124.996811], // Maasim Town Plaza
+[6.060887, 124.495351], // Maitum Municipal Hall
+[6.201696, 124.201763], // Baywalk Palimbang
+[6.555053, 124.050883], // Kalamansig Municipal
+[6.632939, 124.066297], // Lebak Municipal Portal / Lebak Roundball
+[7.202451, 124.165127], // The Grand Mosque of Cotabato
+[7.197065, 124.235096], // People's Palace Cotabato City
+[7.380779, 124.556281], // Alamada Municipal Hall
+[7.524320, 124.584420], // Tent City
+[7.638481, 124.725234], // WOWWAO
+[8.003098, 124.284901], // KM0 Warawi
+[7.693033, 123.898503], // Picong Tunnel
+[7.839864, 123.434373], // Pagadian Rotonda Park
+[7.782147, 122.586790], // Ipil Rotunda Obelisk
+[6.951386, 122.074372], // Pasonanca Park
+[6.908028, 122.066590], // Zamboanga City Signage
+[6.907928, 122.067276], // Historic BSP Monument
+[7.149160, 121.906102], // Limpana TRUSS Bridge
+[7.262423, 122.010534], // Pangian Bridge
+[7.292642, 122.066847], // Sibuco Municipal Hall
+[7.706209, 122.136089], // Siocon Municipal Hall
+[8.121752, 122.673582], // Liloy Municipal Hall
+[8.515870, 123.091685], // Manukan Town Hall
+[8.586338, 123.344346], // Dipolog City Hall
+[8.636386, 123.414642], // New Dapitan City Hall
+[8.667023, 123.417460], // Rizal Shrine
+[8.697970, 123.404489], // Taguilon Elementary School
+[8.705627, 123.399248], // Dakak National High School
+[8.703885, 123.385305], // DJ LAYLA BEACH
+[8.725497, 123.380482], // Tag-ulo Elementary School
+[8.726010, 123.382371], // EDU'S BEACH HUTS
+[8.681372, 123.448960], // SINONOK
+[8.642502, 123.485548], // SIBUTAD
+[8.616021, 123.529426], // Sebaca National High School
+[8.525773, 123.551382], // Rizal Municipal Plaza
+[8.619221, 123.713468], // Plaridel
+[8.486813, 123.807411], // I Love Oroquieta
+[8.161330, 123.692601], // Hoyohoy View Deeck
+[8.092450, 123.752925], // Petron Tangub
+[8.056907, 123.776702], // Panguil Bay Bridge
+[8.079720, 123.822110], // Dapit Alim Shrine
+[8.183230, 124.195060], // Maria Christina Falls
+[8.242362, 124.249512], // Iligan City (711/Petron)
+[8.559782, 124.527189], // El Salvador City Hall
+[8.547543, 124.527930], // Devine Mercy Statue
+[8.522764, 124.572130], // RMC PETROL OPOL BRANCH
+[8.462477, 124.512019], // Norminring Enduro Park
+[8.419576, 124.501775], // Bagocboc National High School
+[8.440801, 124.567362], // San Simon Health Center
+[8.467289, 124.572496], // Baikingon Elementary School
+[8.476335, 124.584173], // Hinaplanon - Baikingon Basketball Court
+[8.476989, 124.594067], // Juanne MBG
+[8.465644, 124.584664], // GRAM Convenience Store Pagatpat
+[8.447815, 124.581554], // VELOX ENERGY
+[8.440726, 124.568831], // San Simon - Pagatpat Bridge
+[8.434416, 124.577039], // Sunrise Café
+[8.425602, 124.578146], // Alluka Camp
+[8.402230, 124.574489], // Baluarte Elementary School
+[8.366191, 124.562363], // TAGPANGI NATIONAL HIGH SCHOOL
+[8.298796, 124.539236], // Dansoliwood Viewdeck Cafe
+[8.302357, 124.579218], // Bolao Cold Spring Signage
+[8.291495, 124.589563], // Bolo Store
+[8.313897, 124.601528], // Whitewater Rafting Entry Point
+[8.378834, 124.609830], // Macahambus Cave
+[8.421851, 124.630073], // Pelaez Bridge
+[8.420015, 124.643612], // Cagayan de Oro International Convention Center
+[8.422603, 124.657052], // Amaya View
+[8.469382, 124.658813], // Yuri’s Arts and Crafts
+[8.472889, 124.658958], // Camaman-an Elementary School
+[8.473826, 124.661747], // Camaman-an Barangay Hall
+[8.446794, 124.671924], // Macapaya Livelihood Center
+[8.439084, 124.676064], // Ministry Incorporated, kamakawan
+[8.466103, 124.677888], // CamHills - Home of Gecko Café
+[8.500744, 124.750530], // Shell CDO
+[8.269935, 125.010205], // Atugan Nature Farm
+[7.906204, 125.093416], // Valencia Jollibee
+[7.923732, 125.328019], // San Fernando Cabanglasan Junction
+[8.047990, 125.345370], // - Manggaod
+[8.090106, 125.323030], // - Iba
+[8.239780, 125.264200], // - Kulaman
+[8.281540, 125.253820], // - Busdi
+[8.330960, 125.233910], // - Bulonay
+[8.374600, 125.217810], // - Magawa
+[8.383908, 125.218041], // - Magawa Bridge
+[8.474800, 125.176200], // - Lamingan
+[8.528250, 125.182780], // - Mintapud
+[8.670290, 125.194680], // - Gingoog Butuan Fork (turn left to Gingoog) 
+[8.698250, 125.130460], // - Bal-ason
+[8.805800, 125.106702], // Kahulogan
+[8.632568, 124.945935], // Claveria View Deck
+[8.620750, 124.906145], // Municipal Hall of Claveria
+[8.713430, 124.755040], // Balingasag Light House
+[9.004003, 124.846691], // Balingoan
+[8.829911, 125.098814], // The Bay Gingoog
+[9.019331, 125.180553], // Magsaysay Munipal Park
+[9.087200, 125.218410], // Vin4 (Jurassic) Blue Waters
+[8.946042, 125.479494], // Bancasi Rotunda
+[8.661091, 125.653288], // Ezperanza Bridge
+[8.448912, 125.785710], // Talacogon
+[8.278558, 125.808135], // La Paz Signage
+[8.180950, 125.859692], // Petron Loreto
+[8.178921, 125.858775], // Loreto Municipal Hall
+[8.018794, 126.073568], // Trento Rotonda
+[8.504829, 125.977610], // Rotonda/711 San Francisco
+[8.714450, 125.748213], // Bayugan Park
+[9.119127, 125.538743], // Jollibee Cabadbaran
+[9.342503, 125.516115], // Jabonga People's Park
+[9.591765, 125.408315], // Hanagdong Project
+[9.820277, 125.438962], // Looc Landmark
+[9.823334, 125.440294], // Punta Bilar Lighthouse
+[9.788233, 125.498986], // I Love Surigao
+[9.734852, 125.564048], // Nabago Elementary School
+[9.571717, 125.732264], // Claver 711
+[9.491631, 125.883257], // Noventa View Deck
+[9.073743, 126.200968], // Tandag Boulevard
+[8.620166, 126.077450], // Lianga Signage
+[8.513123, 126.383396], // Harip Beach
+[8.458943, 126.355000], // Enchanted River
+[8.380646, 126.311969], // Hinatuan Signage
+[8.210837, 126.321910], // iLoveBislig
+[8.018840, 126.073666], // Cuevas
+[7.831372, 126.059323], // Monkayo
+[7.821760, 126.183069], // Mt. Diwata
+[7.873611, 126.341524], // Poblacion Boston
+[7.651215, 126.556115], // Baganga Sunrise
+[7.293984, 126.602389], // Pusan Point Caraga
+[7.209445, 126.537860], // WOW Manay Landmark
+[6.945694, 126.254798], // Dahican Rotunda
+[6.944460, 126.248400], // DavOr Provincial Museum
+[6.950450, 126.217086], // Mati Baywalk Park
+[6.734480, 126.140510], // Mt. Hamiguitan World Heritage Park
+[6.653820, 126.072068], // 711/SeaOil Governor Generoso
+[6.540034, 126.100154], // Centennial Tree General Generoso
+[6.270747, 126.192732], // Cape San Agustin
+[6.882409, 126.087062], // Manikling Rotonda
+[7.364908, 125.856480], // Diocesan Shrine of Our Mother of Pertual Help
+[7.509493, 125.917588], // 711 Mawab
+[7.401222, 126.028583], // Bilawa Mainit Falls
+[7.404034, 126.062532], // Tambo View Deck
+[7.316551, 126.128385], // Maragusan Landmark
+[7.458031, 126.171680], // Saddle Road
+[7.596791, 125.956960], // Nabunturan
+[7.708900, 125.990440], // Montevista Rotonda
+[7.842099, 125.979318], // Casoon National HighSchool
+[7.864261, 125.904098], // LS Sarmiento Bridge
+[7.873353, 125.847074], // Conception Elementary School
+[7.818599, 125.791564], // Laak Municipal Hall
+[7.538184, 125.754036], // w0w Assuncion
+[7.439382, 125.826637], // Fe Misa Ayala Seniors Park
+[7.465994, 125.805252], // ELKAPITAN 's Burial Ground 
+[7.456677, 125.783270], // DavNor Signage
+[7.439268, 125.774478], // Laureta Elementary School
+[7.374672, 125.750864], // Bugsay Landmark
+[7.287518, 125.692839], // Panabo City Seawall & Park
+[7.234178, 125.638275], // Finish Line Bunawan Grid
+            ],
+            'G7': [],
+            'G81': [
+[7.234178, 125.638275], // Starting Grid Bunawan
+[7.369694, 125.495930], // Paquibato
+[7.694253, 125.391602], // Kalagangan
+[8.162476026863812, 125.1264482318699], // Malaybalay Old City Hall
+[8.500050092666287, 124.75171786736837], // Gaisano Puerto
+[8.479369330292975, 124.67589891766735], // Gusa coastal road
+[8.493540164143488, 124.65530616674269], // Vhilma Store
+[8.50483885667173, 124.6223529158179], // Vjandep Pastel Of Camiguin
+[8.484613005473063, 124.6322686995159], // Country Village Hotel
+[8.48153051807185, 124.63789700047478], // Jollibee CDO Vamenta
+[8.477462896081738, 124.65140423116029], // Cogon Public Market
+[8.47154792111242, 124.67959868698166], // Orange Graphic Materials Inc
+[8.466103322769259, 124.67788837348888], // CamHills - Home of Gecko Café
+[8.439084303153654, 124.67606467182759], // Ministry Incorporated, kamakawan
+[8.44679446601835, 124.67192414650275], // Macapaya Livelihood Center
+[8.473826108703594, 124.66174720232449], // Camaman-an Barangay Hall
+[8.472889480974604, 124.65895889811341], // Camaman-an Elementary School
+[8.469382069125952, 124.65881391766722], // Yuri’s Arts and Crafts
+[8.42260358846943, 124.65705297533816], // Amaya View
+[8.422988975195501, 124.66693594465255], // Indahag Barangay Hall
+[8.420015300720904, 124.64361280362967], // Cagayan de Oro International Convention Center
+[8.462649132756695, 124.64784274388163], // High Ridge
+[8.472062915077508, 124.64904124465318], // Chesamz Halal Pater Station
+[8.472636932529266, 124.63533480232459], // CDO PET DOCTOR
+[8.438959405663303, 124.63205794465273], // Vermont Cafe & Resort
+[8.427881260331114, 124.62713903115981], // The Copeland
+[8.437616694986602, 124.61997638883128], // Gasa (By: VjANDEP) CDO Uptown Branch
+[8.472767532485914, 124.6054201734888], // Midway Seafooods Grill and Restaurant
+[8.504209289400547, 124.61571070232489], // Jollibee Bulua
+[8.504178998180944, 124.59334264650325], // Jollibee Igpit Opol
+[8.522764798737525, 124.57213087533921], // RMC PETROL OPOL BRANCH
+[8.462477123872217, 124.51201997348873], // Norminring Enduro Park
+[8.419576363300704, 124.50177591581689], // Bagocboc National High School
+[8.440801868330928, 124.56736230232421], // San Simon Health Center
+[8.467289205685644, 124.57249674650294], // Baikingon Elementary School
+[8.476335424481999, 124.5841730176673], // Hinaplanon - Baikingon Basketball Court
+[8.476989354341141, 124.59406700232459], // Juanne MBG
+[8.465644499027334, 124.58466497348884], // GRAM Convenience Store Pagatpat
+[8.447815904541871, 124.58155452942736], // VELOX ENERGY
+[8.44072669259823, 124.56883197348844], // San Simon - Pagatpat Bridge
+[8.434416249326205, 124.57703997023755], // Sunrise Café
+[8.425602574189174, 124.57814623115962], // Alluka Camp
+[8.402230883176971, 124.57448911766656], // Baluarte Elementary School
+[8.366191067653403, 124.56236328698056], // TAGPANGI NATIONAL HIGH SCHOOL
+[8.298796041362607, 124.5392363195072], // Dansoliwood Viewdeck Cafe
+[8.30235792291019, 124.57921808882969], // Bolao Cold Spring Signage
+[8.253015649624906, 124.5823347218878], // Sinulom Falls, de Oro, Tignapoloan
+[8.235811037914639, 124.41459604568648], // Rogongon Agricultural High School -Main
+[8.24921120191481, 124.31771808882914], // Digkilaan Barangay Hall
+[8.24481244146542, 124.2420881872921], // Paseo De Santiago
+[8.23124632143893, 124.23531060232168], // Cheding's Peanuts
+[8.190081441632168, 124.21030968281129], // Overton-Abaga-Suarez Cross Road
+[8.003162170347196, 124.28492834908444], // Kilometer Zero (KM 0.000) Point Marker Marawi
+[7.915381238154803, 124.20535338882566], // Balindong District Hospital
+[7.799302269757867, 124.08350091765998], // J & S HARDWARE
+[7.777131770696621, 124.22339259234379], // Lumbatan Municipal Hall
+[7.8730806617122235, 124.33356791885986], // BigBrew Tamparan
+[7.9965505224181, 124.29378197741252], // Marawi City Rizal Park
+[8.112239996753207, 124.22507941453324], // King's Bakeshop And Snack Inn, Baloi
+[8.164539613370478, 124.24308801581411], // Abuno-Tagoloan Boundary
+[8.206276757559902, 124.24790150047174], // The Pantry Iligan
+[8.229525385547781, 124.26228130232187], // FAT PAULY'S TAPROOM+PUB
+[8.240879051016503, 124.3853598806139], // D’Holy 3 Nature Park & Family Resort
+[8.14428828764266, 124.55242153794372], // Lantud Bridge
+[8.104837695382656, 124.57519474464914], // Mamaon Border Control Point .
+[7.766202840000784, 125.00770478882394], // JABLA store
+[7.730420, 125.100123], // Jollibee Quezon
+[7.215057, 125.474489], // Dacudao Covered Court
+[7.256492, 125.508631], // Callawa-Fatima Junction
+[7.209807, 125.545020], // Callawa Covered Court
+[7.219150, 125.619752], // Mahayag National High School
+[7.234178, 125.638275], // Finish Line Bunawan Grid
+            ],
+            'DO01': [
+                [7.122892, 125.898784], // Balutan sa Pantukan
+                [7.819049, 125.792328], // Laak Municipal Hall
+                [8.179796, 125.859822], // Loreto Municipal Hall
+                [8.450876, 125.812710], // Talacogon
+                [8.661107, 125.653210], // Esperanza Bridge
+                [9.532927, 125.563708], // Mainit, Surigao del Norte
+                [9.491509, 125.883278], // Carrascal, Surigao del Sur
+                [9.073799, 126.200954], // Tandag, Surigao del Sur
+                [8.456171, 126.351952], // Enchanted Kingdom
+                [8.380760, 126.311900], // Hinatuan, Surigaao del Sur
+                [7.740141, 126.301862], // Aliwagwag Falls, Cateel, Davao Oriental
+                [7.293468, 126.602136], // Pusan Point, Davao Oriental
+                [6.946602, 126.256034], // Mati, Davao Oriental
+                [6.270486, 126.192925], // Cape San Agustin, Governor Generoso, Davao Oriental
+                [7.122892, 125.898784], // Pantukan, Davao Oriental
+            ]
+        };
+
+        // ==========================================
+        // 🎨 ROUTE COLOR & LABEL MAPPER FUNCTION
+        // ==========================================
+        function getRouteDetails(code) {
+            switch(code) {
+                case 'AS26': return { label: 'AS26 (628 KM)', color: '#FF0000' };      
+                case 'G1N':  return { label: 'G1N (777 KM North)', color: '#cc0000' }; 
+                case 'G1E':  return { label: 'G1E (777 KM East)', color: '#e63946' };  
+                case 'G1W':  return { label: 'G1W (777 KM West)', color: '#d90429' };  
+                case 'G1S':  return { label: 'G1S (777 KM South)', color: '#b7094c' }; 
+                case 'G3':   return { label: 'G3 (3333 KM)', color: '#0066cc' };      
+                case 'G4':   return { label: 'G4 (400 KM)', color: '#2a9d8f' };       
+                case 'G5':   return { label: 'G5 (5555 KM)', color: '#7209b7' };      
+                case 'G7':   return { label: 'G7 (7777 KM)', color: '#f72585' };      
+                case 'G81':  return { label: 'G8 (888 KM)', color: '#B22222' };       
+                case 'DO01': return { label: 'DO01 (Mindanao Adventourally L3)', color: '#AB7200' }; 
+                default:     return { label: code ? code + ' KM' : 'Unknown', color: '#555555' };
+            }
+        }
+
+        // ==========================================
+        // 🗺️ ROUTE DRAWING LAYER & LOGIC (CHUNKED OSRM HYBRID)
+        // ==========================================
+        let activeRouteLayer = L.layerGroup().addTo(map);
+
+        async function drawRoutePath(routeCode) {
+            activeRouteLayer.clearLayers();
+
+            if (routeCode === 'ALL') {
+                map.setView([7.4474, 125.8093], 10);
+                return;
+            }
+
+            let coords = routeCoordinates[routeCode];
+            if (!coords || coords.length < 2) return;
+
+            let routeInfo = getRouteDetails(routeCode);
+            let pinColor = routeInfo.color;
+
+            if (routeCode === 'AS26') {
+                let highwayPart1 = coords.slice(0, 11);
+                let trailPart = coords.slice(10, 123);
+                let highwayPart2 = coords.slice(122);
+
+                await fetchAndDrawOSRM(highwayPart1, pinColor);
+
+                let directTrail = L.polyline(trailPart, {
+                    color: pinColor,
+                    weight: 3, 
+                    opacity: 0.9,
+                    dashArray: '8, 8' 
+                });
+                activeRouteLayer.addLayer(directTrail);
+
+                await fetchAndDrawOSRM(highwayPart2, pinColor);
+            } else {
+                await fetchAndDrawOSRM(coords, pinColor);
+            }
+
+            setTimeout(() => {
+                if (activeRouteLayer.getLayers().length > 0) {
+                    let group = new L.FeatureGroup(activeRouteLayer.getLayers());
+                    map.fitBounds(group.getBounds(), { padding: [50, 50] });
+                }
+            }, 500);
+        }
+
+        async function fetchAndDrawOSRM(coordArray, color) {
+            if (coordArray.length < 2) return;
+            
+            const chunkSize = 25;
+            for (let i = 0; i < coordArray.length; i += (chunkSize - 1)) {
+                let chunk = coordArray.slice(i, i + chunkSize);
+                if (chunk.length < 2) break;
+
+                let coordString = chunk.map(c => `${c[1]},${c[0]}`).join(';');
+                let osrmUrl = `https://router.project-osrm.org/route/v1/driving/${coordString}?overview=full&geometries=geojson`;
+
+                try {
+                    let response = await fetch(osrmUrl);
+                    let data = await response.json();
+
+                    if (data.routes && data.routes.length > 0) {
+                        let routeData = data.routes[0];
+                        let routeCoords = routeData.geometry.coordinates.map(c => [c[1], c[0]]); 
+
+                        let roadPolyline = L.polyline(routeCoords, {
+                            color: color, 
+                            weight: 2, 
+                            opacity: 0.85
+                        });
+                        activeRouteLayer.addLayer(roadPolyline);
+                    }
+                } catch (error) {
+                    console.error("Napakyas pagkuha sa OSRM route chunk:", error);
+                }
+            }
+        }
+
+        function setRouteFilter(routeType, btnElement) {
+            currentRouteFilter = routeType;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            if (btnElement) btnElement.classList.add('active');
+            drawRoutePath(routeType);
+            fetchLiveRiders();
+        }
+
+        // ==========================================
+        // 🔍 SEARCH & TRACK RIDER FEATURE
+        // ==========================================
+        function searchAndTrackRider() {
+            let query = document.getElementById('riderSearchInput').value.trim().toLowerCase();
+            if (!query) return;
+
+            let foundId = null;
+            for (let id in riderMarkers) {
+                let riderData = riderDict[id] || {};
+                let name = (riderData.fullname || riderData.name || "").toLowerCase();
+                if (id.toLowerCase() === query || name.includes(query)) {
+                    foundId = id;
+                    break;
+                }
+            }
+
+            if (foundId && riderMarkers[foundId]) {
+                let marker = riderMarkers[foundId];
+                markersCluster.zoomToShowLayer(marker, () => {
+                    marker.openPopup();
+                    trackedRiderId = foundId;
+                });
+            } else {
+                alert("Wala makit-an ang rider nga adunay ID o pangalan nga: " + query);
+            }
+        }
+
+        // ==========================================
+        // 📏 MATH & MOVEMENT CALCULATORS
+        // ==========================================
+        function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
+            const R = 6371000;
+            const dLat = (lat2 - lat1) * (Math.PI / 180);
+            const dLon = (lon2 - lon1) * (Math.PI / 180);
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * 
+                      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))); 
+        }
+
+        function getBearing(startLat, startLng, destLat, destLng) {
+            startLat = startLat * Math.PI / 180;
+            startLng = startLng * Math.PI / 180;
+            destLat = destLat * Math.PI / 180;
+            destLng = destLng * Math.PI / 180;
+            let y = Math.sin(destLng - startLng) * Math.cos(destLat);
+            let x = Math.cos(startLat) * Math.sin(destLat) -
+                    Math.sin(startLat) * Math.cos(destLat) * Math.cos(destLng - startLng);
+            return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360; 
+        }
+
+        
+        // ==========================================
+        // 📡 FETCH & SMOOTH UPDATE RIDERS LOCATION (TRACCAR LIVE_LOCATIONS TABLE)
+        // ==========================================
+        async function fetchLiveRiders() {
+            // Dili mo-fetch kung naka-lock pa ang modal
+            let modal = document.getElementById('passcodeModal');
+            if (modal && modal.style.display !== 'none') return;
+
+            // 🔄 GIALIAN: 'rider_locations' -> 'live_locations'
+            const { data, error } = await supabaseMapClient
+                .from('live_locations')
+                .select('*');
+
+            if (error) {
+                console.error("❌ Error pagkuha sa Traccar live locations:", error.message);
+                document.getElementById('connectionStatus').innerHTML = "🔴 Naay problema sa koneksyon";
+                return;
+            }
+
+            if (data) {
+                document.getElementById('connectionStatus').innerHTML = "🟢 Live Feed Active (Traccar)";
+                
+                let displayedCount = 0;
+                let movingCount = 0;
+                let standbyCount = 0;
+                let staleCount = 0;
+                let activeIdsThisFetch = new Set(); 
+                const activeMMC26Routes = ["G81", "G3", "G5"];
+
+                // 🛠️ DUPLICATE FILTER (Kuhuon lang ang pinakabag-o nga record matag rider_id)
+                let latestLocations = {};
+                data.sort((a, b) => new Date(a.updated_at || 0) - new Date(b.updated_at || 0));
+                data.forEach(row => {
+                    if (row.rider_id) {
+                        latestLocations[String(row.rider_id)] = row;
+                    }
+                });
+                let cleanData = Object.values(latestLocations);
+
+                cleanData.forEach(rider => {
+                    // 📌 Direct mapping gikan sa live_locations table columns
+                    const rider_id = String(rider.rider_id);
+                    let latitude = parseFloat(rider.latitude);
+                    let longitude = parseFloat(rider.longitude);
+                    const updated_at = rider.updated_at || new Date().toISOString();
+                    const rawSpeed = rider.speed ? parseFloat(rider.speed) : 0;
+                    const battery = rider.battery ? parseFloat(rider.battery) : null;
+
+                    if (!rider_id || isNaN(latitude) || isNaN(longitude)) return;
+
+                    let riderFullName = "Rider #" + rider_id;
+                    let riderRoute = "AS26"; 
+                    let isValidRider = false;
+                    
+                    let found = riderDict[rider_id];
+                    if (found) {
+                        riderFullName = found.fullname || found.name;
+                        riderRoute = found.route ? String(found.route) : (found.level ? String(found.level) : "AS26");
+                        isValidRider = true;
+                    }
+
+                    if (!isValidRider) return;
+
+                    // 🛑 ROUTE FILTERING LOGIC
+                    if (currentRouteFilter === 'ALL') {
+                        if (!activeMMC26Routes.includes(riderRoute.toUpperCase())) return;
+                    } else {
+                        if (riderRoute.toUpperCase() !== currentRouteFilter.toUpperCase()) return;
+                    }
+
+                    activeIdsThisFetch.add(rider_id); 
+                    displayedCount++;
+                    
+                    let latLng = [latitude, longitude];
+                    let updateDate = new Date(updated_at);
+                    let diffMinutes = (new Date() - updateDate) / (1000 * 60);
+                    if (diffMinutes > 720) return; 
+
+                    let isStale = diffMinutes > 15;
+                    if (isStale) staleCount++;
+
+                    let isMoving = false;
+                    let speedKph = Math.round(rawSpeed);
+                    let currentAngle = 0;
+                    const prev = window.riderHistory[rider_id];
+
+                    if (prev) {
+                        if (prev.updated_at !== updated_at) {
+                            const distanceMeters = getDistanceFromLatLonInMeters(prev.lat, prev.lon, latitude, longitude);
+                            const timeDiffHours = (new Date(updated_at).getTime() - new Date(prev.updated_at).getTime()) / (1000 * 60 * 60);
+
+                            if (distanceMeters >= 15) {
+                                let calcSpeed = timeDiffHours > 0 ? (distanceMeters / 1000) / timeDiffHours : 0;
+                                
+                                // TELEPORT PROTECTOR (>250 kph i-ignore)
+                                if (calcSpeed > 250) {
+                                    latitude = prev.lat;   
+                                    longitude = prev.lon;  
+                                } else {
+                                    prev.isMoving = true;
+                                    prev.angle = getBearing(prev.lat, prev.lon, latitude, longitude);
+                                    prev.speed = speedKph > 0 ? speedKph : Math.round(calcSpeed);
+                                    prev.lat = latitude;
+                                    prev.lon = longitude;
+                                }
+                            } else {
+                                prev.isMoving = false;
+                                prev.speed = 0;
+                            }
+                            prev.updated_at = updated_at;
+                        }
+                        isMoving = prev.isMoving || speedKph > 2;
+                        speedKph = prev.speed || speedKph;
+                        currentAngle = prev.angle || 0; 
+                    } else {
+                        isMoving = speedKph > 2;
+                        window.riderHistory[rider_id] = { 
+                            lat: latitude, 
+                            lon: longitude, 
+                            updated_at: updated_at, 
+                            isMoving: isMoving, 
+                            speed: speedKph, 
+                            angle: 0 
+                        };
+                    }
+                    
+                    if (!isStale) {
+                        if (isMoving) movingCount++;
+                        else standbyCount++;
+                    }
+
+                    let routeInfo = getRouteDetails(riderRoute);
+                    let routeBadgeColor = routeInfo.color;
+                    let routeLabel = routeInfo.label;
+                    let batteryDisplay = battery !== null ? ` | 🔋 ${battery}%` : '';
+
+                    let popupContent = `
+                        <div style="font-family:sans-serif; color:#000; font-size:13px; line-height: 1.5; min-width: 150px;">
+                            <b style="color:${routeBadgeColor}; font-size:15px;">${riderFullName}</b><br>
+                            <span style="font-size:11px; color:#555;">ID: #${rider_id} | Ruta: <b>${routeLabel}</b>${batteryDisplay}</span><br>
+                            ${isMoving ? `<b style="color: #0066cc; font-size:14px;">⚡ Speed: \${speedKph} KM/H</b>` : `<b style="color: #d90429; font-size:12px;">🛑 Standby</b>`}
+                        </div>
+                    `;
+
+                    let customIcon;
+                    if (isStale) {
+                        customIcon = L.divIcon({
+                            className: 'stale-rider-marker',
+                            html: `<div style="background-color: #555; color: #aaa; border: 2px solid #888; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; box-shadow: 0 0 5px rgba(0,0,0,0.8);">${rider_id.slice(-2)}</div>`,
+                            iconSize: [30, 30], iconAnchor: [15, 15]
+                        });
+                    } else if (isMoving) {
+                        let svgPath = `<path d="M12 2 L17 21 L12 17 L7 21 Z" fill="${routeBadgeColor}" stroke="#ffffff" stroke-width="1.8" stroke-linejoin="round"/>`;
+                        customIcon = L.divIcon({
+                            className: 'moving-rider-marker',
+                            html: `<div style="position: relative; width: 36px; height: 36px;">
+                                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transform: rotate(${currentAngle}deg); transform-origin: center; filter: drop-shadow(0px 2px 5px rgba(0,0,0,0.8));">
+                                        <svg viewBox="0 0 24 24" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">${svgPath}</svg>
+                                    </div>
+                                    <div style="position: absolute; top: 32px; left: 50%; transform: translateX(-50%); background-color: rgba(0,0,0,0.8); color: #ffffff; border: 1px solid ${routeBadgeColor}; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; white-space: nowrap;">${rider_id}</div>
+                                </div>`,
+                            iconSize: [36, 36], iconAnchor: [18, 18]
+                        });
+                    } else {
+                        customIcon = L.divIcon({
+                            className: 'static-rider-marker',
+                            html: `<div style="background-color: ${routeBadgeColor}; color: white; border: 2px solid #fff; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; box-shadow: 0 0 8px rgba(0,0,0,0.8);">${rider_id.slice(-2)}</div>`,
+                            iconSize: [30, 30], iconAnchor: [15, 15]
+                        });
+                    }
+
+                    if (riderMarkers[rider_id]) {
+                        riderMarkers[rider_id].setLatLng(latLng);
+                        riderMarkers[rider_id].setIcon(customIcon);
+                        if (riderMarkers[rider_id].isPopupOpen()) {
+                            riderMarkers[rider_id].getPopup().setContent(popupContent);
+                        } else {
+                            riderMarkers[rider_id].bindPopup(popupContent);
+                        }
+                    } else {
+                        let marker = L.marker(latLng, { icon: customIcon }).bindPopup(popupContent);
+                        
+                        marker.on('click', () => {
+                            trackedRiderId = rider_id;
+                        });
+
+                        markersCluster.addLayer(marker);
+                        riderMarkers[rider_id] = marker;
+                    }
+
+                    if (trackedRiderId === rider_id) {
+                        map.panTo(latLng, { animate: true, duration: 1.0 });
+                    }
+                });
+
+                Object.keys(riderMarkers).forEach(id => {
+                    if (!activeIdsThisFetch.has(id)) {
+                        markersCluster.removeLayer(riderMarkers[id]);
+                        delete riderMarkers[id];
+                        delete window.riderHistory[id]; 
+                    }
+                });
+
+                document.getElementById('movingCount').innerText = movingCount;
+                document.getElementById('standbyCount').innerText = standbyCount;
+                document.getElementById('staleCount').innerText = staleCount;
+                document.getElementById('activeCountBadge').innerText = `Total: ${displayedCount}`;
+            }
+        }
+
+
+        // ==========================================
+        // 🚀 START PROCESS (Auto Refresh 10s)
+        // ==========================================
+        setInterval(fetchLiveRiders, 10000); 
+
+        // ==========================================
+        // 💡 ANTI-SLEEP / SCREEN WAKE LOCK API
+        // ==========================================
+        async function keepScreenAwake() {
+            if ('wakeLock' in navigator) {
+                try { await navigator.wakeLock.request('screen'); } catch (err) {}
+            }
+        }
+        keepScreenAwake();
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') keepScreenAwake();
+        });
+    </script>
+</body>
+</html>
