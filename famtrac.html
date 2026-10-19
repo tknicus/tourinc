@@ -229,7 +229,6 @@
         // 📡 FETCH & UPDATE LOCATIONS (FAMILY TRACKER ONLY - TEXT IDs)
         // ==========================================
         async function fetchLiveRiders() {
-            // 1️⃣ GIALIAN: 'rider_locations' -> 'live_locations'
             const { data, error } = await supabaseMapClient
                 .from('live_locations')
                 .select('*');
@@ -254,21 +253,18 @@
 
                     if (!rider_id || isNaN(latitude) || isNaN(longitude)) return;
 
-                    // 2️⃣ 🛑 FILTER OUT NUMERIC RIDER IDs (e.g., "0001", "123")
-                    // Kung pulos numero ang ID, i-ignore kini kay para kana sa Rally Command Center
+                    // 🛑 1. SAKTONG REGEX FILTER (I-BLOCK ANG NUMERIC IDs TULAD SA "0001")
                     if (/^\d+\$/.test(rider_id)) return;
 
-                    let riderFullName = rider_id.toUpperCase(); // Default Display Name
+                    let riderFullName = rider_id.toUpperCase();
                     let riderRoute = "Balay"; 
                     
-                    // ⚡ Check sa familyDict gikan sa famdb.js kung naa ma-match
                     let found = familyDict[rider_id];
                     if (found) {
                         riderFullName = found.fullname || found.name;
                         if (found.route) riderRoute = String(found.route);
                     }
 
-                    // 🎛️ ROUTE FILTER LOGIC (Balay / Laag / ALL)
                     if (currentRouteFilter !== 'ALL' && riderRoute !== currentRouteFilter) {
                         return; 
                     }
@@ -279,11 +275,10 @@
                     let latLng = [latitude, longitude];
                     let updateDate = new Date(updated_at);
                     let diffMinutes = (new Date() - updateDate) / (1000 * 60);
-                    if (diffMinutes > 720) return; // Ignore kung labaw sa 12 hours nga offline
+                    if (diffMinutes > 720) return;
 
                     let isStale = diffMinutes > 15;
 
-                    // 🏍️ SPEED UG MOVEMENT CHECKER
                     let isMoving = false;
                     let speedKph = 0;
                     let currentAngle = 0; 
@@ -331,6 +326,7 @@
                     
                     let routeBadgeColor = riderRoute === "Laag" ? "#0066cc" : "#cc0000";
 
+                    // 🛑 2. SAKTONG TEMPLATE LITERAL (WALA'Y BACKSLASH SA SPEED)
                     let popupContent = `
                         <div style="font-family:sans-serif; color:#000; line-height: 1.4; text-align: center; min-width: 100px;">
                             <b style="color:${routeBadgeColor}; font-size:16px;">${riderFullName}</b><br>
@@ -405,6 +401,7 @@
                 document.getElementById('activeCountBadge').innerText = `Gipakita: ${displayedCount} Members`;
             }
         }
+
 
         fetchLiveRiders();
         setInterval(fetchLiveRiders, 5000);
