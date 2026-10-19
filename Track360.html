@@ -1118,7 +1118,7 @@ activeIdsThisFetch<body>
                     if (isStale) {
                         customIcon = L.divIcon({
                             className: 'stale-rider-marker',
-                            html: `<div style="background-color: #555; color: #aaa; border: 2px solid #888; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; box-shadow: 0 0 5px rgba(0,0,0,0.8);">${rider_id.slice(-2)}</div>`,
+                            html: `<div style="background-color: #555; color: #aaa; border: 2px solid #888; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; box-shadow: 0 0 5px rgba(0,0,0,0.8);">${rider_id}</div>`,
                             iconSize: [30, 30], iconAnchor: [15, 15]
                         });
                     } else if (isMoving) {
@@ -1136,7 +1136,7 @@ activeIdsThisFetch<body>
                     } else {
                         customIcon = L.divIcon({
                             className: 'static-rider-marker',
-                            html: `<div style="background-color: ${routeBadgeColor}; color: white; border: 2px solid #fff; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; box-shadow: 0 0 8px rgba(0,0,0,0.8);">${rider_id.slice(-2)}</div>`,
+                            html: `<div style="background-color: ${routeBadgeColor}; color: white; border: 2px solid #fff; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; box-shadow: 0 0 8px rgba(0,0,0,0.8);">${rider_id}</div>`,
                             iconSize: [30, 30], iconAnchor: [15, 15]
                         });
                     }
