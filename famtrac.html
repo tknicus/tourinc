@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Live Map</title>
+
+    <!-- 🎨 STYLES & LEAFLET MAP CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="icon" type="image/png" href="scan.png">
+    
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-color: #121212;
+            color: #f5f5f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: #1e1e1e;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid #cc0000;
+            height: 55px;
+            box-sizing: border-box;
+            flex-wrap: wrap;
+        }
+
+        h2 {
+            margin: 0;
+            color: #ffffff;
+            font-size: 16px;
+            font-style: italic;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* FILTER BUTTONS STYLING */
+        .filter-container {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .filter-btn {
+            background-color: #333;
+            color: white;
+            border: 1px solid #555;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .filter-btn:hover { background-color: #555; }
+        .filter-btn.active { background-color: #cc0000; border-color: #ff0000; }
+
+        .back-btn {
+            background-color: #444;
+            color: white;
+            padding: 6px 12px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 11px;
+            text-transform: uppercase;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            transition: 0.2s;
+        }
+        .back-btn:hover { background-color: #666; }
+
+        #map {
+            width: 100%;
+            height: calc(100vh - 95px);
+            background-color: #2b2b2b;
+        }
+
+        .status-bar {
+            background: #1e1e1e;
+            padding: 10px 20px;
+            font-size: 12px;
+            color: #ccc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #333;
+            height: 40px;
+            box-sizing: border-box;
+            font-weight: bold;
+        }
+
+        /* ========================================== */
+        /* 🪟 TRANSPARENT GLASS POP-UP BOX           */
+        /* ========================================== */
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+            background-color: rgba(255, 255, 255, 0.0) !important;
+            backdrop-filter: blur(2px) !important;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+            border-radius: 12px !important;
+        }
+        .leaflet-popup-content {
+            margin: 10px 12px !important;
+        }
+        .leaflet-container a.leaflet-popup-close-button {
+            color: #333 !important;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVIGATION HEADER WITH FILTERS -->
+    <header>
+        <h2>🛰️ German Family Live Map</h2>
+        
+        <div class="filter-container">
+            <span style="font-size: 11px; color: #aaa;">Filter Ruta:</span>
+            <button class="filter-btn active" onclick="setRouteFilter('ALL', this)">Tanan</button>
+            <button class="filter-btn" onclick="setRouteFilter('Balay', this)">Balay (Pula)</button>
+            <button class="filter-btn" onclick="setRouteFilter('Laag', this)">Laag (Asul)</button>
+        </div>
+
+        <a href="scan.html" class="back-btn">Balik sa Scanner</a>
+    </header>
+
+    <!-- MAP CONTAINER -->
+    <div id="map"></div>
+
+    <!-- STATUS FOOTER -->
+    <div class="status-bar">
+        <span id="connectionStatus">🟢 Nakakonekta sa Supabase Live Feed</span>
+        <span id="activeCountBadge" style="color: #ff9900;">Active Members: 0</span>
+    </div>
+
+    <!-- LEAFLET JS, SUPABASE JS UG FAMDB.JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="famdb.js"></script>
+    
+    <script>
+        // ==========================================
+        // 🗺️ MAP INITIALIZATION
+        // ==========================================
+        const map = L.map('map').setView([7.4474, 125.8093], 10);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // ==========================================
+        // 🔌 SUPABASE CONNECTION CONFIG
+        // ==========================================
+        const _supabaseUrl = 'https://iilfklquzyxmdergwawh.supabase.co';
+        const _supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpbGZrbHF1enl4bWRlcmd3YXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MTkzMDcsImV4cCI6MjEwMzI5NTMwN30.jMctz666CGfTdODLqNr24O3dQ5SDM6K5GkmihCtDdBQ';
+        
+        const supabaseMapClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
+
+        let currentRouteFilter = 'ALL';
+
+        function setRouteFilter(routeType, btnElement) {
+            currentRouteFilter = routeType;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btnElement.classList.add('active');
+            fetchLiveRiders();
+        }
+
+        // ==========================================
+        // 🚀 FAST LOOKUP DICTIONARY PARA SA PAMILYA
+        // ==========================================
+        const familyDict = {};
+        if (typeof familyDatabase !== 'undefined' && Array.isArray(familyDatabase)) {
+            familyDatabase.forEach(r => {
+                familyDict[String(r.idNum)] = r;
+            });
+        }
+        
+        // ==========================================
+        // 📏 HAVERSINE DISTANCE FORMULA (METERS)
+        // ==========================================
+        function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
+            const R = 6371000;
+            const dLat = (lat2 - lat1) * (Math.PI / 180);
+            const dLon = (lon2 - lon1) * (Math.PI / 180);
+            const a = 
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * 
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c; 
+        }
+
+        // ==========================================
+        // 🧭 BEARING (ANGLE) CALCULATOR
+        // ==========================================
+        function getBearing(startLat, startLng, destLat, destLng) {
+            startLat = startLat * Math.PI / 180;
+            startLng = startLng * Math.PI / 180;
+            destLat = destLat * Math.PI / 180;
+            destLng = destLng * Math.PI / 180;
+
+            let y = Math.sin(destLng - startLng) * Math.cos(destLat);
+            let x = Math.cos(startLat) * Math.sin(destLat) -
+                    Math.sin(startLat) * Math.cos(destLat) * Math.cos(destLng - startLng);
+            
+            let bearing = Math.atan2(y, x) * 180 / Math.PI;
+            return (bearing + 360) % 360; 
+        }
+
+        if (!window.riderHistory) window.riderHistory = {};
+        const riderMarkers = {}; // Ebidensya kinsay naa sa mapa
+
+        // 🎯 MGA VARIABLES PARA SA "FOLLOW MODE"
+        let trackedRiderId = null;
+
+        // ==========================================
+        // 📡 FETCH & UPDATE LOCATIONS (FAMILY TRACKER ONLY - TEXT IDs)
+        // ==========================================
+        async function fetchLiveRiders() {
+            // 1️⃣ GIALIAN: 'rider_locations' -> 'live_locations'
+            const { data, error } = await supabaseMapClient
+                .from('live_locations')
+                .select('*');
+
+            if (error) {
+                console.error("❌ Error pagkuha sa locations:", error.message);
+                document.getElementById('connectionStatus').innerHTML = "🔴 Naay problema sa koneksyon";
+                return;
+            }
+
+            if (data) {
+                document.getElementById('connectionStatus').innerHTML = "🟢 Live Feed Active";
+                
+                let displayedCount = 0;
+                let activeIdsThisFetch = new Set();
+
+                data.forEach(rider => {
+                    const rider_id = String(rider.rider_id || rider.riderId || rider.id).trim();
+                    const latitude = parseFloat(rider.latitude || rider.lat);
+                    const longitude = parseFloat(rider.longitude || rider.lon);
+                    const updated_at = rider.updated_at || rider.timestamp || new Date();
+
+                    if (!rider_id || isNaN(latitude) || isNaN(longitude)) return;
+
+                    // 2️⃣ 🛑 FILTER OUT NUMERIC RIDER IDs (e.g., "0001", "123")
+                    // Kung pulos numero ang ID, i-ignore kini kay para kana sa Rally Command Center
+                    if (/^\d+\$/.test(rider_id)) return;
+
+                    let riderFullName = rider_id.toUpperCase(); // Default Display Name
+                    let riderRoute = "Balay"; 
+                    
+                    // ⚡ Check sa familyDict gikan sa famdb.js kung naa ma-match
+                    let found = familyDict[rider_id];
+                    if (found) {
+                        riderFullName = found.fullname || found.name;
+                        if (found.route) riderRoute = String(found.route);
+                    }
+
+                    // 🎛️ ROUTE FILTER LOGIC (Balay / Laag / ALL)
+                    if (currentRouteFilter !== 'ALL' && riderRoute !== currentRouteFilter) {
+                        return; 
+                    }
+
+                    activeIdsThisFetch.add(rider_id);
+                    displayedCount++;
+                    
+                    let latLng = [latitude, longitude];
+                    let updateDate = new Date(updated_at);
+                    let diffMinutes = (new Date() - updateDate) / (1000 * 60);
+                    if (diffMinutes > 720) return; // Ignore kung labaw sa 12 hours nga offline
+
+                    let isStale = diffMinutes > 15;
+
+                    // 🏍️ SPEED UG MOVEMENT CHECKER
+                    let isMoving = false;
+                    let speedKph = 0;
+                    let currentAngle = 0; 
+                    const prev = window.riderHistory[rider_id];
+
+                    if (prev) {
+                        if (prev.updated_at !== updated_at) {
+                            const distanceMeters = getDistanceFromLatLonInMeters(prev.lat, prev.lon, latitude, longitude);
+                            const timeDiffMs = new Date(updated_at).getTime() - new Date(prev.updated_at).getTime();
+                            const timeDiffHours = timeDiffMs / (1000 * 60 * 60);
+
+                            if (distanceMeters >= 15) {
+                                prev.isMoving = true;
+                                prev.angle = getBearing(prev.lat, prev.lon, latitude, longitude);
+
+                                let actualSpeed = rider.speed !== undefined ? parseFloat(rider.speed) : (rider.vel !== undefined ? parseFloat(rider.vel) : 0);
+                                
+                                if (actualSpeed === 0 && timeDiffHours > 0) {
+                                    let calcSpeed = (distanceMeters / 1000) / timeDiffHours;
+                                    actualSpeed = calcSpeed < 300 ? calcSpeed : 0; 
+                                }
+                                
+                                prev.speed = Math.round(actualSpeed);
+                                prev.lat = latitude;
+                                prev.lon = longitude;
+                            } else {
+                                prev.isMoving = false;
+                                prev.speed = 0;
+                            }
+                            prev.updated_at = updated_at;
+                        }
+                        isMoving = prev.isMoving;
+                        speedKph = prev.speed || 0;
+                        currentAngle = prev.angle || 0; 
+                    } else {
+                        window.riderHistory[rider_id] = { 
+                            lat: latitude, 
+                            lon: longitude, 
+                            updated_at: updated_at,
+                            isMoving: false,
+                            speed: 0,
+                            angle: 0
+                        };
+                    }
+                    
+                    let routeBadgeColor = riderRoute === "Laag" ? "#0066cc" : "#cc0000";
+
+                    let popupContent = `
+                        <div style="font-family:sans-serif; color:#000; line-height: 1.4; text-align: center; min-width: 100px;">
+                            <b style="color:${routeBadgeColor}; font-size:16px;">${riderFullName}</b><br>
+                            ${isMoving ? `<b style="color: #0066cc; font-size:15px;">⚡ \${speedKph} km/h</b>` : `<b style="color: #d90429; font-size:12px;">🛑 Standby</b>`}
+                        </div>
+                    `;
+
+                    let customIcon;
+                    if (isStale) {
+                        customIcon = L.divIcon({
+                            className: 'stale-marker',
+                            html: `<div style="background-color: #555; color: #aaa; border: 2px solid #888; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; box-shadow: 0 0 5px rgba(0,0,0,0.8);">${rider_id}</div>`,
+                            iconSize: [30, 30], iconAnchor: [15, 15]
+                        });
+                    } else if (isMoving) {
+                        let svgPath = "";
+                        if (speedKph > 15) {
+                            svgPath = `<path d="M12 2 L17 21 L12 17 L7 21 Z" fill="${routeBadgeColor}" stroke="#ffffff" stroke-width="1.8" stroke-linejoin="round"/>`;
+                        } else if (speedKph > 5) {
+                            svgPath = `<g transform="rotate(-90 12 12)"><path d="M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9L7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C14.8 12 16.8 13 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l1.8-.7" fill="${routeBadgeColor}" stroke="#ffffff" stroke-width="0.5"/></g>`;
+                        } else {
+                            svgPath = `<ellipse cx="9.5" cy="15" rx="2.5" ry="4.5" fill="${routeBadgeColor}" stroke="#ffffff" stroke-width="1" transform="rotate(-15 9.5 15)"/><circle cx="9.5" cy="8.5" r="1.5" fill="${routeBadgeColor}" stroke="#ffffff" stroke-width="1"/><ellipse cx="14.5" cy="11" rx="2.5" ry="4.5" fill="${routeBadgeColor}" stroke="#ffffff" stroke-width="1" transform="rotate(15 14.5 11)"/><circle cx="14.5" cy="4.5" r="1.5" fill="${routeBadgeColor}" stroke="#ffffff" stroke-width="1"/>`;
+                        }
+
+                        customIcon = L.divIcon({
+                            className: 'moving-rider-marker',
+                            html: `<div style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; transform: rotate(${currentAngle}deg); transform-origin: center; filter: drop-shadow(0px 2px 5px rgba(0,0,0,0.8));">
+                                        <svg viewBox="0 0 24 24" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">${svgPath}</svg>
+                                    </div>`,
+                            iconSize: [36, 36], iconAnchor: [18, 18]
+                        });
+                    } else {
+                        customIcon = L.divIcon({
+                            className: 'static-marker',
+                            html: `<div style="background-color: ${routeBadgeColor}; color: white; border: 2px solid #fff; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; box-shadow: 0 0 8px rgba(0,0,0,0.8);">${rider_id}</div>`,
+                            iconSize: [30, 30], iconAnchor: [15, 15]
+                        });
+                    }
+
+                    if (riderMarkers[rider_id]) {
+                        riderMarkers[rider_id].setLatLng(latLng);
+                        riderMarkers[rider_id].setIcon(customIcon);
+                        if (riderMarkers[rider_id].isPopupOpen()) {
+                            riderMarkers[rider_id].getPopup().setContent(popupContent);
+                        } else {
+                            riderMarkers[rider_id].bindPopup(popupContent);
+                        }
+                    } else {
+                        let marker = L.marker(latLng, { icon: customIcon }).addTo(map).bindPopup(popupContent);
+                        marker.on('click', () => {
+                            trackedRiderId = rider_id;
+                            map.panTo(latLng, { animate: true, duration: 0.5 });
+                        });
+                        marker.on('popupclose', () => {
+                            if (trackedRiderId === rider_id) trackedRiderId = null;
+                        });
+                        riderMarkers[rider_id] = marker;
+                    }
+
+                    if (trackedRiderId === rider_id) {
+                        map.panTo(latLng, { animate: true, duration: 1.0 });
+                    }
+                });
+
+                Object.keys(riderMarkers).forEach(id => {
+                    if (!activeIdsThisFetch.has(id)) {
+                        map.removeLayer(riderMarkers[id]);
+                        delete riderMarkers[id];
+                    }
+                });
+
+                document.getElementById('activeCountBadge').innerText = `Gipakita: ${displayedCount} Members`;
+            }
+        }
+
+        fetchLiveRiders();
+        setInterval(fetchLiveRiders, 5000);
+
+        // 3️⃣ GIALIAN BENCHMARK SA SUPABASE REALTIME CHANNEL
+        supabaseMapClient
+            .channel('public:live_locations')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'live_locations' }, payload => {
+                fetchLiveRiders();
+            })
+            .subscribe();
+        
+        // ==========================================
+        // 💡 ANTI-SLEEP / SCREEN WAKE LOCK API
+        // ==========================================
+        let wakeLock = null;
+
+        async function keepScreenAwake() {
+            if ('wakeLock' in navigator) {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                } catch (err) {
+                    console.error("❌ Wake Lock error:", err.message);
+                }
+            }
+        }
+
+        keepScreenAwake();
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                keepScreenAwake();
+            }
+        });
+
+    </script>
+</body>
+</html>
