@@ -513,6 +513,49 @@
                 picBtn.disabled = false;
             });
         }
+
+        // ✅ ITO ANG TAMA AT GUMAGANANG FUNCTION PARA SA SAVE EVALUATION
+        async function saveEvaluation(recordId) {
+            const statElement = document.getElementById(`stat-${recordId}`);
+            const remElement = document.getElementById(`rem-${recordId}`);
+            const trElement = document.getElementById(`row-${recordId}`);
+            
+            if (!statElement || !remElement) return;
+
+            const newStatus = statElement.value;
+            const newRemark = remElement.value;
+
+            // Temporarily disable controls habang nag-sa-save
+            statElement.disabled = true;
+            remElement.disabled = true;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('rally_scans') // ✅ Sakto nga table name
+                    .update({ 
+                        status: newStatus,       // ✅ Column sa Supabase para sa Valid/Invalid/Pending
+                        eval_remarks: newRemark  // ✅ Column sa Supabase para sa Admin Remarks
+                    })
+                    .eq('id', recordId);
+
+                if (error) throw error;
+
+                // I-update ang kulay sa table row UI
+                if (trElement) trElement.className = `row-${newStatus}`;
+                statElement.className = `status-dropdown status-${newStatus}`;
+                
+                showToast();
+
+            } catch (err) {
+                console.error("Save Evaluation Error:", err);
+                alert("❌ Wala na-save sa Database! Error: " + err.message);
+            } finally {
+                statElement.disabled = false;
+                remElement.disabled = false;
+            }
+        }
+
+        
     </script>
 </body>
 </html>
