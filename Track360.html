@@ -962,47 +962,51 @@ activeIdsThisFetch<body>
 
         
         // ==========================================
-        // 📡 FETCH & SMOOTH UPDATE RIDERS LOCATION (TRACCAR LIVE_LOCATIONS TABLE)
+        // 🚀 FAST LOOKUP DICTIONARY PARA SA RIDERS
+        // ==========================================
+        const riderDict = {};
+        if (typeof riderDatabase !== 'undefined' && Array.isArray(riderDatabase)) {
+            riderDatabase.forEach(r => {
+                riderDict[String(r.idNum).trim()] = r;
+            });
+        }
+
+        // ==========================================
+        // 📡 FETCH & LIVE UPDATE RIDERS ONLY
         // ==========================================
         async function fetchLiveRiders() {
-            // Dili mo-fetch kung naka-lock pa ang modal
-            let modal = document.getElementById('passcodeModal');
-            if (modal && modal.style.display !== 'none') return;
-
-            // 🔄 GIALIAN: 'rider_locations' -> 'live_locations'
+            // Kuhaon ang live coordinates gikan sa Supabase 'live_locations'
             const { data, error } = await supabaseMapClient
                 .from('live_locations')
                 .select('*');
 
             if (error) {
-                console.error("❌ Error pagkuha sa Traccar live locations:", error.message);
+                console.error("❌ Error pagkuha sa rider locations:", error.message);
                 document.getElementById('connectionStatus').innerHTML = "🔴 Naay problema sa koneksyon";
                 return;
             }
 
             if (data) {
-                document.getElementById('connectionStatus').innerHTML = "🟢 Live Feed Active (Traccar)";
+                document.getElementById('connectionStatus').innerHTML = "🟢 Live Feed Active (Rally Grid)";
                 
                 let displayedCount = 0;
                 let movingCount = 0;
                 let standbyCount = 0;
                 let staleCount = 0;
-                let activeIdsThisFetch = new Set(); 
-                const activeMMC26Routes = ["G81", "G3", "G5"];
+                let activeIdsThisFetch = new Set();
 
-                // 🛠️ DUPLICATE FILTER (Kuhuon lang ang pinakabag-o nga record matag rider_id)
+                // 🛠️ FILTER DUPLICATES: KUHAON LANG ANG LATEST RECORD MATAG RIDER_ID
                 let latestLocations = {};
                 data.sort((a, b) => new Date(a.updated_at || 0) - new Date(b.updated_at || 0));
                 data.forEach(row => {
                     if (row.rider_id) {
-                        latestLocations[String(row.rider_id)] = row;
+                        latestLocations[String(row.rider_id).trim()] = row;
                     }
                 });
                 let cleanData = Object.values(latestLocations);
 
                 cleanData.forEach(rider => {
-                    // 📌 Direct mapping gikan sa live_locations table columns
-                    const rider_id = String(rider.rider_id);
+                    const rider_id = String(rider.rider_id || '').trim();
                     let latitude = parseFloat(rider.latitude);
                     let longitude = parseFloat(rider.longitude);
                     const updated_at = rider.updated_at || new Date().toISOString();
@@ -1011,24 +1015,19 @@ activeIdsThisFetch<body>
 
                     if (!rider_id || isNaN(latitude) || isNaN(longitude)) return;
 
-                    let riderFullName = "Rider #" + rider_id;
-                    let riderRoute = "AS26"; 
-                    let isValidRider = false;
-                    
+                    // 🛑 1. STRICT RIDER CHECK:
+                    // Kung WALA ang ID sa riderDatabase (database.js), MATIC I-DROP! (Bypass family IDs)
                     let found = riderDict[rider_id];
-                    if (found) {
-                        riderFullName = found.fullname || found.name;
-                        riderRoute = found.route ? String(found.route) : (found.level ? String(found.level) : "AS26");
-                        isValidRider = true;
-                    }
+                    if (!found) return;
 
-                    if (!isValidRider) return;
+                    // Kuhaon ang profile data sa Rider
+                    let riderFullName = found.fullname || found.nickname || ("Rider #" + rider_id);
+                    let riderRoute = found.level ? String(found.level).toUpperCase() : "AS26";
+                    let riderVehicle = found.vehicle || "Motorcycle";
 
-                    // 🛑 ROUTE FILTERING LOGIC
-                    if (currentRouteFilter === 'ALL') {
-                        if (!activeMMC26Routes.includes(riderRoute.toUpperCase())) return;
-                    } else {
-                        if (riderRoute.toUpperCase() !== currentRouteFilter.toUpperCase()) return;
+                    // 🎛️ 2. ROUTE FILTER LOGIC (G81, G3, G5, AS26, DO01, etc.)
+                    if (currentRouteFilter !== 'ALL') {
+                        if (riderRoute !== currentRouteFilter.toUpperCase()) return;
                     }
 
                     activeIdsThisFetch.add(rider_id); 
@@ -1037,11 +1036,14 @@ activeIdsThisFetch<body>
                     let latLng = [latitude, longitude];
                     let updateDate = new Date(updated_at);
                     let diffMinutes = (new Date() - updateDate) / (1000 * 60);
+                    
+                    // Kung labaw sa 12 hours nga offline, ayaw na ipakita sa active map
                     if (diffMinutes > 720) return; 
 
                     let isStale = diffMinutes > 15;
                     if (isStale) staleCount++;
 
+                    // 🏍️ SPEED UG MOVEMENT TRACKER LOGIC
                     let isMoving = false;
                     let speedKph = Math.round(rawSpeed);
                     let currentAngle = 0;
@@ -1055,7 +1057,6 @@ activeIdsThisFetch<body>
                             if (distanceMeters >= 15) {
                                 let calcSpeed = timeDiffHours > 0 ? (distanceMeters / 1000) / timeDiffHours : 0;
                                 
-                                // TELEPORT PROTECTOR (>250 kph i-ignore)
                                 if (calcSpeed > 250) {
                                     latitude = prev.lat;   
                                     longitude = prev.lon;  
@@ -1092,16 +1093,22 @@ activeIdsThisFetch<body>
                         else standbyCount++;
                     }
 
-                    let routeInfo = getRouteDetails(riderRoute);
-                    let routeBadgeColor = routeInfo.color;
-                    let routeLabel = routeInfo.label;
+                    // Route color identification
+                    let routeBadgeColor = "#cc0000"; // Default Red
+                    if (riderRoute === "G3") routeBadgeColor = "#0066cc";
+                    else if (riderRoute === "G5") routeBadgeColor = "#2a9d8f";
+                    else if (riderRoute === "G81") routeBadgeColor = "#e76f51";
+                    else if (riderRoute === "DO01") routeBadgeColor = "#9c27b0";
+
                     let batteryDisplay = battery !== null ? ` | 🔋 ${battery}%` : '';
 
+                    // POPUP BOX INFO FOR RIDERS
                     let popupContent = `
-                        <div style="font-family:sans-serif; color:#000; font-size:13px; line-height: 1.5; min-width: 150px;">
-                            <b style="color:${routeBadgeColor}; font-size:15px;">${riderFullName}</b><br>
-                            <span style="font-size:11px; color:#555;">ID: #${rider_id} | Ruta: <b>${routeLabel}</b>${batteryDisplay}</span><br>
-                            ${isMoving ? `<b style="color: #0066cc; font-size:14px;">⚡ Speed: \${speedKph} KM/H</b>` : `<b style="color: #d90429; font-size:12px;">🛑 Standby</b>`}
+                        <div style="font-family:sans-serif; color:#000; font-size:13px; line-height: 1.4; min-width: 160px;">
+                            <b style="color:${routeBadgeColor}; font-size:15px;">#${rider_id} - ${riderFullName}</b><br>
+                            <span style="font-size:11px; color:#444;">Ruta: <b>${riderRoute}</b> | Unit: <b>${riderVehicle}</b>${batteryDisplay}</span><br>
+                            <hr style="margin:4px 0; border:0; border-top:1px solid #ccc;">
+                            ${isMoving ? `<b style="color: #0066cc; font-size:14px;">⚡ Speed: \${speedKph} KM/H</b>` : `<b style="color: #d90429; font-size:12px;">🛑 Standby / Parked</b>`}
                         </div>
                     `;
 
@@ -1109,8 +1116,8 @@ activeIdsThisFetch<body>
                     if (isStale) {
                         customIcon = L.divIcon({
                             className: 'stale-rider-marker',
-                            html: `<div style="background-color: #555; color: #aaa; border: 2px solid #888; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; box-shadow: 0 0 5px rgba(0,0,0,0.8);">${rider_id.slice(-2)}</div>`,
-                            iconSize: [30, 30], iconAnchor: [15, 15]
+                            html: `<div style="background-color: #555; color: #aaa; border: 2px solid #888; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; box-shadow: 0 0 5px rgba(0,0,0,0.8);">${rider_id}</div>`,
+                            iconSize: [32, 32], iconAnchor: [16, 16]
                         });
                     } else if (isMoving) {
                         let svgPath = `<path d="M12 2 L17 21 L12 17 L7 21 Z" fill="${routeBadgeColor}" stroke="#ffffff" stroke-width="1.8" stroke-linejoin="round"/>`;
@@ -1120,15 +1127,15 @@ activeIdsThisFetch<body>
                                     <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transform: rotate(${currentAngle}deg); transform-origin: center; filter: drop-shadow(0px 2px 5px rgba(0,0,0,0.8));">
                                         <svg viewBox="0 0 24 24" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">${svgPath}</svg>
                                     </div>
-                                    <div style="position: absolute; top: 32px; left: 50%; transform: translateX(-50%); background-color: rgba(0,0,0,0.8); color: #ffffff; border: 1px solid ${routeBadgeColor}; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; white-space: nowrap;">${rider_id}</div>
+                                    <div style="position: absolute; top: 32px; left: 50%; transform: translateX(-50%); background-color: rgba(0,0,0,0.85); color: #ffffff; border: 1px solid ${routeBadgeColor}; padding: 1px 5px; border-radius: 3px; font-size: 10px; font-weight: bold; white-space: nowrap;">${rider_id}</div>
                                 </div>`,
                             iconSize: [36, 36], iconAnchor: [18, 18]
                         });
                     } else {
                         customIcon = L.divIcon({
                             className: 'static-rider-marker',
-                            html: `<div style="background-color: ${routeBadgeColor}; color: white; border: 2px solid #fff; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; box-shadow: 0 0 8px rgba(0,0,0,0.8);">${rider_id.slice(-2)}</div>`,
-                            iconSize: [30, 30], iconAnchor: [15, 15]
+                            html: `<div style="background-color: ${routeBadgeColor}; color: white; border: 2px solid #fff; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; box-shadow: 0 0 8px rgba(0,0,0,0.8);">${rider_id}</div>`,
+                            iconSize: [32, 32], iconAnchor: [16, 16]
                         });
                     }
 
@@ -1142,12 +1149,13 @@ activeIdsThisFetch<body>
                         }
                     } else {
                         let marker = L.marker(latLng, { icon: customIcon }).bindPopup(popupContent);
-                        
-                        marker.on('click', () => {
-                            trackedRiderId = rider_id;
-                        });
+                        marker.on('click', () => { trackedRiderId = rider_id; });
 
-                        markersCluster.addLayer(marker);
+                        if (typeof markersCluster !== 'undefined') {
+                            markersCluster.addLayer(marker);
+                        } else {
+                            marker.addTo(map);
+                        }
                         riderMarkers[rider_id] = marker;
                     }
 
@@ -1156,18 +1164,23 @@ activeIdsThisFetch<body>
                     }
                 });
 
+                // 🧹 REMOVE UNMATCHED OR REMOVED RIDERS FROM MAP
                 Object.keys(riderMarkers).forEach(id => {
                     if (!activeIdsThisFetch.has(id)) {
-                        markersCluster.removeLayer(riderMarkers[id]);
+                        if (typeof markersCluster !== 'undefined') {
+                            markersCluster.removeLayer(riderMarkers[id]);
+                        } else {
+                            map.removeLayer(riderMarkers[id]);
+                        }
                         delete riderMarkers[id];
                         delete window.riderHistory[id]; 
                     }
                 });
 
-                document.getElementById('movingCount').innerText = movingCount;
-                document.getElementById('standbyCount').innerText = standbyCount;
-                document.getElementById('staleCount').innerText = staleCount;
-                document.getElementById('activeCountBadge').innerText = `Total: ${displayedCount}`;
+                if (document.getElementById('movingCount')) document.getElementById('movingCount').innerText = movingCount;
+                if (document.getElementById('standbyCount')) document.getElementById('standbyCount').innerText = standbyCount;
+                if (document.getElementById('staleCount')) document.getElementById('staleCount').innerText = staleCount;
+                if (document.getElementById('activeCountBadge')) document.getElementById('activeCountBadge').innerText = `Riders Active: ${displayedCount}`;
             }
         }
 
