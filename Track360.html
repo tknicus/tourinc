@@ -902,9 +902,11 @@ activeIdsThisFetch<body>
 
         function setRouteFilter(routeType, btnElement) {
             currentRouteFilter = routeType;
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+ 
+            // Clean active states sa buttons
+            document.querySelectorAll('.filter-btn, button').forEach(b => b.classList.remove('active'));
             if (btnElement) btnElement.classList.add('active');
-            drawRoutePath(routeType);
+
             fetchLiveRiders();
         }
 
@@ -1025,9 +1027,17 @@ activeIdsThisFetch<body>
                     let riderRoute = found.level ? String(found.level).toUpperCase() : "AS26";
                     let riderVehicle = found.vehicle || "Motorcycle";
 
-                    // 🎛️ 2. ROUTE FILTER LOGIC (G81, G3, G5, AS26, DO01, etc.)
-                    if (currentRouteFilter !== 'ALL') {
-                        if (riderRoute !== currentRouteFilter.toUpperCase()) return;
+                    // 🎛️ ROUTE FILTER LOGIC (ACCEPT BOTH 'ALL' AND 'TANAN')
+                    if (currentRouteFilter !== 'ALL' && currentRouteFilter !== 'TANAN') {
+                        let targetFilter = currentRouteFilter;
+
+                        // Normalization para sa mga button code labels
+                        if (targetFilter === '0888') targetFilter = 'G81';
+                        if (targetFilter === '3333') targetFilter = 'G3';
+                        if (targetFilter === '5555') targetFilter = 'G5';
+
+                        // Kung dili mag-match sa napili nga ruta, i-filter out
+                        if (riderRoute.toUpperCase() !== targetFilter) return;
                     }
 
                     activeIdsThisFetch.add(rider_id); 
