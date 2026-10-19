@@ -254,14 +254,16 @@ activeIdsThisFetch<body>
 
                 let filterBtns = document.querySelectorAll('.filter-btn');
 
-                // 1️⃣ ADMIN: Makita tanang route filter buttons
+                // 1️⃣ ADMIN
                 if (isAdminUser) {
+                    currentUserRole = 'ADMIN'; // 👈 I-set sa ADMIN
                     filterBtns.forEach(btn => btn.style.display = "inline-block");
                     let allBtn = Array.from(filterBtns).find(b => b.getAttribute('data-route') === 'ALL');
                     setRouteFilter('ALL', allBtn || filterBtns[0]);
                 } 
-                // 2️⃣ MARSHAL: MMC '26 routes lang (ALL, G81, G3, G5)
+                // 2️⃣ MARSHAL
                 else if (isMarshalUser) {
+                    currentUserRole = 'MARSHAL'; // 👈 I-set sa MARSHAL
                     const marshalRoutes = ["ALL", "G81", "G3", "G5"];
                     filterBtns.forEach(btn => {
                         let r = btn.getAttribute('data-route');
@@ -271,8 +273,9 @@ activeIdsThisFetch<body>
                     let allBtn = Array.from(filterBtns).find(b => b.getAttribute('data-route') === 'ALL');
                     setRouteFilter('ALL', allBtn || filterBtns[0]);
                 } 
-                // 3️⃣ REGULAR USER / EVENT ADMIN: Iya ra nga route
+                // 3️⃣ REGULAR USER
                 else {
+                    currentUserRole = 'REGULAR'; // 👈 I-set sa REGULAR
                     let userLevel = (foundUser.level || "").toUpperCase();
                     let targetBtn = null;
 
@@ -289,7 +292,6 @@ activeIdsThisFetch<body>
                     if (targetBtn) {
                         setRouteFilter(userLevel, targetBtn);
                     } else {
-                        // Kung wala sa static buttons, i-load gihapon iyang route
                         currentRouteFilter = userLevel;
                         drawRoutePath(userLevel);
                         fetchLiveRiders();
@@ -348,6 +350,7 @@ activeIdsThisFetch<body>
         // 🚀 GLOBAL VARIABLES & DICTIONARY
         // ==========================================
         let currentRouteFilter = 'ALL';
+        let currentUserRole = 'REGULAR'; // 👈 BAG-O: I-store ang Role ('ADMIN', 'MARSHAL', 'REGULAR')
         let activeRoutePolyline = null;
         let trackedRiderId = null;
         const riderMarkers = {}; 
@@ -1025,9 +1028,15 @@ activeIdsThisFetch<body>
                     if (!isValidRider) return;
 
                     // 🛑 ROUTE FILTERING LOGIC
+                    // 🛑 DYNAMIC ROUTE FILTERING BASED ON ROLE & FILTER BUTTON
                     if (currentRouteFilter === 'ALL') {
-                        if (!activeMMC26Routes.includes(riderRoute.toUpperCase())) return;
+                        // Kung MARSHAL: Limitehan lang sa MMC '26 active routes (G81, G3, G5)
+                        if (currentUserRole === 'MARSHAL') {
+                            if (!activeMMC26Routes.includes(riderRoute.toUpperCase())) return;
+                        }
+                        // Kung ADMIN: WALAY FILTER! (Makita ang tanang valid riders lakip AS26, DO01, etc.)
                     } else {
+                        // Kung explicit route button ang gi-click (e.g. G81, G3, G5, AS26, DO01)
                         if (riderRoute.toUpperCase() !== currentRouteFilter.toUpperCase()) return;
                     }
 
