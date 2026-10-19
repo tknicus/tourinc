@@ -226,7 +226,7 @@
         let trackedRiderId = null;
 
         // ==========================================
-        // 📡 FETCH & UPDATE LOCATIONS (FAMILY TRACKER ONLY - TEXT IDs)
+        // 📡 FETCH & UPDATE LOCATIONS (FAMILY TRACKER ONLY - STRICT TEXT IDs)
         // ==========================================
         async function fetchLiveRiders() {
             const { data, error } = await supabaseMapClient
@@ -253,18 +253,21 @@
 
                     if (!rider_id || isNaN(latitude) || isNaN(longitude)) return;
 
-                    // 🛑 1. SAKTONG REGEX FILTER (I-BLOCK ANG NUMERIC IDs TULAD SA "0001")
-                    if (/^\d+\$/.test(rider_id)) return;
+                    // 🛑 1. BULLETPROOF NUMERIC FILTER:
+                    // Kung ma-convert gani sa numero (e.g. "0001", "123", "456"), I-BLOCK PAIRAY!
+                    if (!isNaN(Number(rider_id))) return;
 
-                    let riderFullName = rider_id.toUpperCase();
-                    let riderRoute = "Balay"; 
-                    
+                    // ⚡ Check sa familyDict gikan sa famdb.js
                     let found = familyDict[rider_id];
-                    if (found) {
-                        riderFullName = found.fullname || found.name;
-                        if (found.route) riderRoute = String(found.route);
-                    }
+                    
+                    // 🛑 2. OPTIONAL STRICT FAMDB CHECK:
+                    // Kung gusto nimo nga kadto ra gyud naa sa famdb.js ang mopakita, i-uncomment kini:
+                    // if (!found) return;
 
+                    let riderFullName = found ? (found.fullname || found.name) : rider_id.toUpperCase();
+                    let riderRoute = (found && found.route) ? String(found.route) : "Balay";
+
+                    // 🎛️ ROUTE FILTER LOGIC (Balay / Laag / ALL)
                     if (currentRouteFilter !== 'ALL' && riderRoute !== currentRouteFilter) {
                         return; 
                     }
@@ -275,10 +278,11 @@
                     let latLng = [latitude, longitude];
                     let updateDate = new Date(updated_at);
                     let diffMinutes = (new Date() - updateDate) / (1000 * 60);
-                    if (diffMinutes > 720) return;
+                    if (diffMinutes > 720) return; // Drop kung labaw sa 12 hours offline
 
                     let isStale = diffMinutes > 15;
 
+                    // 🏍️ SPEED UG MOVEMENT CHECKER
                     let isMoving = false;
                     let speedKph = 0;
                     let currentAngle = 0; 
@@ -326,7 +330,6 @@
                     
                     let routeBadgeColor = riderRoute === "Laag" ? "#0066cc" : "#cc0000";
 
-                    // 🛑 2. SAKTONG TEMPLATE LITERAL (WALA'Y BACKSLASH SA SPEED)
                     let popupContent = `
                         <div style="font-family:sans-serif; color:#000; line-height: 1.4; text-align: center; min-width: 100px;">
                             <b style="color:${routeBadgeColor}; font-size:16px;">${riderFullName}</b><br>
@@ -391,6 +394,7 @@
                     }
                 });
 
+                // 🧹 TANGTANGON ANG BISAN UNSANG MARKER NGA WALA NA APIL SA ACTIVE FETCH (KASAPOLAN SI "0001")
                 Object.keys(riderMarkers).forEach(id => {
                     if (!activeIdsThisFetch.has(id)) {
                         map.removeLayer(riderMarkers[id]);
