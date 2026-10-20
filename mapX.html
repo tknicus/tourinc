@@ -864,12 +864,11 @@
 
             if (confirm(`Sigurado ka nga natabangan ug resolved na ang SOS alang sa Rider #${rId}?`)) {
                 try {
-                    // I-update ang pinakabag-o nga scan record sa rider sa Supabase
+                    // I-update ang checkpoint ug notes ra sa Supabase (wala gi-apil ang is_sos)
                     const { error } = await supabaseLiveClient
                         .from('rally_scans')
                         .update({ 
-                            is_sos: false, 
-                            checkpoint: 'SOS RESOLVED',
+                            checkpoint: 'RESOLVED',
                             notes: 'OK / RESOLVED BY COMMAND CENTER'
                         })
                         .eq('qr_code', rId);
@@ -878,7 +877,7 @@
                         alert("❌ Napakyas sa pag-update: " + error.message);
                     } else {
                         alert(`✅ Na-clear ug na-resolve na ang SOS signal ni Rider #${rId}!`);
-                        refreshLiveRiders(); // Awtomatiko nga i-refresh ang mapa
+                        refreshLiveRiders(); // Refresh ang mapa aron mabalik sa normal ang icon
                     }
                 } catch (err) {
                     console.error("Error sa resolveSOS:", err);
