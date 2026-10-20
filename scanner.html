@@ -196,15 +196,15 @@
                 <img id="photoPreview" alt="Ebidensya">
                 <canvas id="photoCanvas" style="display:none;"></canvas>
 
-                <!-- 1. SUBMIT BUTTON (Gihimong Green aron dali mailhan sa regular scan) -->
+                <!-- 1. SUBMIT BUTTON -->
                 <button type="submit" id="submitBtn" style="background: linear-gradient(135deg, #28a745, #218838); color: white; font-weight: bold; font-size: 16px; padding: 14px; border: none; border-radius: 8px; width: 100%; cursor: pointer; text-transform: uppercase; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(40, 167, 69, 0.4);">
                     ✅ I-SUBMIT ANG DATA
                 </button>
 
-                <!-- 2. VISUAL DIVIDER LINE (Naghimo og separation line) -->
+                <!-- 2. VISUAL DIVIDER LINE -->
                 <hr style="border: 0; height: 1px; background: linear-gradient(to right, transparent, #ff4444, transparent); margin: 30px 0;">
 
-                <!-- 3. 🚨 SOS EMERGENCY ASSISTANCE BOX (Naay space ug separation) -->
+                <!-- 3. 🚨 SOS EMERGENCY ASSISTANCE BOX -->
                 <div style="background: #2b0000; border: 2px solid #ff0000; padding: 15px; border-radius: 10px; margin-top: 10px; margin-bottom: 25px; text-align: center; box-shadow: 0 0 15px rgba(255, 0, 0, 0.4);">
                     <h4 style="color: #ff3333; margin: 0 0 8px 0; text-transform: uppercase; font-weight: bold; font-size: 14px; letter-spacing: 1px;">
                         🚨 EMERGENCY ASSISTANCE / SOS
@@ -239,8 +239,15 @@
         const _supabaseAnonKey = 'sb_publishable_xO3twPzyDBLhdltnkwoS3w_xswYLyf_';
         const supabaseLiveClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
         
+        window.routeNames = (typeof routeNames !== 'undefined') ? routeNames : {};
         window.routeConfigs = (typeof routeCheckpoints !== 'undefined') ? routeCheckpoints : {};
         
+        window.routeTotalKm = { 
+            "G1N": 777, "G1E": 777, "G1W": 777, "G1S": 777, 
+            "G3": 3333, "G4": 444, "G5": 5555, "AS26": 628, 
+            "G7": 7777, "G8": 8888, "G81": 888, "G82": 888, "G83": 888 
+        };
+
         // ==========================================
         // 🛠️ CUSTOM PIN PROMPT HELPER
         // ==========================================
@@ -279,18 +286,6 @@
                 return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
             } catch (err) { return ""; }
         }
-
-        // ==========================================
-        // 📥 KONEKTAHON DIRETSO SA DATABASE.JS
-        // ==========================================
-        window.routeNames = (typeof routeNames !== 'undefined') ? routeNames : {};
-        window.routeConfigs = (typeof routeCheckpoints !== 'undefined') ? routeCheckpoints : {};
-        
-        window.routeTotalKm = { 
-            "G1N": 777, "G1E": 777, "G1W": 777, "G1S": 777, 
-            "G3": 3333, "G4": 444, "G5": 5555, "AS26": 628, 
-            "G7": 7777, "G8": 8888, "G81": 888, "G82": 888, "G83": 888 
-        };
 
         async function verifyAndLogin() {
             // 🛑 1. LOCKOUT CHECK
@@ -723,7 +718,7 @@
                             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
                             function convertToDMS(decimal, isLat) {
-                                if (decimal === "N/A") return "N/A";
+                                if (decimal === "N/A" || isNaN(parseFloat(decimal))) return "N/A";
                                 const val = parseFloat(decimal);
                                 const absVal = Math.abs(val);
                                 const d = Math.floor(absVal);
@@ -796,17 +791,18 @@
 
         function getLocation() {
             return new Promise((resolve) => {
-                if (!navigator.geolocation) { resolve({ link: "No GPS", lat: "N/A", lon: "N/A", time: "N/A" }); } 
+                if (!navigator.geolocation) { resolve({ link: "No GPS", lat: 0, lon: 0, time: "N/A" }); } 
                 else {
                     navigator.geolocation.getCurrentPosition(
                         (position) => {
                             resolve({
                                 link: `https://www.google.com/maps?q=${position.coords.latitude},${position.coords.longitude}`,
-                                lat: position.coords.latitude, lon: position.coords.longitude,
+                                lat: position.coords.latitude, 
+                                lon: position.coords.longitude,
                                 time: new Date(position.timestamp).toLocaleString()
                             });
                         },
-                        (error) => { resolve({ link: "Error/Gibalibaran", lat: "N/A", lon: "N/A", time: "N/A" }); },
+                        (error) => { resolve({ link: "Error/Gibalibaran", lat: 0, lon: 0, time: "N/A" }); },
                         { timeout: 10000, enableHighAccuracy: true, maximumAge: 0 }
                     );
                 }
@@ -857,12 +853,15 @@
             return new Blob(byteArrays, {type: contentType});
         }
 
+        // ==========================================
+        // 🚀 SAFE DATABASE INSERT (FIXED LAT/LON BUG)
+        // ==========================================
         async function sendDataToServer(dataPayload) {
             try {
                 let finalPhotoUrl = "Walay Ebidensya";
                 if (dataPayload.photo && dataPayload.photo.includes('base64')) {
                     const blob = b64toBlob(dataPayload.photo, 'image/jpeg');
-                    const cleanCp = dataPayload.checkpoint.replace(/\s+/g, '');
+                    const cleanCp = String(dataPayload.checkpoint).replace(/\s+/g, '');
                     const fileName = `${dataPayload.idNum}_${cleanCp}_${new Date().getTime()}.jpg`;
                     const { data: uploadData, error: uploadError } = await supabaseLiveClient.storage.from('photos').upload(fileName, blob, { contentType: 'image/jpeg' });
                     if (!uploadError) {
@@ -871,15 +870,20 @@
                     }
                 }
 
+                // 🎯 CONVERT LATITUDE UG LONGITUDE PARA DILI MAG-ERROR SA NUMERIC COLUMN SA SUPABASE
+                let safeLat = parseFloat(dataPayload.latitude);
+                let safeLon = parseFloat(dataPayload.longitude);
+                let safeOdo = parseFloat(dataPayload.odometer);
+
                 const { error: dbError } = await supabaseLiveClient.from('rally_scans').insert([{
-                    qr_code: dataPayload.idNum, 
+                    qr_code: String(dataPayload.idNum), 
                     rider_name: dataPayload.name, 
                     rider_level: dataPayload.level,
                     checkpoint: dataPayload.checkpoint, 
-                    odometer: dataPayload.odometer || 0, 
+                    odometer: isNaN(safeOdo) ? 0 : safeOdo, 
                     notes: dataPayload.notes || "",
-                    latitude: dataPayload.latitude || 0, 
-                    longitude: dataPayload.longitude || 0,
+                    latitude: isNaN(safeLat) ? 0 : safeLat, 
+                    longitude: isNaN(safeLon) ? 0 : safeLon,
                     location_address: dataPayload.location || "", 
                     photo_url: finalPhotoUrl,
                     time_submit: dataPayload.timestamp 
@@ -945,7 +949,8 @@
         let isSubmitting = false;
 
         if (myForm) {
-            const mainSubmitBtn = document.getElementById('mainSubmitBtn');
+            // 🎯 FIX: ID CORRECTED FROM 'mainSubmitBtn' TO 'submitBtn'
+            const mainSubmitBtn = document.getElementById('submitBtn');
             if (mainSubmitBtn && submitAudio) {
                 mainSubmitBtn.addEventListener('click', function() {
                     submitAudio.currentTime = 0;
@@ -1307,8 +1312,6 @@
             });
         }
 
-
-
         // ==========================================
         // 🚨 SOS EMERGENCY TRANSMITTER
         // ==========================================
@@ -1347,8 +1350,7 @@
                 latitude: gpsData.lat,
                 longitude: gpsData.lon,
                 locationTime: gpsData.time,
-                level: window.activeRiderLevel || "G5",
-                is_sos: true
+                level: window.activeRiderLevel || "G5"
             };
 
             let isStable = await checkInternetStability();
@@ -1368,9 +1370,6 @@
 
             if (sosBtn) { sosBtn.innerText = "🚨 MANGAYO UG TABANG (SEND SOS)"; sosBtn.disabled = false; }
         }
-
-
-
     </script>
 </body>
 </html>
