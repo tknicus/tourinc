@@ -115,6 +115,40 @@
             backdrop-filter: blur(5px); /* Unobtrusive frosted glass blur effect sa luyo */
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
+
+        /* 🚨 SOS BLINKING & PULSING MARKER ANIMATION */
+        @keyframes sosPulsing {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.9);
+            }
+            70% {
+                transform: scale(1.3);
+                box-shadow: 0 0 0 18px rgba(255, 0, 0, 0);
+            }
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+            }
+        }
+
+        .sos-blinking-pin {
+            background-color: #ff0000;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 3px solid #ffffff;
+            animation: sosPulsing 1s infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            box-shadow: 0 0 10px #ff0000;
+        }
+        
+
     </style>
 </head>
 <body>
@@ -167,6 +201,12 @@
             <button class="action-btn" onclick="refreshLiveRiders()">🔄 Refresh Live Riders</button>
             <button class="action-btn back-btn" onclick="window.location.href='scan.html'">🔙 Scanner</button>
         </div>
+
+        <!-- 🚨 SOS ALERT BADGE SA HEADER -->
+        <div id="sosAlertBadge" class="rider-count-badge" style="background: #ff0000; color: white; border: 1px solid #ff9999; display: none; animation: sosPulsing 1.2s infinite;">
+            🚨 SOS: 0
+        </div>        
+
     </header>
 
     <div id="map"></div>
@@ -1265,6 +1305,164 @@
                 }
             }, 30000);
         });
+
+
+        // Function alang sa SOS Blinking Icon
+        function createSOSIcon() {
+            return L.divIcon({
+                className: 'custom-pin-sos',
+                html: `<div class="sos-blinking-pin">🚨</div>`,
+                iconSize: [26, 26],
+                iconAnchor: [13, 13]
+            });
+        }
+
+        // Gi-update nga loadRidersToMap function nga naa nay SOS Detector:
+        async function loadRidersToMap(selectedRoute = "all") {
+            if (selectedRoute === "none") {
+                markerLayer.clearLayers();
+                document.getElementById('riderCountBadge').innerText = "Riders: 0";
+                if(document.getElementById('sosAlertBadge')) document.getElementById('sosAlertBadge').style.display = "none";
+                return;
+            }
+
+            try {
+                let allScans = [];
+                let fetchStart = 0;
+                let fetchLimit = 1000;
+                let isFetching = true;
+
+                while (isFetching) {
+                    let { data, error } = await supabaseLiveClient
+                        .from('rally_scans')
+                        .select('*')
+                        .range(fetchStart, fetchStart + fetchLimit - 1)
+                        .order('scanned_at', { ascending: true });
+
+                    if (error) {
+                        console.error("Error sa pagkuha gikan sa Supabase:", error.message);
+                        break;
+                    }
+
+                    if (data && data.length > 0) {
+                        allScans.push(...data);
+                        if (data.length < fetchLimit) { isFetching = false; } 
+                        else { fetchStart += fetchLimit; }
+                    } else { isFetching = false; }
+                }
+
+                if (allScans.length === 0) {
+                    markerLayer.clearLayers();
+                    document.getElementById('riderCountBadge').innerText = "Riders: 0";
+                    return;
+                }
+
+                let latestRidersMap = {};
+                allScans.forEach(rider => {
+                    let rId = rider.qr_code || rider.idNum;
+                    if (rId) { latestRidersMap[rId] = rider; }
+                });
+
+                markerLayer.clearLayers();
+
+                let validRiderCount = 0;
+                let activeSOSCount = 0;
+                const activeRoutes = ["G81", "G3", "G5"];
+
+                Object.values(latestRidersMap).forEach(rider => {
+                    let rId = rider.qr_code || rider.idNum;
+                    let lat = parseFloat(rider.latitude);
+                    let lon = parseFloat(rider.longitude);
+                    let routeKey = (rider.rider_level || "G5").toUpperCase();
+                    
+                    if (selectedRoute.toLowerCase() === "all") {
+                        if (!activeRoutes.includes(routeKey)) return;
+                    } else {
+                        if (routeKey !== selectedRoute.toUpperCase()) return;
+                    }
+
+                    if (!isNaN(lat) && !isNaN(lon) && lat !== 0 && lon !== 0) {
+                        validRiderCount++;
+
+                        let vehicleName = "Wala Gibutang";
+                        if (typeof riderDatabase !== 'undefined') {
+                            let matchingRider = riderDatabase.find(r => String(r.idNum) === String(rId));
+                            if (matchingRider && matchingRider.vehicle) {
+                                vehicleName = matchingRider.vehicle;
+                            }
+                        }
+
+                        let formattedTime = "Wala";
+                        if (rider.scanned_at || rider.created_at) {
+                            let d = new Date(rider.scanned_at || rider.created_at);
+                            formattedTime = d.toLocaleString('en-PH', {
+                                timeZone: 'Asia/Manila',
+                                month: 'short', day: 'numeric',
+                                hour: '2-digit', minute: '2-digit', hour12: false
+                            });
+                        }
+
+                        // 🚨 CHECK KUNG SOS KINI NGA SCAN
+                        let isSOS = (rider.checkpoint && rider.checkpoint.includes("SOS")) || rider.is_sos === true;
+                        let markerIcon;
+
+                        if (isSOS) {
+                            activeSOSCount++;
+                            markerIcon = createSOSIcon(); // Pula ug mag-blink!
+                        } else {
+                            let pinColor = routeColors[routeKey] || "#ff9900"; 
+                            markerIcon = createColoredIcon(pinColor);
+                        }
+
+                        let marker = L.marker([lat, lon], { icon: markerIcon });
+
+                        let emergencyHeader = isSOS ? `<div style="background:#cc0000; color:white; padding:4px; text-align:center; font-weight:bold; border-radius:3px; margin-bottom:5px;">🚨 EMERGENCY SOS DISTRESS SIGNAL!</div>` : '';
+
+                        marker.bindPopup(`
+                            <div style="color: black; font-family: Arial; font-size: 13px;">
+                                ${emergencyHeader}
+                                <b>🏍️ ID: ${rId}</b><br>
+                                👤 Pangalan: <b>${rider.rider_name || "Rider"}</b><br>
+                                🛵 Motor: <b style="color:#0066cc;">${vehicleName}</b><br>
+                                📍 Checkpoint: <b style="color:${isSOS ? 'red' : 'black'};">${rider.checkpoint}</b><br>
+                                🛣️ Rota: <b style="background: #222; padding: 2px 5px; border-radius: 3px; color:white;">${routeKey}</b><br>
+                                ⚙️ Odometer: ${rider.odometer} KM<br>
+                                🕒 Oras: ${formattedTime}<br>
+                                📝 Notes: <b style="color:${isSOS ? 'red' : 'black'};">${rider.notes || 'Wala'}</b><br>
+                                📸 <a href="${rider.photo_url}" target="_blank" style="color:blue; font-weight:bold;">Tan-awa ang Ebidensya</a><br>
+                                <a href="${rider.location_address}" target="_blank">🗺️ Google Maps Location</a>
+                            </div>
+                        `);
+
+                        markerLayer.addLayer(marker);
+
+                        // Auto open popup sa map kung naa bag-ong SOS
+                        if (isSOS) {
+                            marker.openPopup();
+                        }
+                    }
+                });
+
+                document.getElementById('riderCountBadge').innerText = `Riders: ${validRiderCount}`;
+
+                // I-update ang SOS Badge sa Header
+                let sosBadge = document.getElementById('sosAlertBadge');
+                if (sosBadge) {
+                    if (activeSOSCount > 0) {
+                        sosBadge.innerText = `🚨 SOS EMERGENCY: ${activeSOSCount}`;
+                        sosBadge.style.display = "inline-block";
+                    } else {
+                        sosBadge.style.display = "none";
+                    }
+                }
+
+            } catch (err) {
+                console.error("Critical error sa pag-load sa map markers:", err);
+            }
+        }        
+
+
+        
     </script>
 
 </body>

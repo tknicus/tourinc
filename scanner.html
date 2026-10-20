@@ -196,6 +196,24 @@
                 <img id="photoPreview" alt="Ebidensya">
                 <canvas id="photoCanvas" style="display:none;"></canvas>
 
+
+
+                <!-- 🚨 SOS EMERGENCY ASSISTANCE BOX -->
+                <div style="background: #2b0000; border: 2px solid #ff0000; padding: 12px; border-radius: 8px; margin-bottom: 15px; text-align: center; box-shadow: 0 0 10px rgba(255, 0, 0, 0.4);">
+                    <h4 style="color: #ff3333; margin: 0 0 6px 0; text-transform: uppercase; font-weight: bold; font-size: 14px;">
+                        🚨 EMERGENCY ASSISTANCE / SOS
+                    </h4>
+                    <p style="font-size: 11px; color: #ccc; margin-bottom: 8px;">
+                        Kung nanginahanglan ka ug tabang sa dalan (flat tire, aksidente, mechanical breakdown), isulat ang mensahe sa ubos ug i-tap ang SOS button:
+                    </p>
+                    <textarea id="sosNotes" placeholder="Pananglitan: 'Nawad-an ug kuryente ang motor / Flat tire diri sa Maramag...'" rows="2" style="background: #120000; border: 1px solid #ff4444; color: #fff; font-size: 13px; margin-bottom: 8px; width: 100%; box-sizing: border-box; border-radius: 4px; padding: 8px;"></textarea>
+                    <button type="button" onclick="sendSOSAlert()" id="sosBtn" style="background: linear-gradient(135deg, #cc0000, #ff0000); color: white; font-weight: bold; font-size: 15px; padding: 12px; border: none; border-radius: 6px; cursor: pointer; text-transform: uppercase; width: 100%; box-shadow: 0 4px 8px rgba(255, 0, 0, 0.5);">
+                        🚨 MANGAYO UG TABANG (SEND SOS)
+                    </button>
+                </div>
+
+
+
                 <button type="submit" id="mainSubmitBtn">I-Submit ang Data</button>
             </form>
 
@@ -1285,6 +1303,70 @@
                 }
             });
         }
+
+
+
+        // ==========================================
+        // 🚨 SOS EMERGENCY TRANSMITTER
+        // ==========================================
+        async function sendSOSAlert() {
+            const riderId = document.getElementById('idNum') ? document.getElementById('idNum').value.trim() : "";
+            const riderName = document.getElementById('name') ? document.getElementById('name').value.trim() : "";
+            const sosMsg = document.getElementById('sosNotes') ? document.getElementById('sosNotes').value.trim() : "";
+
+            if (!riderId || !riderName || riderName.includes("❌")) {
+                alert("🛑 DILI MA-SEND! Palihug i-verify muna ang imong Rider ID.");
+                return;
+            }
+
+            if (!sosMsg) {
+                alert("⚠️ Palihug isulat sa text box ang imong sitwasyon o kung unsang tabang ang imong gikinahanglan!");
+                return;
+            }
+
+            let confirmSOS = confirm("🚨 KUMPIRMASYON SA SOS:\n\nSigurado ka ba nga mangayo ka og tabang emergency sa Command Center?");
+            if (!confirmSOS) return;
+
+            const sosBtn = document.getElementById('sosBtn');
+            if (sosBtn) { sosBtn.innerText = "⏳ NAGTRAYSER SA GPS UG NAGPADALA..."; sosBtn.disabled = true; }
+
+            const gpsData = await getLocation();
+
+            const sosPayload = {
+                idNum: riderId,
+                name: riderName,
+                checkpoint: "🚨 SOS EMERGENCY",
+                odometer: document.getElementById('odometer') ? (document.getElementById('odometer').value || 0) : 0,
+                notes: "🚨 EMERGENCY: " + sosMsg,
+                photo: compressedPhotoBase64 || "Walay Ebidensya",
+                timestamp: new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' }),
+                location: gpsData.link,
+                latitude: gpsData.lat,
+                longitude: gpsData.lon,
+                locationTime: gpsData.time,
+                level: window.activeRiderLevel || "G5",
+                is_sos: true
+            };
+
+            let isStable = await checkInternetStability();
+            if (isStable) {
+                let sentSuccess = await sendDataToServer(sosPayload);
+                if (sentSuccess) {
+                    alert("🚨 SOS SENT SUCCESSFULLY!\n\nNa-alert na ang Command Center. Mag-blink na ang imong location sa Live Map!");
+                    document.getElementById('sosNotes').value = "";
+                } else {
+                    saveToOfflineStorage(sosPayload);
+                    alert("⚠️ Na-save sa Offline Storage ang SOS! I-sync dayon kini inig kaayong signal.");
+                }
+            } else {
+                saveToOfflineStorage(sosPayload);
+                alert("⚠️ WALAY INTERNET SIGNAL! Gi-save sa Offline Storage ang SOS. Modagayday kini inig abit sa signal.");
+            }
+
+            if (sosBtn) { sosBtn.innerText = "🚨 MANGAYO UG TABANG (SEND SOS)"; sosBtn.disabled = false; }
+        }
+
+
 
     </script>
 </body>
