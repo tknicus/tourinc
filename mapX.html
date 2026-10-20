@@ -210,8 +210,15 @@
         
         const supabaseLiveClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
 
+        // 🔑 CURRENT USER ROLE STATE
+        let currentUserRole = {
+            isAdmin: false,
+            isMarshal: false,
+            userLevel: ""
+        };
+
         // ==========================================
-        // 🔐 PASSCODE CHECKER LOGIC (NAG-SUNDOG SA MMC360.HTML)
+        // 🔐 PASSCODE CHECKER LOGIC
         // ==========================================
         async function checkAccessCode() {
             let inputCode = document.getElementById('accessCodeInput').value.trim();
@@ -246,6 +253,12 @@
 
                 let isAdminUser = (foundUser.isAdmin === true || String(foundUser.isAdmin).toLowerCase() === 'true');
                 let isMarshalUser = (foundUser.isMarshal === true || String(foundUser.isMarshal).toLowerCase() === 'true');
+                let userLevel = (foundUser.level || "").toUpperCase();
+
+                // Store in Global State
+                currentUserRole.isAdmin = isAdminUser;
+                currentUserRole.isMarshal = isMarshalUser;
+                currentUserRole.userLevel = userLevel;
 
                 // 1️⃣ ADMIN: Makita tanang routes sa dropdown
                 if (isAdminUser) {
@@ -270,9 +283,8 @@
                     selectElem.value = "all";
                     switchRoute();
                 } 
-                // 3️⃣ REGULAR USER / EVENT ADMIN: Iya ra nga route level
+                // 3️⃣ REGULAR USER: Iya ra nga route level
                 else {
-                    let userLevel = (foundUser.level || "").toUpperCase();
                     let hasMatchingOption = false;
 
                     for (let option of selectElem.options) {
@@ -285,7 +297,6 @@
                         }
                     }
 
-                    // Kung wala sa static dropdown, i-add dynamically
                     if (!hasMatchingOption && userLevel) {
                         let newOpt = document.createElement("option");
                         newOpt.value = userLevel;
@@ -317,7 +328,7 @@
         let markerLayer = L.layerGroup().addTo(map);
         let routePolylineLayer = L.layerGroup().addTo(map);
 
-        // 🎨 MGA KOLOR PARA SA MATAG ROTA (Color Coding)
+        // 🎨 MGA KOLOR PARA SA MATAG ROTA
         const routeColors = {
             "G83": "#FCEA0E",  
             "G82": "#040D12",  
@@ -351,7 +362,7 @@
             });
         }
 
-        // 2. IMONG MGA ROTA COORDINATES
+        // 2. ROTA COORDINATES
         const routesData = {
             "G1N": [
                 [7.454081, 125.782316], [7.917103, 125.329051], [8.089767, 125.323060], [8.283995, 125.255056],
@@ -708,7 +719,6 @@
 
                 let validRiderCount = 0;
                 let activeSOSCount = 0;
-                const activeRoutes = ["G81", "G3", "G5"];
 
                 Object.values(latestRidersMap).forEach(rider => {
                     let rId = rider.qr_code || rider.idNum;
@@ -716,9 +726,19 @@
                     let lon = parseFloat(rider.longitude);
                     let routeKey = (rider.rider_level || "G5").toUpperCase();
                     
+                    // 🎯 KOREHIYO SA FILTERING LOGIC DEPENDI SA LOGIN ROLE:
                     if (selectedRoute.toLowerCase() === "all") {
-                        if (!activeRoutes.includes(routeKey)) return;
+                        if (currentUserRole.isAdmin) {
+                            // 🌟 ADMIN: Makita TANANG riders sa tanang ruta!
+                        } else if (currentUserRole.isMarshal) {
+                            // 🛡️ MARSHAL: G81, G3, ug G5 ra ang makita sa "all" view
+                            if (!["G81", "G3", "G5"].includes(routeKey)) return;
+                        } else {
+                            // 👤 REGULAR USER: Ang iya ra nga assigned route level
+                            if (routeKey !== currentUserRole.userLevel) return;
+                        }
                     } else {
+                        // 📌 SPECIFIC ROUTE OPTION: Ang napili ra nga ruta ang makita
                         if (routeKey !== selectedRoute.toUpperCase()) return;
                     }
 
