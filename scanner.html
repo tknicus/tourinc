@@ -195,17 +195,24 @@
                 
                 <img id="photoPreview" alt="Ebidensya">
                 <canvas id="photoCanvas" style="display:none;"></canvas>
-                <button type="submit" id="mainSubmitBtn">I-Submit ang Data</button>
 
-                <!-- 🚨 SOS EMERGENCY ASSISTANCE BOX -->
-                <div style="background: #2b0000; border: 2px solid #ff0000; padding: 12px; border-radius: 8px; margin-bottom: 15px; text-align: center; box-shadow: 0 0 10px rgba(255, 0, 0, 0.4);">
-                    <h4 style="color: #ff3333; margin: 0 0 6px 0; text-transform: uppercase; font-weight: bold; font-size: 14px;">
+                <!-- 1. SUBMIT BUTTON (Gihimong Green aron dali mailhan sa regular scan) -->
+                <button type="submit" id="submitBtn" style="background: linear-gradient(135deg, #28a745, #218838); color: white; font-weight: bold; font-size: 16px; padding: 14px; border: none; border-radius: 8px; width: 100%; cursor: pointer; text-transform: uppercase; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(40, 167, 69, 0.4);">
+                    ✅ I-SUBMIT ANG DATA
+                </button>
+
+                <!-- 2. VISUAL DIVIDER LINE (Naghimo og separation line) -->
+                <hr style="border: 0; height: 1px; background: linear-gradient(to right, transparent, #ff4444, transparent); margin: 30px 0;">
+
+                <!-- 3. 🚨 SOS EMERGENCY ASSISTANCE BOX (Naay space ug separation) -->
+                <div style="background: #2b0000; border: 2px solid #ff0000; padding: 15px; border-radius: 10px; margin-top: 10px; margin-bottom: 25px; text-align: center; box-shadow: 0 0 15px rgba(255, 0, 0, 0.4);">
+                    <h4 style="color: #ff3333; margin: 0 0 8px 0; text-transform: uppercase; font-weight: bold; font-size: 14px; letter-spacing: 1px;">
                         🚨 EMERGENCY ASSISTANCE / SOS
                     </h4>
-                    <p style="font-size: 11px; color: #ccc; margin-bottom: 8px;">
+                    <p style="font-size: 11px; color: #ccc; margin-bottom: 10px; line-height: 1.4;">
                         Kung nanginahanglan ka ug tabang sa dalan (flat tire, aksidente, mechanical breakdown), isulat ang mensahe sa ubos ug i-tap ang SOS button:
                     </p>
-                    <textarea id="sosNotes" placeholder="Pananglitan: 'Nawad-an ug kuryente ang motor / Flat tire diri sa Maramag...'" rows="2" style="background: #120000; border: 1px solid #ff4444; color: #fff; font-size: 13px; margin-bottom: 8px; width: 100%; box-sizing: border-box; border-radius: 4px; padding: 8px;"></textarea>
+                    <textarea id="sosNotes" placeholder="Pananglitan: 'Nawad-an ug kuryente ang motor / Flat tire diri sa Maramag...'" rows="2" style="background: #120000; border: 1px solid #ff4444; color: #fff; font-size: 13px; margin-bottom: 10px; width: 100%; box-sizing: border-box; border-radius: 6px; padding: 8px;"></textarea>
                     <button type="button" onclick="sendSOSAlert()" id="sosBtn" style="background: linear-gradient(135deg, #cc0000, #ff0000); color: white; font-weight: bold; font-size: 15px; padding: 12px; border: none; border-radius: 6px; cursor: pointer; text-transform: uppercase; width: 100%; box-shadow: 0 4px 8px rgba(255, 0, 0, 0.5);">
                         🚨 MANGAYO UG TABANG (SEND SOS)
                     </button>
