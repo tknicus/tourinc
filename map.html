@@ -779,11 +779,15 @@
 
                         let emergencyHeader = isSOS ? `<div style="background:#cc0000; color:white; padding:4px; text-align:center; font-weight:bold; border-radius:3px; margin-bottom:5px;">🚨 EMERGENCY SOS DISTRESS SIGNAL!</div>` : '';
 
-                        // 🔘 BUTTON PARA SA ADMIN / MARSHAL ARON MKA-CLEAR SA SOS
+                        // 🔘 LUWAS NGA BUTTON PARA SA ADMIN / MARSHAL
                         let resolveBtn = '';
                         if (isSOS && (currentUserRole.isAdmin || currentUserRole.isMarshal)) {
+                            let safeCp = rider.checkpoint || "CP 00";
+                            let safeLvl = routeKey || "G5";
+                            let safeName = rider.rider_name || "Rider";
+                            
                             resolveBtn = `
-                                <button onclick="resolveSOS('${rId}')" style="background:#28a745; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; margin-top:8px; font-weight:bold; width:100%; text-transform:uppercase; font-size:11px;">
+                                <button onclick="resolveSOSSafe('${rId}', '${safeName}', '${safeCp}', '${safeLvl}')" style="background:#28a745; color:white; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; margin-top:8px; font-weight:bold; width:100%; text-transform:uppercase; font-size:11px;">
                                     ✅ Mark as Resolved (Clear SOS)
                                 </button>
                             `;
@@ -854,33 +858,36 @@
         });
 
         // ==========================================
-        // 🛠️ RESOLVE / CLEAR SOS ALERT FUNCTION
+        // 🛠️ SAFE ADMIN RESOLVE (DILI MAGUBA ANG RECORD)
         // ==========================================
-        async function resolveSOS(rId) {
+        async function resolveSOSSafe(rId, rName, currentCp, rLevel) {
             if (!currentUserRole.isAdmin && !currentUserRole.isMarshal) {
                 alert("🔒 Admin o Marshal ra ang maka-resolve sa SOS alert!");
                 return;
             }
 
-            if (confirm(`Sigurado ka nga natabangan ug resolved na ang SOS alang sa Rider #${rId}?`)) {
+            if (confirm(`Sigurado ka nga resolved na ang SOS alang sa Rider #${rId}?`)) {
                 try {
-                    // I-update ang checkpoint ug notes ra sa Supabase (wala gi-apil ang is_sos)
+                    // MAG-INSERT OG BAG-ONG ENTRY IMBES MAG-UPDATE ARON DILI MAGUBA ANG HISTORY
                     const { error } = await supabaseLiveClient
                         .from('rally_scans')
-                        .update({ 
-                            checkpoint: 'RESOLVED',
-                            notes: 'OK / RESOLVED BY COMMAND CENTER'
-                        })
-                        .eq('qr_code', rId);
+                        .insert([{
+                            qr_code: String(rId),
+                            rider_name: rName,
+                            rider_level: rLevel,
+                            checkpoint: currentCp.replace("🚨 SOS EMERGENCY", "CLEAR"), // Preserbaron ang CP info
+                            notes: "✅ SOS RESOLVED BY COMMAND CENTER",
+                            time_submit: new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' })
+                        }]);
 
                     if (error) {
-                        alert("❌ Napakyas sa pag-update: " + error.message);
+                        alert("❌ Napakyas sa pag-clear: " + error.message);
                     } else {
-                        alert(`✅ Na-clear ug na-resolve na ang SOS signal ni Rider #${rId}!`);
-                        refreshLiveRiders(); // Refresh ang mapa aron mabalik sa normal ang icon
+                        alert(`✅ Na-clear na ang SOS signal alang sa Rider #${rId}!`);
+                        refreshLiveRiders(); // Refresh ang mapa
                     }
                 } catch (err) {
-                    console.error("Error sa resolveSOS:", err);
+                    console.error("Error sa resolveSOSSafe:", err);
                     alert("❌ Naay error sa pag-process sa request.");
                 }
             }
