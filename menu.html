@@ -58,6 +58,10 @@
         
         .menu-btn.dtr-btn { background-color: #2e7d32; border-color: #1b5e20; }
         .menu-btn.dtr-btn:hover { background-color: #43a047; }
+
+        /* 🆕 TRACGEN BUTTON COLOR (ORANGE THEME) */
+        .menu-btn.tracgen-btn { background-color: #ff5722; border-color: #e64a19; }
+        .menu-btn.tracgen-btn:hover { background-color: #ff7043; }
         
         hr { border: 1px solid #333; margin: 20px 0; }
         
@@ -119,7 +123,7 @@
         <a href="scan.html" class="menu-btn primary">📸 Checkpoint Scanner</a>
 
         <!-- ========================================== -->
-        <!-- 🗺️ MAPPING & TRACKING TOOLS                -->
+        <!-- 🗺️ MAPPING & TRACKING TOOLS               -->
         <!-- ========================================== -->
         <a href="map.html" class="menu-btn map-btn">🗺️ Checkpoint Map Monitor</a>
         <a href="mmc360.html" class="menu-btn tracker-btn">🛰️ MMC 360 Live Tracker</a>
@@ -133,8 +137,14 @@
 
         <hr>
 
+        <!-- ========================================== -->
+        <!-- 🛠️ UTILITIES & GENERATORS                  -->
+        <!-- ========================================== -->
+        <!-- 🆕 TRACGEN LINK GIBUTANG DINHI -->
+        <a href="TracGen.html" class="menu-btn tracgen-btn">🔗 Tracking Link Generator (TracGen)</a>
+
         <!-- 🕵️‍♂️ BUTTON 1: CUSTOM PIN GENERATOR TOGGLE -->
-        <button class="generator-toggle-btn btn-custom-pin" onclick="toggleGenerator('customPinBox', this)">
+        <button class="generator-toggle-btn btn-custom-pin" onclick="toggleGenerator('customPinBox', this)" style="margin-top: 10px;">
             🕵️‍♂️ Custom Marshal PIN Generator
         </button>
 
