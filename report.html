@@ -10,7 +10,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 10px; color: #111; }
-        .report-wrapper { max-width: 1250px; margin: 0 auto; background: #ffffff; padding: 15px; border: 1px solid #b5b5b5; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
+        .report-wrapper { max-width: 1350px; margin: 0 auto; background: #ffffff; padding: 15px; border: 1px solid #b5b5b5; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
         
         /* SEARCH CONTROL PANEL */
         .control-panel { background: #1e1e1e; padding: 15px; border-radius: 6px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; color: white; }
@@ -73,7 +73,7 @@
 
         /* TABLE RESPONSIVE WRAPPER */
         .table-container { width: 100%; overflow-x: auto; margin-top: 10px; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; font-family: Arial, sans-serif; min-width: 750px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; font-family: Arial, sans-serif; min-width: 880px; }
         th, td { border: 1px solid #000; padding: 6px 8px; text-align: left; }
         th { background-color: #d9d9d9; text-align: center; font-weight: bold; color: #000; }
         .center { text-align: center; }
@@ -83,7 +83,7 @@
         #captureArea { padding: 10px; background-color: #ffffff; }
 
         /* ==========================================
-           🖨️ PDF & PRINT CONFIGURATION (SECRET SA PAG-PRINT)
+           🖨️ PDF & PRINT CONFIGURATION
            ========================================== */
         @media print {
             @page { size: landscape; margin: 10mm; }
@@ -122,7 +122,7 @@
 
             <button onclick="generateReport()">Generate Report</button>
             
-            <!-- BUTTONS PARA PRINT UG PICTURE (Nakatago sa sinugdanan) -->
+            <!-- BUTTONS PARA PRINT UG PICTURE -->
             <div class="action-buttons">
                 <button onclick="window.print()" id="printBtn" style="display: none;">🖨️ I-Print (Papel)</button>
                 <button onclick="downloadAsPicture()" id="picBtn" style="display: none;">📸 Download Picture</button>
@@ -154,7 +154,6 @@
             const printBtn = document.getElementById('printBtn');
             const picBtn = document.getElementById('picBtn');
 
-            // Tagoan daan ang buttons inig sige'g generate
             if (printBtn) printBtn.style.display = "none";
             if (picBtn) picBtn.style.display = "none";
 
@@ -230,7 +229,6 @@
 
                 let speedVal = totalHours > 0 ? (totalDistance / (diffMs / (1000 * 60 * 60))).toFixed(2) : "0.00";
 
-                // Gi-wrap nato ang tanang content sa sulod sa div nga dunay id="captureArea"
                 let html = `<div id="captureArea">
                     <div class="excel-header">
                         <div class="profile-side">
@@ -252,11 +250,13 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th rowspan="2" style="width: 40px;">#</th>
+                                    <th rowspan="2" style="width: 35px;">#</th>
                                     <th rowspan="2">CHECKPOINTS</th>
-                                    <th rowspan="2" style="width: 150px;">TIME</th>
-                                    <th rowspan="2" style="width: 85px;">RUN</th>
-                                    <th rowspan="2" style="width: 80px;">ODO</th>
+                                    <!-- 📌 BAG-ONG COLUMN: COORDINATES -->
+                                    <th rowspan="2" style="width: 140px;">COORDINATES</th>
+                                    <th rowspan="2" style="width: 140px;">TIME</th>
+                                    <th rowspan="2" style="width: 75px;">RUN</th>
+                                    <th rowspan="2" style="width: 70px;">ODO</th>
                                     <th colspan="2" style="background-color: #d9e1f2;">RUNNING</th>
                                     <th colspan="3" style="background-color: #e2efda;">point to point</th>
                                 </tr>
@@ -319,10 +319,17 @@
                     }
                     if (!locationName) { locationName = scan.notes || ''; }
 
+                    // 📌 FORMAT SA GPS COORDINATES (Lat, Lon)
+                    let lat = scan.latitude ? parseFloat(scan.latitude).toFixed(5) : null;
+                    let lon = scan.longitude ? parseFloat(scan.longitude).toFixed(5) : null;
+                    let coordsDisplay = (lat && lon) ? `${lat}, ${lon}` : (scan.latitude && scan.longitude ? `${scan.latitude}, ${scan.longitude}` : 'N/A');
+
                     html += `
                         <tr>
                             <td class="center">${String(index + 1).padStart(2, '0')}</td>
                             <td><b>${scan.checkpoint}</b> - ${locationName}</td>
+                            <!-- 📌 DATA SA COORDINATES -->
+                            <td class="center" style="font-family: monospace; font-size: 10px;">${coordsDisplay}</td>
                             <td class="center">${formattedDate}</td>
                             <td class="center">${runStr}</td>
                             <td class="center">${currentOdo}</td>
@@ -338,13 +345,12 @@
                 html += `
                             </tbody>
                         </table>
-                    </div> <!-- End of table-container -->
-                </div> <!-- End of captureArea -->
+                    </div>
+                </div>
                 `;
 
                 container.innerHTML = html;
 
-                // Ipapakita ang duha ka buttons kon nakahuman na og generate
                 if (printBtn) printBtn.style.display = "block";
                 if (picBtn) picBtn.style.display = "block";
 
@@ -362,22 +368,20 @@
             
             if (!captureDiv) return;
 
-            // Ilisan kadiyot ang text sa button para makahibalo ang user nga ga-process pa
             const originalText = picBtn.innerHTML;
             picBtn.innerHTML = "⏳ Nag-capture...";
             picBtn.disabled = true;
 
             html2canvas(captureDiv, {
-                scale: 2, // Mas tin-aw ug hait nga picture quality
+                scale: 2,
                 backgroundColor: "#ffffff",
                 useCORS: true
             }).then(canvas => {
                 const link = document.createElement('a');
-                link.download = `Rider_${targetId}_Report.png`; // Pangalan sa file
+                link.download = `Rider_${targetId}_Report.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
 
-                // Ibalik sa normal ang button
                 picBtn.innerHTML = originalText;
                 picBtn.disabled = false;
             }).catch(err => {
