@@ -179,6 +179,12 @@
                 <option value="none">🗺️ Routes & Riders HIDDEN</option>
             </select>
 
+            <!-- 🎨 ROUTE COLOR ADJUSTER (BAG-O) -->
+            <div id="colorPickerWrapper" style="display: flex; align-items: center; gap: 6px; background: #2a2a2a; padding: 4px 8px; border-radius: 4px; border: 1px solid #0088ff;">
+                <label for="routeColorPicker" style="font-size: 11px; font-weight: bold; color: #ccc; cursor: pointer;">🎨 COLOR:</label>
+                <input type="color" id="routeColorPicker" onchange="updateRouteColor(this.value)" style="border: none; width: 28px; height: 28px; cursor: pointer; background: transparent; padding: 0;">
+            </div>            
+
             <!-- 📏 KUNG ASA MOGAWAS ANG TOTAL KILOMETERS -->
             <div id="distanceBadge" class="distance-badge" style="display: none;">Total: 0 KM</div>
 
@@ -328,21 +334,46 @@
         let markerLayer = L.layerGroup().addTo(map);
         let routePolylineLayer = L.layerGroup().addTo(map);
 
-        // 🎨 MGA KOLOR PARA SA MATAG ROTA
+        // 🎨 DEFAULT/SAVED COLOR MAPPER (Mo-check sa LocalStorage)
+        let savedColors = JSON.parse(localStorage.getItem('customRouteColors')) || {};
+
         const routeColors = {
-            "G83": "#FCEA0E",  
-            "G82": "#040D12",  
-            "G81": "#02225D",  
-            "G5": "#C80000",   
-            "G3": "#00FFFF",   
-            "AS26": "#00ff00", 
-            "G4": "#ff9900",   
-            "G1N": "#ff00ff",  
-            "G1E": "#ffff00",  
-            "G1W": "#00ffff",  
-            "G1S": "#9900ff",   
-            "DO01": "#AB7200"   
+            "G83": savedColors["G83"] || "#fcea0e",   
+            "G82": savedColors["G82"] || "#040d12",  
+            "G81": savedColors["G81"] || "#02225d",  
+            "G5":  savedColors["G5"]  || "#c80000",   
+            "G3":  savedColors["G3"]  || "#00ffff",   
+            "AS26": savedColors["AS26"] || "#00ff00", 
+            "G4":  savedColors["G4"]  || "#ff9900",   
+            "G1N": savedColors["G1N"] || "#ff00ff",  
+            "G1E": savedColors["G1E"] || "#ffff00",  
+            "G1W": savedColors["G1W"] || "#00ffff",  
+            "G1S": savedColors["G1S"] || "#9900ff",   
+            "DO01": savedColors["DO01"] || "#ab7200"   
         };
+
+        // 🎨 FUNCTION SA PAG-UPDATE UG PAG-SAVE SA BAG-ONG COLOR
+        function updateRouteColor(newColor) {
+            let rawKey = document.getElementById('routeSelect').value;
+            let selectedKey = rawKey ? rawKey.trim().toUpperCase() : "";
+
+            // Ayaw i-allow kung "ALL" o "NONE" ang napili
+            if (!selectedKey || selectedKey === "ALL" || selectedKey === "NONE") {
+                alert("⚠️ Palihug pagpili muna og piho nga Ruta (halimbawa: G5, G81) aron ma-usab ang color!");
+                return;
+            }
+
+            // 1. I-update ang active memory color
+            routeColors[selectedKey] = newColor;
+
+            // 2. I-save sa LocalStorage para permanent
+            let currentSaved = JSON.parse(localStorage.getItem('customRouteColors')) || {};
+            currentSaved[selectedKey] = newColor;
+            localStorage.setItem('customRouteColors', JSON.stringify(currentSaved));
+
+            // 3. I-redraw ang rota ug markers sa bag-ong color
+            switchRoute();
+        }
 
         function createColoredIcon(colorHex) {
             return L.divIcon({
@@ -624,6 +655,11 @@
                     badge.style.display = "none";
                 }
             }
+
+            const colorPicker = document.getElementById('routeColorPicker');
+                if (colorPicker && routeColors[selectedKey]) {
+                    colorPicker.value = routeColors[selectedKey];
+                }            
 
             loadRidersToMap(selectedKey);
         }
