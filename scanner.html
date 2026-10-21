@@ -217,7 +217,6 @@
                         🚨 MANGAYO UG TABANG (SEND SOS)
                     </button>
                 </div>
-
             </form>
 
             <div style="text-align: center; margin-top: 25px; padding-bottom: 20px; font-size: 12px; color: #aaa; border-top: 1px solid #333; padding-top: 15px;">
@@ -239,9 +238,13 @@
         const _supabaseAnonKey = 'sb_publishable_xO3twPzyDBLhdltnkwoS3w_xswYLyf_';
         const supabaseLiveClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
         
+        // ==========================================
+        // 📥 KONEKTAHON DIRETSO SA DATABASE.JS
+        // ==========================================
         window.routeNames = (typeof routeNames !== 'undefined') ? routeNames : {};
         window.routeConfigs = (typeof routeCheckpoints !== 'undefined') ? routeCheckpoints : {};
         
+        // Atong ibutang ang Total KM diri kay wala man ni sa database.js
         window.routeTotalKm = { 
             "G1N": 777, "G1E": 777, "G1W": 777, "G1S": 777, 
             "G3": 3333, "G4": 444, "G5": 5555, "AS26": 628, 
