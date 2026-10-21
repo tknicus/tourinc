@@ -59,7 +59,7 @@
             border: 2px solid #000000; width: 100%; background: #ffffff; display: flex; flex-direction: column; 
             justify-content: space-between; font-size: 13px; font-family: Arial, sans-serif; 
         }
-        .summary-row { display: flex; justify-content: space-between; border-bottom: 1px solid #000000; padding: 8px 12px; }
+        .summary-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #000000; padding: 8px 12px; }
         .summary-row:last-child { border-bottom: none; }
         .summary-row span { color: #555555; }
         .summary-row b { text-align: right; color: #000000; }
@@ -68,7 +68,7 @@
         @media (min-width: 768px) {
             .excel-header { flex-direction: row; justify-content: space-between; align-items: stretch; }
             .profile-side { flex: 1; width: auto; }
-            .summary-side { width: 280px; min-width: 280px; flex-shrink: 0; }
+            .summary-side { width: 310px; min-width: 310px; flex-shrink: 0; }
         }
 
         /* TABLE RESPONSIVE WRAPPER */
@@ -255,10 +255,10 @@
                             <div><b>motor vehicle</b> ${vehicleName}</div>
                             <div><b>Route Name</b> ${routeFullName}</div>
                             <div><b>Total Checkpoints</b> ${scans.length}</div>
-                            <!-- 📌 BAG-O: VERIFICATION STATUS -->
-                            <div><b>Status</b> ${statusBadge}</div>
                         </div>
                         <div class="summary-side">
+                            <!-- 📌 STATUS NAKA-SULOD NA SA SUMMARY BOX (UNANG LINYA) -->
+                            <div class="summary-row"><span>status</span><b>${statusBadge}</b></div>
                             <div class="summary-row"><span>running time</span><b>${runningTimeFormatted}</b></div>
                             <div class="summary-row"><span>distance</span><b>${totalDistance} km</b></div>
                             <div class="summary-row"><span>average speed</span><b>${speedVal} kph</b></div>
