@@ -178,13 +178,33 @@
                 <img id="photoPreview" alt="Ebidensya">
                 <canvas id="photoCanvas" style="display:none;"></canvas>
 
-                <button type="submit" id="mainSubmitBtn">I-Submit ang Data</button>
+                <!-- 1. SUBMIT BUTTON (Gihimong Green aron dali mailhan sa regular scan) -->
+                <button type="submit" id="submitBtn" style="background: linear-gradient(135deg, #28a745, #218838); color: white; font-weight: bold; font-size: 16px; padding: 14px; border: none; border-radius: 8px; width: 100%; cursor: pointer; text-transform: uppercase; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(40, 167, 69, 0.4);">
+                    ✅ I-SUBMIT ANG DATA
+                </button>
+
+                <!-- 2. VISUAL DIVIDER LINE (Naghimo og separation line) -->
+                <hr style="border: 0; height: 1px; background: linear-gradient(to right, transparent, #ff4444, transparent); margin: 30px 0;">
+
+                <!-- 3. 🚨 SOS EMERGENCY ASSISTANCE BOX (Naay space ug separation) -->
+                <div style="background: #2b0000; border: 2px solid #ff0000; padding: 15px; border-radius: 10px; margin-top: 10px; margin-bottom: 25px; text-align: center; box-shadow: 0 0 15px rgba(255, 0, 0, 0.4);">
+                    <h4 style="color: #ff3333; margin: 0 0 8px 0; text-transform: uppercase; font-weight: bold; font-size: 14px; letter-spacing: 1px;">
+                        🚨 EMERGENCY ASSISTANCE / SOS
+                    </h4>
+                    <p style="font-size: 11px; color: #ccc; margin-bottom: 10px; line-height: 1.4;">
+                        Kung nanginahanglan ka ug tabang sa dalan (flat tire, aksidente, mechanical breakdown), isulat ang mensahe sa ubos ug i-tap ang SOS button:
+                    </p>
+                    <textarea id="sosNotes" placeholder="Pananglitan: 'Nawad-an ug kuryente ang motor / Flat tire diri sa Maramag...'" rows="2" style="background: #120000; border: 1px solid #ff4444; color: #fff; font-size: 13px; margin-bottom: 10px; width: 100%; box-sizing: border-box; border-radius: 6px; padding: 8px;"></textarea>
+                    <button type="button" onclick="sendSOSAlert()" id="sosBtn" style="background: linear-gradient(135deg, #cc0000, #ff0000); color: white; font-weight: bold; font-size: 15px; padding: 12px; border: none; border-radius: 6px; cursor: pointer; text-transform: uppercase; width: 100%; box-shadow: 0 4px 8px rgba(255, 0, 0, 0.5);">
+                        🚨 MANGAYO UG TABANG (SEND SOS)
+                    </button>
+                </div>
             </form>
 
             <div style="text-align: center; margin-top: 25px; padding-bottom: 20px; font-size: 12px; color: #aaa; border-top: 1px solid #333; padding-top: 15px;">
                 <!-- DIRI ANG SECRET TRIPLE-TAP FOOTER -->
                 <p id="secretFooter" style="margin: 0; font-weight: bold; color: #ffcc00; cursor: pointer; -webkit-tap-highlight-color: transparent;">&copy; 2026 MasterMinds'CUP. All Rights Reserved.</p>
-                <p style="margin: 5px 0 0 0;">Build Version: <span id="appVersionText" style="color: #00ff00; font-family: monospace;">v4.2-technicus-stable</span></p>
+                <p style="margin: 5px 0 0 0;">Build Version: <span id="appVersionText" style="color: #00ff00; font-family: monospace;">v4.3-technicus-stable</span></p>
                 <p style="margin: 3px 0 0 0; font-size: 10px; color: #666;">Status: Active & Secure 🛡️</p>
             </div>
         </div>
@@ -195,14 +215,36 @@
     <script src="database.js"></script>
     <script>
         // ==========================================
-        // 🛰️ SUPABASE CONFIGURATION
+        // 🛰️ DATABASE CONFIGURATION
         // ==========================================
         const _supabaseUrl = 'https://iilfklquzyxmdergwawh.supabase.co';
         const _supabaseAnonKey = 'sb_publishable_xO3twPzyDBLhdltnkwoS3w_xswYLyf_';
         const supabaseLiveClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
         
+        // ==========================================
+        // 📥 KONEKTAHON DIRETSO SA DATABASE.JS
+        // ==========================================
+        window.routeNames = (typeof routeNames !== 'undefined') ? routeNames : {};
         window.routeConfigs = (typeof routeCheckpoints !== 'undefined') ? routeCheckpoints : {};
         
+        // Atong ibutang ang Total KM diri kay wala man ni sa database.js
+        window.routeTotalKm = { 
+            "G1N": 777, "G1E": 777, "G1W": 777, "G1S": 777, 
+            "G3": 3333, "G4": 444, "G5": 5555, "AS26": 628, 
+            "G7": 7777, "G8": 8888, "G81": 888, "G82": 888, "G83": 888 
+        };        
+
+        // ==========================================
+        // 🌐 GPS VALIDATOR HELPER
+        // ==========================================
+        function isValidCoordinates(lat, lon) {
+            let parsedLat = parseFloat(lat);
+            let parsedLon = parseFloat(lon);
+            if (isNaN(parsedLat) || isNaN(parsedLon)) return false;
+            if (parsedLat === 0 && parsedLon === 0) return false;
+            return (parsedLat >= -90 && parsedLat <= 90 && parsedLon >= -180 && parsedLon <= 180);
+        }        
+
         // ==========================================
         // 🛠️ CUSTOM PIN PROMPT HELPER
         // ==========================================
@@ -241,19 +283,6 @@
                 return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
             } catch (err) { return ""; }
         }
-
-        // ==========================================
-        // 📥 KONEKTAHON DIRETSO SA DATABASE.JS
-        // ==========================================
-        window.routeNames = (typeof routeNames !== 'undefined') ? routeNames : {};
-        window.routeConfigs = (typeof routeCheckpoints !== 'undefined') ? routeCheckpoints : {};
-        
-        // Atong ibutang ang Total KM diri kay wala man ni sa database.js
-        window.routeTotalKm = { 
-            "G1N": 777, "G1E": 777, "G1W": 777, "G1S": 777, 
-            "G3": 3333, "G4": 444, "G5": 5555, "AS26": 628, 
-            "G7": 7777, "G8": 888, "G81": 888, "G82": 888, "G83": 888 
-        };
 
         async function verifyAndLogin() {
             // 🛑 1. LOCKOUT CHECK (Susiha kung naka-lock pa ba ang user)
@@ -444,14 +473,22 @@
                 return;
             }
             const configJson = {
-                "_type": "configuration", "mode": 3,
+                "_type": "configuration", 
+                "mode": 3,
                 "url": "https://iilfklquzyxmdergwawh.supabase.co/functions/v1/owntracks-webhook?rider_id=" + riderId,
-                "username": "rider_" + riderId, "deviceId": "phone", "tid": riderId.slice(-2),
-                "autostartOnBoot": true, "extendedData": true,
-                "ignoreInaccurateLocations": 100, "ignoreStaleLocations": 0,
-                "locatorDisplacement": 100, "locatorInterval": 120,
-                "locatorPriority": 0, "monitoring": 2,
-                "notificationLocation": true, "pegLocatorFastestIntervalToInterval": true
+                "username": "rider_" + riderId, 
+                "deviceId": "phone", 
+                "tid": riderId.slice(-2),
+                "autostartOnBoot": true, 
+                "extendedData": true,
+                "ignoreInaccurateLocations": 500, // GI-USAB: Gikan 100 ngadto sa 500
+                "ignoreStaleLocations": 0,
+                "locatorDisplacement": 3000, // GI-USAB: Gikan 100 ngadto sa 500 meters
+                "locatorInterval": 300, // GI-USAB: Gikan 120 ngadto sa 300 seconds (5 minutes)
+                "locatorPriority": 0, 
+                "monitoring": 2, // Move Mode (Sakto na ni)
+                "notificationLocation": true, 
+                "pegLocatorFastestIntervalToInterval": true
             };
             const base64Config = btoa(JSON.stringify(configJson));
             const oneTapConfigUrl = `owntracks:///config?inline=${base64Config}`;
@@ -697,7 +734,7 @@
                             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
                             function convertToDMS(decimal, isLat) {
-                                if (decimal === "N/A") return "N/A";
+                                if (decimal === "N/A" || isNaN(parseFloat(decimal))) return "N/A";
                                 const val = parseFloat(decimal);
                                 const absVal = Math.abs(val);
                                 const d = Math.floor(absVal);
@@ -771,17 +808,32 @@
 
         function getLocation() {
             return new Promise((resolve) => {
-                if (!navigator.geolocation) { resolve({ link: "No GPS", lat: "N/A", lon: "N/A", time: "N/A" }); } 
-                else {
+                const handleFallback = () => {
+                    if (isValidCoordinates(globalLat, globalLon)) {
+                        resolve({
+                            link: `https://www.google.com/maps?q=${globalLat},${globalLon}`,
+                            lat: parseFloat(globalLat),
+                            lon: parseFloat(globalLon),
+                            time: new Date().toLocaleString()
+                        });
+                    } else {
+                        resolve({ link: "No GPS", lat: 0, lon: 0, time: "N/A" });
+                    }
+                };
+
+                if (!navigator.geolocation) { 
+                    handleFallback(); 
+                } else {
                     navigator.geolocation.getCurrentPosition(
                         (position) => {
                             resolve({
                                 link: `https://www.google.com/maps?q=${position.coords.latitude},${position.coords.longitude}`,
-                                lat: position.coords.latitude, lon: position.coords.longitude,
+                                lat: position.coords.latitude, 
+                                lon: position.coords.longitude,
                                 time: new Date(position.timestamp).toLocaleString()
                             });
                         },
-                        (error) => { resolve({ link: "Error/Gibalibaran", lat: "N/A", lon: "N/A", time: "N/A" }); },
+                        (error) => { handleFallback(); },
                         { timeout: 10000, enableHighAccuracy: true, maximumAge: 0 }
                     );
                 }
@@ -835,12 +887,15 @@
             return new Blob(byteArrays, {type: contentType});
         }
 
+        // ==========================================
+        // 🚀 SAFE DATABASE INSERT
+        // ==========================================
         async function sendDataToServer(dataPayload) {
             try {
                 let finalPhotoUrl = "Walay Ebidensya";
                 if (dataPayload.photo && dataPayload.photo.includes('base64')) {
                     const blob = b64toBlob(dataPayload.photo, 'image/jpeg');
-                    const cleanCp = dataPayload.checkpoint.replace(/\s+/g, '');
+                    const cleanCp = String(dataPayload.checkpoint).replace(/\s+/g, '');
                     const fileName = `${dataPayload.idNum}_${cleanCp}_${new Date().getTime()}.jpg`;
                     const { data: uploadData, error: uploadError } = await supabaseLiveClient.storage.from('photos').upload(fileName, blob, { contentType: 'image/jpeg' });
                     if (!uploadError) {
@@ -849,16 +904,25 @@
                     }
                 }
 
-                // 🛑 I-APIL DIRI ANG SCANNED_AT O TIMESTAMP NGA GIPADALA SA PAYLOAD:
+                let safeLat = parseFloat(dataPayload.latitude);
+                let safeLon = parseFloat(dataPayload.longitude);
+                let safeOdo = parseFloat(dataPayload.odometer);
+
+                // FINAL GUARD CLAUSE UNAD I-INSERT SA DATABASE
+                if (!isValidCoordinates(safeLat, safeLon)) {
+                    console.error("🛑 GUARD TRIGGERED: Invalid GPS coordinates detected, insertion aborted.");
+                    return false;
+                }
+
                 const { error: dbError } = await supabaseLiveClient.from('rally_scans').insert([{
-                    qr_code: dataPayload.idNum, 
+                    qr_code: String(dataPayload.idNum), 
                     rider_name: dataPayload.name, 
                     rider_level: dataPayload.level,
                     checkpoint: dataPayload.checkpoint, 
-                    odometer: dataPayload.odometer || 0, 
+                    odometer: isNaN(safeOdo) ? 0 : safeOdo, 
                     notes: dataPayload.notes || "",
-                    latitude: dataPayload.latitude || 0, 
-                    longitude: dataPayload.longitude || 0,
+                    latitude: safeLat, 
+                    longitude: safeLon,
                     location_address: dataPayload.location || "", 
                     photo_url: finalPhotoUrl,
                     time_submit: dataPayload.timestamp 
@@ -927,7 +991,7 @@
         let isSubmitting = false;
 
         if (myForm) {
-            const mainSubmitBtn = document.getElementById('mainSubmitBtn');
+            const mainSubmitBtn = document.getElementById('submitBtn');
             if (mainSubmitBtn && submitAudio) {
                 mainSubmitBtn.addEventListener('click', function() {
                     submitAudio.currentTime = 0;
@@ -956,6 +1020,13 @@
                 }
 
                 const gpsData = await getLocation();
+
+                // IDUGANG KINI NGA HARD GUARD SA SOS SA SCAN:
+                if (!isValidCoordinates(gpsData.lat, gpsData.lon)) {
+                    alert("🚨 DILI MA-SEND ANG SOS! Walay Valid nga GPS Location Coordinates.\n\nPalihug i-turn ON ang GPS/Location sa imong selpon ug i-allow ang browser aron matultolan ka sa Command Center.");
+                    if (sosBtn) { sosBtn.innerText = "🚨 MANGAYO UG TABANG (SEND SOS)"; sosBtn.disabled = false; }
+                    return;
+                }
                 
                 if (!compressedPhotoBase64 || compressedPhotoBase64 === "" || !compressedPhotoBase64.includes('base64')) {
                     if (submitAudio) { submitAudio.pause(); submitAudio.currentTime = 0; }
@@ -1290,6 +1361,75 @@
                 }
             });
         }
+
+
+        // ==========================================
+        // 🚨 SOS EMERGENCY TRANSMITTER
+        // ==========================================
+        async function sendSOSAlert() {
+            const riderId = document.getElementById('idNum') ? document.getElementById('idNum').value.trim() : "";
+            const riderName = document.getElementById('name') ? document.getElementById('name').value.trim() : "";
+            const sosMsg = document.getElementById('sosNotes') ? document.getElementById('sosNotes').value.trim() : "";
+
+            if (!riderId || !riderName || riderName.includes("❌")) {
+                alert("🛑 DILI MA-SEND! Palihug i-verify muna ang imong Rider ID.");
+                return;
+            }
+
+            if (!sosMsg) {
+                alert("⚠️ Palihug isulat sa text box ang imong sitwasyon o kung unsang tabang ang imong gikinahanglan!");
+                return;
+            }
+
+            let confirmSOS = confirm("🚨 KUMPIRMASYON SA SOS:\n\nSigurado ka ba nga mangayo ka og tabang emergency sa Command Center?");
+            if (!confirmSOS) return;
+
+            const sosBtn = document.getElementById('sosBtn');
+            if (sosBtn) { sosBtn.innerText = "⏳ NAGTRAYSER SA GPS UG NAGPADALA..."; sosBtn.disabled = true; }
+
+            const gpsData = await getLocation();
+
+            // IDUGANG KINI NGA HARD GUARD SA SOS SA SCAN:
+            if (!isValidCoordinates(gpsData.lat, gpsData.lon)) {
+                alert("🚨 DILI MA-SEND ANG SOS! Walay Valid nga GPS Location Coordinates.\n\nPalihug i-turn ON ang GPS/Location sa imong selpon ug i-allow ang browser aron matultolan ka sa Command Center.");
+                if (sosBtn) { sosBtn.innerText = "🚨 MANGAYO UG TABANG (SEND SOS)"; sosBtn.disabled = false; }
+                return;
+            }
+
+            const sosPayload = {
+                idNum: riderId,
+                name: riderName,
+                checkpoint: "🚨 SOS EMERGENCY",
+                odometer: document.getElementById('odometer') ? (document.getElementById('odometer').value || 0) : 0,
+                notes: "🚨 EMERGENCY: " + sosMsg,
+                photo: compressedPhotoBase64 || "Walay Ebidensya",
+                timestamp: new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' }),
+                location: gpsData.link,
+                latitude: gpsData.lat,
+                longitude: gpsData.lon,
+                locationTime: gpsData.time,
+                level: window.activeRiderLevel || "G5",
+            };
+
+            let isStable = await checkInternetStability();
+            if (isStable) {
+                let sentSuccess = await sendDataToServer(sosPayload);
+                if (sentSuccess) {
+                    alert("🚨 SOS SENT SUCCESSFULLY!\n\nNa-alert na ang Command Center. Mag-blink na ang imong location sa Live Map!");
+                    document.getElementById('sosNotes').value = "";
+                } else {
+                    saveToOfflineStorage(sosPayload);
+                    alert("⚠️ Na-save sa Offline Storage ang SOS! I-sync dayon kini inig kaayong signal.");
+                }
+            } else {
+                saveToOfflineStorage(sosPayload);
+                alert("⚠️ WALAY INTERNET SIGNAL! Gi-save sa Offline Storage ang SOS. Modagayday kini inig abit sa signal.");
+            }
+
+            if (sosBtn) { sosBtn.innerText = "🚨 MANGAYO UG TABANG (SEND SOS)"; sosBtn.disabled = false; }
+        }        
+
+
 
     </script>
 </body>
