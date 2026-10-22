@@ -50,7 +50,7 @@
         .profile-side b { display: inline-block; width: 150px; font-weight: normal; color: #555555; }
         
         .summary-side { border: 2px solid #000000; width: 100%; background: #ffffff; display: flex; flex-direction: column; justify-content: space-between; font-size: 13px; font-family: Arial, sans-serif; }
-        .summary-row { display: flex; justify-content: space-between; border-bottom: 1px solid #000000; padding: 8px 12px; }
+        .summary-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #000000; padding: 8px 12px; }
         .summary-row:last-child { border-bottom: none; }
         .summary-row span { color: #555555; }
         .summary-row b { text-align: right; color: #000000; }
@@ -58,7 +58,7 @@
         @media (min-width: 768px) {
             .excel-header { flex-direction: row; justify-content: space-between; align-items: stretch; }
             .profile-side { flex: 1; width: auto; }
-            .summary-side { width: 280px; min-width: 280px; flex-shrink: 0; }
+            .summary-side { width: 330px; min-width: 330px; flex-shrink: 0; }
         }
 
         /* AREA NGA I-CAPTURE PARA SA PICTURE */
@@ -78,7 +78,6 @@
         .status-Pending { background-color: #ffc107; color: #000; }
         .status-Valid { background-color: #28a745; color: #fff; }
         .status-Invalid { background-color: #dc3545; color: #fff; }
-        /* 👁️‍🗨️ STYLING PARA SA HIDE */
         .status-Hide { background-color: #6c757d; color: #fff; }
         
         .admin-remark { 
@@ -97,8 +96,9 @@
         .row-Pending { background-color: #ffffff; }
         .row-Valid { background-color: #d4edda; }
         .row-Invalid { background-color: #f8d7da; }
-        /* 👁️‍🗨️ ROW STYLING PARA SA HIDE */
-        .row-Hide { background-color: #e2e3e5; color: #555; text-decoration: line-through; }
+        /* 👁️‍🗨️ STRIKETHROUGH / GRAY ROW UNTUK HIDE */
+        .row-Hide { background-color: #e2e3e5; color: #777; text-decoration: line-through; }
+        .row-Hide input, .row-Hide select { text-decoration: none; }
         
         .toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 5px; padding: 12px; position: fixed; z-index: 1000; right: 20px; bottom: 20px; font-size: 14px; }
         .toast.show { visibility: visible; }
@@ -184,27 +184,18 @@
         document.onclick = resetIdleTimer;
         document.onscroll = resetIdleTimer;
 
-        // ==========================================
-        // 1️⃣ CHECK KUNG NAKA-LOGIN NA DAAN
-        // ==========================================
         if (sessionStorage.getItem("admin_authenticated") === "true") {
             document.getElementById("authOverlay").style.display = "none";
             document.getElementById("mainReportWrapper").style.display = "block";
             resetIdleTimer();
         }
 
-        // ==========================================
-        // 2️⃣ ENTER KEY SUPPORT SA LOGIN
-        // ==========================================
         function handleEnter(event) {
             if (event.key === 'Enter') {
                 verifyAdminPass();
             }
         }
 
-        // ==========================================
-        // 3️⃣ ANG VERIFIER 
-        // ==========================================
         async function verifyAdminPass() {
             const userPin = document.getElementById("adminPassInput").value.trim();
             if (!userPin) return;
@@ -323,7 +314,14 @@
                     routeFullName = routeNames[riderLevel]; 
                 }
 
-                let chronologicalScans = [...scans].sort((a, b) => new Date(a.time_submit) - new Date(b.time_submit));
+                // 📌 I-SEPARATE ANG ACTIVE SCANS (Dili apil ang Hide/Hidden) PARA RA SA KENTA SA RUNNING TIME, DISTANCE, UG ETA
+                let activeScans = scans.filter(scan => {
+                    let st = String(scan.status || scan.evaluation || '').toUpperCase();
+                    return st !== 'HIDE' && st !== 'HIDDEN';
+                });
+
+                let calcScans = activeScans.length > 0 ? activeScans : scans;
+                let chronologicalScans = [...calcScans].sort((a, b) => new Date(a.time_submit) - new Date(b.time_submit));
                 
                 let firstScanTime = new Date(chronologicalScans[0].time_submit);
                 let lastScanTime = new Date(chronologicalScans[chronologicalScans.length - 1].time_submit);
@@ -336,9 +334,30 @@
                 let startOdo = parseFloat(chronologicalScans[0].odometer) || 0;
                 let endOdo = parseFloat(chronologicalScans[chronologicalScans.length - 1].odometer) || startOdo;
                 let totalDistance = endOdo >= startOdo ? (endOdo - startOdo) : endOdo;
-                if (totalDistance === 0) totalDistance = 655;
 
-                let speedVal = totalHours > 0 ? (totalDistance / (diffMs / (1000 * 60 * 60))).toFixed(2) : "0.00";
+                let speedValNum = totalHours > 0 ? (totalDistance / (diffMs / (1000 * 60 * 60))) : 0;
+                let speedVal = speedValNum > 0 ? speedValNum.toFixed(2) : "0.00";
+
+                // 📌 TARGET ROUTE DISTANCE (DIREKTA GIKAN SA database.js routeDistances)
+                let targetRouteKm = 655; // Default fallback distance
+                if (typeof routeDistances !== 'undefined' && routeDistances[riderLevel]) {
+                    targetRouteKm = parseFloat(routeDistances[riderLevel]);
+                }
+
+                // 📌 ESTIMATED ARRIVAL (ETA) COMPUTATION
+                let remainingKm = Math.max(0, targetRouteKm - totalDistance);
+                let etaFormatted = "N/A";
+
+                if (remainingKm === 0) {
+                    etaFormatted = "🏁 ARRIVED (FINISHED)";
+                } else if (speedValNum > 0 && lastScanTime) {
+                    let hoursNeeded = remainingKm / speedValNum;
+                    let etaTimeMs = lastScanTime.getTime() + (hoursNeeded * 60 * 60 * 1000);
+                    let etaDate = new Date(etaTimeMs);
+                    etaFormatted = formatPhilippineTime(etaDate.toISOString());
+                } else {
+                    etaFormatted = "⏳ N/A (Stationary)";
+                }
 
                 let html = `<div id="captureArea">
                     <div class="excel-header">
@@ -352,8 +371,13 @@
                         </div>
                         <div class="summary-side">
                             <div class="summary-row"><span>running time</span><b>${runningTimeFormatted}</b></div>
-                            <div class="summary-row"><span>distance</span><b>${totalDistance} km</b></div>
+                            <div class="summary-row"><span>distance covered</span><b>${totalDistance} km</b></div>
+                            <div class="summary-row"><span>target route</span><b>${targetRouteKm} km</b></div>
                             <div class="summary-row"><span>average speed</span><b>${speedVal} kph</b></div>
+                            <div class="summary-row" style="background-color: #fffde7;">
+                                <span style="font-weight: bold; color: #cc0000;">EST. ARRIVAL (ETA)</span>
+                                <b style="color: #cc0000; font-size: 12px;">${etaFormatted}</b>
+                            </div>
                         </div>
                     </div>
 
@@ -375,6 +399,7 @@
                             <tbody>
                 `;
 
+                // 📌 IPAPAKITA SA TABLE ANG TANANG SCANS (APIL ANG HIDE)
                 scans.forEach((scan, index) => {
                     let formattedDate = formatPhilippineTime(scan.time_submit);
                     let rLevel = riderInfo ? riderInfo.level : (scan.rider_level || 'AS26');
@@ -424,7 +449,6 @@
                                     <option value="Pending" ${evalStatus === 'Pending' ? 'selected' : ''}>⏳ Pending</option>
                                     <option value="Valid" ${evalStatus === 'Valid' ? 'selected' : ''}>✅ Valid</option>
                                     <option value="Invalid" ${evalStatus === 'Invalid' ? 'selected' : ''}>❌ Invalid</option>
-                                    <!-- 📌 BAG-ONG OPSYON: HIDE / IGNORE -->
                                     <option value="Hide" ${evalStatus === 'Hide' ? 'selected' : ''}>👁️‍🗨️ Hide / Ignore</option>
                                 </select>
                             </td>
@@ -450,9 +474,6 @@
             }
         }
 
-        // ==========================================
-        // 💾 SAVE EVALUATION FUNCTION (SAVE TO SUPABASE)
-        // ==========================================
         async function saveEvaluation(recordId) {
             const statElement = document.getElementById(`stat-${recordId}`);
             const remElement = document.getElementById(`rem-${recordId}`);
