@@ -198,6 +198,17 @@
                     return;
                 }
 
+                // 📌 FILTER OUT HIDE/HIDDEN RECORDS (Dili i-display ug dili i-include sa calculations)
+                scans = scans.filter(scan => {
+                    let st = String(scan.status || scan.evaluation || '').toUpperCase();
+                    return st !== 'HIDE' && st !== 'HIDDEN';
+                });
+
+                if (scans.length === 0) {
+                    container.innerHTML = `<div class="no-data" style="color: #cc0000;">⚠️ Ang tanang record para sa Rider ID #${targetId} gihimong HIDDEN sa Evaluator.</div>`;
+                    return;
+                }
+
                 if (sortOption === 'time_submit') {
                     scans.sort((a, b) => new Date(a.time_submit) - new Date(b.time_submit));
                 } else if (sortOption === 'checkpoint') {
@@ -257,7 +268,6 @@
                             <div><b>Total Checkpoints</b> ${scans.length}</div>
                         </div>
                         <div class="summary-side">
-                            <!-- 📌 STATUS NAKA-SULOD NA SA SUMMARY BOX (UNANG LINYA) -->
                             <div class="summary-row"><span>status</span><b>${statusBadge}</b></div>
                             <div class="summary-row"><span>running time</span><b>${runningTimeFormatted}</b></div>
                             <div class="summary-row"><span>distance</span><b>${totalDistance} km</b></div>
