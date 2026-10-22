@@ -53,6 +53,7 @@ const riderDatabase = [
     { idNum: "1673", fullname: "Oculam, CRIZEL", nickname: "TAKAHASHI 23", level: "G81", category: "LONEWOLF", classification: "ELITE", vehicle: "SUZUKI 150CC", passcode: "63075cf5a34e6685ffb9be2e009b5ece6efae26232223575ac382fafa6ae335a", isMarshal: false, expiry: "2026-12-31" },
     { idNum: "1674", fullname: "Resurreccion, Ram", nickname: "Asher", level: "G81", category: "LONEWOLF", classification: "ELITE", vehicle: "YAMAHA 155", passcode: "8fc750f6d387270884c52388abf261efa9e0b55854fdd27020113b47fcc766c0", isMarshal: false, expiry: "2026-12-31" },
     { idNum: "1675", fullname: "Perez, Daniel Julie", nickname: "Daniel / 31", level: "G81", category: "LONEWOLF", classification: "ELITE", vehicle: "YAMAHA 155", passcode: "e9c15acddd2bbb3144f2bf481443dfd75d5205573b89cb455604f646e321d5f4", isMarshal: false, expiry: "2026-12-31" },
+    { idNum: "1676", fullname: "Montoya, John Ronald", nickname: "THROTTLE THERAPY PH", level: "G8", category: "LONEWOLF", classification: "ELITE", vehicle: "HONDA 150", passcode: "22d04f665519fd8091f873476b0b4be4ad02abe10c610b1f81611b7cc37d6146", isMarshal: false, expiry: "2026-12-31" },
 ];
 
 
