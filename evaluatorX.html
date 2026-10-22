@@ -96,7 +96,9 @@
         .row-Pending { background-color: #ffffff; }
         .row-Valid { background-color: #d4edda; }
         .row-Invalid { background-color: #f8d7da; }
-        .row-Hide { background-color: #e2e3e5; color: #555; text-decoration: line-through; }
+        /* 👁️‍🗨️ STRIKETHROUGH / GRAY ROW UNTUK HIDE */
+        .row-Hide { background-color: #e2e3e5; color: #777; text-decoration: line-through; }
+        .row-Hide input, .row-Hide select { text-decoration: none; }
         
         .toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 5px; padding: 12px; position: fixed; z-index: 1000; right: 20px; bottom: 20px; font-size: 14px; }
         .toast.show { visibility: visible; }
@@ -289,17 +291,6 @@
                     return;
                 }
 
-                // 📌 FILTER OUT HIDE/HIDDEN RECORDS
-                scans = scans.filter(scan => {
-                    let st = String(scan.status || scan.evaluation || '').toUpperCase();
-                    return st !== 'HIDE' && st !== 'HIDDEN';
-                });
-
-                if (scans.length === 0) {
-                    container.innerHTML = `<div class="no-data" style="color: #cc0000;">⚠️ Ang tanang record para sa Rider ID #${targetId} gihimong HIDDEN.</div>`;
-                    return;
-                }
-
                 if (sortOption === 'time_submit') {
                     scans.sort((a, b) => new Date(a.time_submit) - new Date(b.time_submit));
                 } else if (sortOption === 'checkpoint') {
@@ -323,7 +314,14 @@
                     routeFullName = routeNames[riderLevel]; 
                 }
 
-                let chronologicalScans = [...scans].sort((a, b) => new Date(a.time_submit) - new Date(b.time_submit));
+                // 📌 I-SEPARATE ANG ACTIVE SCANS (Dili apil ang Hide/Hidden) PARA RA SA KENTA SA RUNNING TIME, DISTANCE, UG ETA
+                let activeScans = scans.filter(scan => {
+                    let st = String(scan.status || scan.evaluation || '').toUpperCase();
+                    return st !== 'HIDE' && st !== 'HIDDEN';
+                });
+
+                let calcScans = activeScans.length > 0 ? activeScans : scans;
+                let chronologicalScans = [...calcScans].sort((a, b) => new Date(a.time_submit) - new Date(b.time_submit));
                 
                 let firstScanTime = new Date(chronologicalScans[0].time_submit);
                 let lastScanTime = new Date(chronologicalScans[chronologicalScans.length - 1].time_submit);
@@ -340,13 +338,13 @@
                 let speedValNum = totalHours > 0 ? (totalDistance / (diffMs / (1000 * 60 * 60))) : 0;
                 let speedVal = speedValNum > 0 ? speedValNum.toFixed(2) : "0.00";
 
-                // 📌 1. TARGET ROUTE DISTANCE (DIREKTA GIKAN SA database.js routeDistances)
+                // 📌 TARGET ROUTE DISTANCE (DIREKTA GIKAN SA database.js routeDistances)
                 let targetRouteKm = 655; // Default fallback distance
                 if (typeof routeDistances !== 'undefined' && routeDistances[riderLevel]) {
                     targetRouteKm = parseFloat(routeDistances[riderLevel]);
                 }
 
-                // 📌 2. ESTIMATED ARRIVAL (ETA) COMPUTATION
+                // 📌 ESTIMATED ARRIVAL (ETA) COMPUTATION
                 let remainingKm = Math.max(0, targetRouteKm - totalDistance);
                 let etaFormatted = "N/A";
 
@@ -376,7 +374,6 @@
                             <div class="summary-row"><span>distance covered</span><b>${totalDistance} km</b></div>
                             <div class="summary-row"><span>target route</span><b>${targetRouteKm} km</b></div>
                             <div class="summary-row"><span>average speed</span><b>${speedVal} kph</b></div>
-                            <!-- 📌 ESTIMATED ARRIVAL (ETA) DISPLAY -->
                             <div class="summary-row" style="background-color: #fffde7;">
                                 <span style="font-weight: bold; color: #cc0000;">EST. ARRIVAL (ETA)</span>
                                 <b style="color: #cc0000; font-size: 12px;">${etaFormatted}</b>
@@ -402,6 +399,7 @@
                             <tbody>
                 `;
 
+                // 📌 IPAPAKITA SA TABLE ANG TANANG SCANS (APIL ANG HIDE)
                 scans.forEach((scan, index) => {
                     let formattedDate = formatPhilippineTime(scan.time_submit);
                     let rLevel = riderInfo ? riderInfo.level : (scan.rider_level || 'AS26');
