@@ -98,7 +98,7 @@
                 let option = document.createElement('option');
                 option.value = key;
                 option.text = `${key} - ${activeRoutes[key]}`;
-                if(key === "G81") option.selected = true; // Gituyo nakog select ang G81 para dali ma-test
+                if(key === "G81") option.selected = true;
                 select.add(option);
             }
         };
@@ -113,13 +113,12 @@
                 return;
             }
 
-            container.innerHTML = `<div class="no-data">🔄 Gikuha ang tanang data (bisan lapas sa 1000) para sa rutang <b>${selectedRoute}</b> gikan sa Supabase... Palihug paghulat.</div>`;
+            container.innerHTML = `<div class="no-data">🔄 Gikuha ang tanang data para sa rutang <b>${selectedRoute}</b> gikan sa Supabase... Palihug paghulat.</div>`;
             btn.disabled = true;
             btn.innerText = "NAG-LOADING...";
 
             try {
                 // 1. KUHAON ANG TANANG SCANS (PAGINATION LOOP)
-                // Maoy musolbad sa nagputol nga scans kay i-bypass niini ang 1000 hard-limit.
                 let allScans = [];
                 let fetchStart = 0;
                 let fetchLimit = 1000;
@@ -130,16 +129,16 @@
                         .from('rally_scans')
                         .select('*')
                         .range(fetchStart, fetchStart + fetchLimit - 1)
-                        .order('scanned_at', { ascending: true });
+                        .order('time_submit', { ascending: true }); // 📌 Gamiton ang time_submit imbes scanned_at
 
                     if (error) throw new Error(error.message);
 
                     if (data && data.length > 0) {
                         allScans.push(...data);
                         if (data.length < fetchLimit) {
-                            isFetching = false; // Nahurot na
+                            isFetching = false;
                         } else {
-                            fetchStart += fetchLimit; // Kuha nasab sa sunod
+                            fetchStart += fetchLimit;
                         }
                     } else {
                         isFetching = false;
@@ -211,6 +210,15 @@
                 routeRiders.forEach((rider, index) => {
                     let riderScans = allScans.filter(s => String(s.qr_code) === String(rider.idNum));
                     
+                    // 📌 EXCLUDE HIDE / HIDDEN SCANS (Para mo-tutok ug mo-coincide sa evaluator.html & report.html)
+                    let activeScans = riderScans.filter(s => {
+                        let st = String(s.status || s.evaluation || '').toUpperCase();
+                        return st !== 'HIDE' && st !== 'HIDDEN';
+                    });
+
+                    // 📌 SORT CHRONOLOGICALLY BASE SA time_submit
+                    activeScans.sort((a, b) => new Date(a.time_submit || a.scanned_at) - new Date(b.time_submit || b.scanned_at));
+
                     let durationText = "";
                     let distanceText = "";
                     let totalScannedUnique = 0;
@@ -219,23 +227,24 @@
                     let cpCounts = {};
                     expectedCPs.forEach(cp => cpCounts[cp] = 0);
 
-                    if (riderScans.length > 0) {
+                    if (activeScans.length > 0) {
                         hasStarted = true;
-                        let firstScan = new Date(riderScans[0].scanned_at);
-                        let lastScan = new Date(riderScans[riderScans.length - 1].scanned_at);
-                        let diffMs = lastScan - firstScan;
+                        let firstScanTime = new Date(activeScans[0].time_submit || activeScans[0].scanned_at);
+                        let lastScanTime = new Date(activeScans[activeScans.length - 1].time_submit || activeScans[activeScans.length - 1].scanned_at);
+                        let diffMs = lastScanTime - firstScanTime;
+
                         let tH = Math.floor(diffMs / (1000 * 60 * 60));
                         let tM = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
                         let tS = Math.floor((diffMs % (1000 * 60)) / 1000);
                         durationText = `${String(tH).padStart(2, '0')}:${String(tM).padStart(2, '0')}:${String(tS).padStart(2, '0')}`;
 
-                        let startOdo = parseFloat(riderScans[0].odometer) || 0;
-                        let endOdo = parseFloat(riderScans[riderScans.length - 1].odometer) || startOdo;
+                        let startOdo = parseFloat(activeScans[0].odometer) || 0;
+                        let endOdo = parseFloat(activeScans[activeScans.length - 1].odometer) || startOdo;
                         let dist = endOdo >= startOdo ? (endOdo - startOdo) : endOdo;
                         distanceText = dist > 0 ? Math.round(dist) : "";
 
-                        // FLEXIBLE CHECKPOINT MATCHING LOGIC
-                        riderScans.forEach(scan => {
+                        // FLEXIBLE CHECKPOINT MATCHING LOGIC (ACTIVE SCANS ONLY)
+                        activeScans.forEach(scan => {
                             let rawCp = String(scan.checkpoint || '').trim();
                             let cleanCp = rawCp.replace(/^CP\s*/i, '');
 
