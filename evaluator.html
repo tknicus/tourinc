@@ -52,18 +52,19 @@
         }
 
         /* 🌊 HANAP NGA WATERMARK LOGO STYLES (UPDATED OVERLAY) */
+        /* 🌊 GI-PADAK-AN NGA WATERMARK LOGO */
         .watermark-bg {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 60%;
-            max-width: 600px;
-            opacity: 0.15; /* Gisaka sa 15% aron makita gyud sa mata */
-            pointer-events: none; /* Dili maka-balag sa pag-click sa inputs ug dropdowns */
-            z-index: 100; /* Gisaka sa ibabaw aron dili matabonan sa solid color sa table */
-            mix-blend-mode: multiply; /* Para mo-blend sa table ug background */
-}
+            width: 85%;          /* Gikan sa 60% gihimong 85% para mas lapad */
+            max-width: 950px;    /* Gikan sa 600px gihimong 950px para mas dako sa screen */
+            opacity: 0.15;       /* Puyde nimo patas-an pabalik sa 0.18 o 0.20 kon gusto mas klaro pa */
+            pointer-events: none;
+            z-index: 100;
+            mix-blend-mode: multiply;
+        }
 
         /* EXCEL HEADER & TABLE Z-INDEX (PARA NAA SA TAWAS SA WATERMARK) */
         .excel-header { display: flex; flex-direction: column; gap: 12px; border: 2px solid #000; padding: 12px; background: rgba(253, 253, 253, 0.85); margin-bottom: 15px; position: relative; z-index: 1; }
