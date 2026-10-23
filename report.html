@@ -34,6 +34,27 @@
         #picBtn { background: #28a745; flex: 1; }
         #picBtn:hover { background: #218838; }
 
+        /* 🌊 WATERMARK LOGO STYLES */
+        #captureArea { 
+            padding: 10px; 
+            background-color: #ffffff; 
+            position: relative; 
+            overflow: hidden; 
+        }
+
+        .watermark-bg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 85%;
+            max-width: 950px;
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 100;
+            mix-blend-mode: multiply;
+        }
+
         /* 📱 RESPONSIVE EXCEL HEADER */
         .excel-header { 
             display: flex; 
@@ -258,6 +279,9 @@
                 let speedVal = totalHours > 0 ? (totalDistance / (diffMs / (1000 * 60 * 60))).toFixed(2) : "0.00";
 
                 let html = `<div id="captureArea">
+                    <!-- 🌊 WATERMARK IMAGE -->
+                    <img src="mmc.png" class="watermark-bg" alt="Watermark Logo">
+
                     <div class="excel-header">
                         <div class="profile-side">
                             <div><b>id number</b> <span style="font-size: 16px; font-weight: bold; color: #0000cc;">${targetId}</span></div>
