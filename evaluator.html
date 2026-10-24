@@ -348,55 +348,63 @@
                 let lastScanTime = new Date(chronologicalScans[chronologicalScans.length - 1].time_submit);
                 let rawDiffMs = lastScanTime - firstScanTime;
                 
-                // ==========================================
-                // ⏱️ PAUSE & REST TIME DEDUCTION COMPUTATION
-                // ==========================================
-                const MAX_VALID_PAUSE_MS = 24 * 60 * 60 * 1000; // 24 Hours Max per pause
-                let totalPauseDeductionMs = 0;
 
-                for (let i = 0; i < chronologicalScans.length - 1; i++) {
-                    let currentScan = chronologicalScans[i];
-                    let nextScan = chronologicalScans[i + 1];
 
-                    let cpName = String(currentScan.checkpoint || '').toUpperCase();
-                    let evalStatus = String(currentScan.status || '').toUpperCase();
-                    let adminRemark = String(currentScan.eval_remarks || '').toUpperCase();
-                    let scanNotes = String(currentScan.notes || '').toUpperCase();
 
-                    // Susiha kon PAUSE ba ang maong scan
-                    let isPause = cpName.includes('PAUSE') || 
-                                  evalStatus.includes('PAUSE') || 
-                                  scanNotes.includes('[PAUSE]');
+// ==========================================
+// ⏱️ EKSATONG PAG-DEDUCT SA PAUSE HANGTOD RESUME
+// ==========================================
+let firstScanTime = new Date(chronologicalScans[0].time_submit);
+let lastScanTime = new Date(chronologicalScans[chronologicalScans.length - 1].time_submit);
+let rawDiffMs = lastScanTime - firstScanTime; // Raw Total Time (walay bawas)
 
-                    // Kon mechanical/motor breakdown, dili i-deduct!
-                    let isMechanical = adminRemark.includes('MECHANICAL') || 
-                                       adminRemark.includes('MOTOR') || 
-                                       scanNotes.includes('MECHANICAL');
+let totalPauseDeductionMs = 0;
+let activePauseTime = null;
 
-                    if (isPause && !isMechanical) {
-                        let pauseStart = new Date(currentScan.time_submit);
-                        let pauseEnd = new Date(nextScan.time_submit);
-                        let pauseDuration = pauseEnd - pauseStart;
+chronologicalScans.forEach((scan) => {
+    let cpName = String(scan.checkpoint || '').toUpperCase();
+    let evalStatus = String(scan.status || '').toUpperCase();
+    let adminRemark = String(scan.eval_remarks || '').toUpperCase();
+    let scanNotes = String(scan.notes || '').toUpperCase();
 
-                        if (pauseDuration > 0) {
-                            // Capped at exact 24 hours maximum per pause
-                            let validDeduction = Math.min(pauseDuration, MAX_VALID_PAUSE_MS);
-                            totalPauseDeductionMs += validDeduction;
-                        }
-                    }
-                }
+    let isPause = cpName.includes('PAUSE') || evalStatus.includes('PAUSE') || scanNotes.includes('[PAUSE]');
+    let isResume = cpName.includes('RESUME') || evalStatus.includes('RESUME') || scanNotes.includes('[RESUME]');
+    let isMechanical = adminRemark.includes('MECHANICAL') || adminRemark.includes('MOTOR') || scanNotes.includes('MECHANICAL');
 
-                // EFFECTIVE RUNNING TIME (TOTAL TIME MINUS VALID PAUSES)
-                let effectiveDiffMs = Math.max(0, rawDiffMs - totalPauseDeductionMs);
+    // 1. Inig-start sa PAUSE (basta dili Mechanical Breakdown)
+    if (isPause && !isMechanical) {
+        if (!activePauseTime) {
+            activePauseTime = new Date(scan.time_submit); // I-mark ang oras nga nag-pause
+        }
+    } 
+    // 2. Inig-RESUME sa Rider (o inig scan sa sunod CP human sa Pause)
+    else if (activePauseTime && (isResume || !isPause)) {
+        let pauseEndTime = new Date(scan.time_submit); // Oras sa pag-resume
+        let duration = pauseEndTime - activePauseTime; // Oras nga gipahuwayan
+        
+        if (duration > 0) {
+            totalPauseDeductionMs += duration; // I-sum ang tanang pause durations
+        }
+        activePauseTime = null; // Reset signal
+    }
+});
 
-                let totalHours = Math.floor(effectiveDiffMs / (1000 * 60 * 60));
-                let totalMinutes = Math.floor((effectiveDiffMs % (1000 * 60 * 60)) / (1000 * 60));
-                let runningTimeFormatted = `${String(totalHours).padStart(2, '0')}:${String(totalMinutes).padStart(2, '0')}:00 hms`;
+// EFFECTIVE RUNNING TIME (TOTAL TIME MINUS TOTAL PAUSE DURATION)
+let effectiveDiffMs = Math.max(0, rawDiffMs - totalPauseDeductionMs);
 
-                // FORMATTED PAUSE DEDUCTION DISPLAY
-                let pauseHours = Math.floor(totalPauseDeductionMs / (1000 * 60 * 60));
-                let pauseMinutes = Math.floor((totalPauseDeductionMs % (1000 * 60 * 60)) / (1000 * 60));
-                let pauseTimeFormatted = `${pauseHours}h ${pauseMinutes}m`;
+// Format sa Oras: HH:MM:SS
+let totalHours = Math.floor(effectiveDiffMs / (1000 * 60 * 60));
+let totalMinutes = Math.floor((effectiveDiffMs % (1000 * 60 * 60)) / (1000 * 60));
+let totalSeconds = Math.floor((effectiveDiffMs % (1000 * 60)) / 1000);
+let runningTimeFormatted = `${String(totalHours).padStart(2, '0')}:${String(totalMinutes).padStart(2, '0')}:${String(totalSeconds).padStart(2, '0')} hms`;
+
+// Format sa Bawas nga Oras (Pause Time Display)
+let pauseHours = Math.floor(totalPauseDeductionMs / (1000 * 60 * 60));
+let pauseMinutes = Math.floor((totalPauseDeductionMs % (1000 * 60 * 60)) / (1000 * 60));
+let pauseTimeFormatted = `${pauseHours}h ${pauseMinutes}m`;
+
+
+
 
                 let startOdo = parseFloat(chronologicalScans[0].odometer) || 0;
                 let endOdo = parseFloat(chronologicalScans[chronologicalScans.length - 1].odometer) || startOdo;
