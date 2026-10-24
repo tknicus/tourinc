@@ -64,6 +64,8 @@
             padding: 12px; 
             background: #fdfdfd; 
             margin-bottom: 15px; 
+            position: relative;
+            z-index: 1;
         }
         .profile-side { 
             width: 100%; 
@@ -93,8 +95,8 @@
         }
 
         /* TABLE RESPONSIVE WRAPPER */
-        .table-container { width: 100%; overflow-x: auto; margin-top: 10px; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; font-family: Arial, sans-serif; min-width: 880px; }
+        .table-container { width: 100%; overflow-x: auto; margin-top: 10px; -webkit-overflow-scrolling: touch; position: relative; z-index: 1; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; font-family: Arial, sans-serif; min-width: 880px; background: rgba(255, 255, 255, 0.85); }
         th, td { border: 1px solid #000; padding: 6px 8px; text-align: left; }
         th { background-color: #d9d9d9; text-align: center; font-weight: bold; color: #000; }
         .center { text-align: center; }
@@ -106,8 +108,9 @@
             color: #b30000 !important;
         }
 
-        /* AREA NGA I-CAPTURE PARA SA PICTURE */
-        #captureArea { padding: 10px; background-color: #ffffff; }
+        /* ⏸️ PAUSE / RESUME ROW HIGHLIGHTS */
+        tr.pause-row { background-color: #fff3cd !important; }
+        tr.resume-row { background-color: #d1ecf1 !important; }
 
         /* ==========================================
            🖨️ PDF & PRINT CONFIGURATION
@@ -140,7 +143,7 @@
         <!-- 🔍 SEARCH BAR -->
         <div class="control-panel">
             <label>RIDER ID:</label>
-            <input type="text" id="searchIdInput" placeholder="Ex: 0001">
+            <input type="text" id="searchIdInput" placeholder="Ex: 0001" onkeypress="if(event.key === 'Enter') generateReport();">
             
             <label>ISUNOD SA:</label>
             <select id="sortByDropdown">
@@ -243,9 +246,9 @@
                     });
                 }
 
-                let fullName = riderInfo ? riderInfo.fullname : (scans[0].rider_name || 'Wala sa Masterlist');
+                let fullName = riderInfo ? (riderInfo.fullname || riderInfo.name) : (scans[0].rider_name || 'Wala sa Masterlist');
                 let riderLevel = riderInfo ? riderInfo.level : (scans[0].rider_level || 'AS26');
-                let codeName = riderInfo ? riderInfo.nickname : 'RIDER';
+                let codeName = riderInfo ? (riderInfo.nickname || 'RIDER') : 'RIDER';
                 let vehicleName = riderInfo ? (riderInfo.vehicle || 'N/A') : (scans[0].vehicle || 'N/A');
 
                 let routeFullName = riderLevel;
@@ -263,20 +266,61 @@
                     ? `<span style="background-color: #e67e22; color: #ffffff; padding: 2px 7px; border-radius: 4px; font-weight: bold; font-size: 11px;">⚠️ PENDING VERIFICATION</span>`
                     : `<span style="background-color: #27ae60; color: #ffffff; padding: 2px 7px; border-radius: 4px; font-weight: bold; font-size: 11px;">✅ OFFICIALLY VERIFIED</span>`;
 
-                let firstScanTime = new Date(scans[0].time_submit);
-                let lastScanTime = new Date(scans[scans.length - 1].time_submit);
-                let diffMs = lastScanTime - firstScanTime;
+                // ==========================================
+                // ⏱️ CHRONOLOGICAL PAUSE DEDUCTION LOGIC
+                // ==========================================
+                let chronologicalScans = [...scans].sort((a, b) => new Date(a.time_submit) - new Date(b.time_submit));
                 
-                let totalHours = Math.floor(diffMs / (1000 * 60 * 60));
-                let totalMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-                let runningTimeFormatted = `${String(totalHours).padStart(2, '0')}:${String(totalMinutes).padStart(2, '0')}:00 hms`;
+                let firstScanTime = new Date(chronologicalScans[0].time_submit);
+                let lastScanTime = new Date(chronologicalScans[chronologicalScans.length - 1].time_submit);
+                let rawDiffMs = lastScanTime - firstScanTime;
 
-                let startOdo = parseFloat(scans[0].odometer) || 0;
-                let endOdo = parseFloat(scans[scans.length - 1].odometer) || startOdo;
+                let totalPauseDeductionMs = 0;
+                let activePauseTime = null;
+
+                chronologicalScans.forEach((scan) => {
+                    let cpName = String(scan.checkpoint || '').toUpperCase();
+                    let evalStatus = String(scan.status || scan.evaluation || '').toUpperCase();
+                    let adminRemark = String(scan.eval_remarks || '').toUpperCase();
+                    let scanNotes = String(scan.notes || '').toUpperCase();
+
+                    let isPause = cpName.includes('PAUSE') || evalStatus.includes('PAUSE') || scanNotes.includes('[PAUSE]');
+                    let isResume = cpName.includes('RESUME') || evalStatus.includes('RESUME') || scanNotes.includes('[RESUME]');
+                    let isMechanical = adminRemark.includes('MECHANICAL') || adminRemark.includes('MOTOR') || scanNotes.includes('MECHANICAL');
+
+                    if (isPause && !isMechanical) {
+                        if (!activePauseTime) {
+                            activePauseTime = new Date(scan.time_submit);
+                        }
+                    } else if (activePauseTime && (isResume || !isPause)) {
+                        let pauseEndTime = new Date(scan.time_submit);
+                        let duration = pauseEndTime - activePauseTime;
+                        if (duration > 0) {
+                            totalPauseDeductionMs += duration;
+                        }
+                        activePauseTime = null;
+                    }
+                });
+
+                // EFFECTIVE RUNNING TIME (RAW TIME MINUS PAUSES)
+                let effectiveDiffMs = Math.max(0, rawDiffMs - totalPauseDeductionMs);
+
+                let totalHours = Math.floor(effectiveDiffMs / (1000 * 60 * 60));
+                let totalMinutes = Math.floor((effectiveDiffMs % (1000 * 60 * 60)) / (1000 * 60));
+                let totalSeconds = Math.floor((effectiveDiffMs % (1000 * 60)) / 1000);
+                let runningTimeFormatted = `${String(totalHours).padStart(2, '0')}:${String(totalMinutes).padStart(2, '0')}:${String(totalSeconds).padStart(2, '0')} hms`;
+
+                let pauseHours = Math.floor(totalPauseDeductionMs / (1000 * 60 * 60));
+                let pauseMinutes = Math.floor((totalPauseDeductionMs % (1000 * 60 * 60)) / (1000 * 60));
+                let pauseTimeFormatted = `${pauseHours}h ${pauseMinutes}m`;
+
+                let startOdo = parseFloat(chronologicalScans[0].odometer) || 0;
+                let endOdo = parseFloat(chronologicalScans[chronologicalScans.length - 1].odometer) || startOdo;
                 let totalDistance = endOdo >= startOdo ? (endOdo - startOdo) : endOdo;
                 if (totalDistance === 0) totalDistance = 655;
 
-                let speedVal = totalHours > 0 ? (totalDistance / (diffMs / (1000 * 60 * 60))).toFixed(2) : "0.00";
+                // AVERAGE SPEED COMPUTED FROM EFFECTIVE TIME
+                let speedVal = effectiveDiffMs > 0 ? (totalDistance / (effectiveDiffMs / (1000 * 60 * 60))).toFixed(2) : "0.00";
 
                 let html = `<div id="captureArea">
                     <!-- 🌊 WATERMARK IMAGE -->
@@ -294,6 +338,7 @@
                         <div class="summary-side">
                             <div class="summary-row"><span>status</span><b>${statusBadge}</b></div>
                             <div class="summary-row"><span>running time</span><b>${runningTimeFormatted}</b></div>
+                            <div class="summary-row"><span>pause deducted</span><b style="color: #d35400;">-${pauseTimeFormatted}</b></div>
                             <div class="summary-row"><span>distance</span><b>${totalDistance} km</b></div>
                             <div class="summary-row"><span>average speed</span><b>${speedVal} kph</b></div>
                         </div>
@@ -376,13 +421,19 @@
                     let lon = scan.longitude ? parseFloat(scan.longitude).toFixed(5) : null;
                     let coordsDisplay = (lat && lon) ? `${lat}, ${lon}` : (scan.latitude && scan.longitude ? `${scan.latitude}, ${scan.longitude}` : 'N/A');
 
-                    // 🚨 SIKSIKON KUNG INVALID BA ANG RECORD
-                    let isInvalid = String(scan.checkpoint || '').toUpperCase().includes('INVALID') ||
-                                    String(scan.notes || '').toUpperCase().includes('INVALID') ||
-                                    String(scan.status || '').toUpperCase().includes('INVALID') ||
-                                    scan.is_invalid === true;
+                    // 🚨 HIGHLIGHT CLASSES FOR ROWS
+                    let cpUpper = cpCode.toUpperCase();
+                    let notesUpper = String(scan.notes || '').toUpperCase();
+                    let statusUpper = String(scan.status || '').toUpperCase();
 
-                    let rowClass = isInvalid ? 'class="invalid-row"' : '';
+                    let isInvalid = cpUpper.includes('INVALID') || notesUpper.includes('INVALID') || statusUpper.includes('INVALID') || scan.is_invalid === true;
+                    let isPauseRow = cpUpper.includes('PAUSE') || statusUpper.includes('PAUSE');
+                    let isResumeRow = cpUpper.includes('RESUME') || statusUpper.includes('RESUME');
+
+                    let rowClass = '';
+                    if (isInvalid) rowClass = 'class="invalid-row"';
+                    else if (isPauseRow) rowClass = 'class="pause-row"';
+                    else if (isResumeRow) rowClass = 'class="resume-row"';
 
                     html += `
                         <tr ${rowClass}>
