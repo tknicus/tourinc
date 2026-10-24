@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mmc-scanner-v3.96'; // ⬅️ GI-UPDATE NATO ANG VERSION
+const CACHE_NAME = 'mmc-scanner-v3.97'; // ⬅️ GI-UPDATE NATO ANG VERSION
 
 // KINI ANG MGA FILES NGA I-DOWNLOAD UG I-SAVE SA SELPON
 const assetsToCache = [
@@ -18,6 +18,7 @@ const assetsToCache = [
     'https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css',
     'https://cdn.jsdelivr.net/npm/sweetalert2@8',
 ];
+
 
 // 1. I-install ug i-cache ang mga files (Gamit ang Promise.allSettled aron dili mag-crash ang SW kung naay external link nga mapakyas)
 self.addEventListener('install', (event) => {
@@ -46,11 +47,16 @@ self.addEventListener('activate', (event) => {
             );
         })
     );
-    self.clientsClaim();
+    self.clients.claim(); // ⬅️ GI-CORRECT ANG SYNTAX
 });
 
 // 3. Intercept ang mga request: kuhaa sa cache kon offline
 self.addEventListener('fetch', (event) => {
+    // Pass-through lang para sa Supabase o non-GET requests (dili i-cache)
+    if (event.request.method !== 'GET' || event.request.url.includes('supabase.co')) {
+        return;
+    }
+
     event.respondWith(
         caches.match(event.request).then((cachedResponse) => {
             return cachedResponse || fetch(event.request).catch(() => {
@@ -61,3 +67,18 @@ self.addEventListener('fetch', (event) => {
         })
     );
 });
+
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').then((reg) => {
+        reg.onupdatefound = () => {
+            const installingWorker = reg.installing;
+            installingWorker.onstatechange = () => {
+                if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    // Magpakita og alert ug mo-reload aron magamit ang bag-ong version
+                    alert("🔄 Naay bag-ong update ang system! Moreset ang page kadiyot.");
+                    window.location.reload();
+                }
+            };
+        };
+    });
+}
