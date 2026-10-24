@@ -51,22 +51,21 @@
             overflow: hidden; 
         }
 
-        /* 🌊 HANAP NGA WATERMARK LOGO STYLES (UPDATED OVERLAY) */
-        /* 🌊 GI-PADAK-AN NGA WATERMARK LOGO */
+        /* 🌊 WATERMARK LOGO STYLES */
         .watermark-bg {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 85%;          /* Gikan sa 60% gihimong 85% para mas lapad */
-            max-width: 950px;    /* Gikan sa 600px gihimong 950px para mas dako sa screen */
-            opacity: 0.15;       /* Puyde nimo patas-an pabalik sa 0.18 o 0.20 kon gusto mas klaro pa */
+            width: 85%;
+            max-width: 950px;
+            opacity: 0.15;
             pointer-events: none;
             z-index: 100;
             mix-blend-mode: multiply;
         }
 
-        /* EXCEL HEADER & TABLE Z-INDEX (PARA NAA SA TAWAS SA WATERMARK) */
+        /* EXCEL HEADER & TABLE Z-INDEX */
         .excel-header { display: flex; flex-direction: column; gap: 12px; border: 2px solid #000; padding: 12px; background: rgba(253, 253, 253, 0.85); margin-bottom: 15px; position: relative; z-index: 1; }
         .profile-side { width: 100%; font-size: 13px; font-family: Arial, sans-serif; color: #000000; }
         .profile-side div { margin-bottom: 6px; word-break: break-word; font-weight: normal; color: #000000; }
@@ -97,6 +96,8 @@
         .status-dropdown { padding: 4px; font-weight: bold; border-radius: 4px; border: 1px solid #000; cursor: pointer; outline: none; width: 110px; }
         .status-Pending { background-color: #ffc107; color: #000; }
         .status-Valid { background-color: #28a745; color: #fff; }
+        .status-PAUSE { background-color: #ff9900; color: #000; }
+        .status-RESUME { background-color: #00d2ff; color: #000; }
         .status-Invalid { background-color: #dc3545; color: #fff; }
         .status-Hide { background-color: #6c757d; color: #fff; }
         
@@ -115,8 +116,9 @@
         
         .row-Pending { background-color: rgba(255, 255, 255, 0.85); }
         .row-Valid { background-color: rgba(212, 237, 218, 0.85); }
+        .row-PAUSE { background-color: rgba(255, 243, 205, 0.85); }
+        .row-RESUME { background-color: rgba(209, 236, 241, 0.85); }
         .row-Invalid { background-color: rgba(248, 215, 218, 0.85); }
-        /* 👁️‍🗨️ STRIKETHROUGH / GRAY ROW UNTUK HIDE */
         .row-Hide { background-color: rgba(226, 227, 229, 0.85); color: #777; text-decoration: line-through; }
         .row-Hide input, .row-Hide select { text-decoration: none; }
         
@@ -344,17 +346,63 @@
                 
                 let firstScanTime = new Date(chronologicalScans[0].time_submit);
                 let lastScanTime = new Date(chronologicalScans[chronologicalScans.length - 1].time_submit);
-                let diffMs = lastScanTime - firstScanTime;
+                let rawDiffMs = lastScanTime - firstScanTime;
                 
-                let totalHours = Math.floor(diffMs / (1000 * 60 * 60));
-                let totalMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                // ==========================================
+                // ⏱️ PAUSE & REST TIME DEDUCTION COMPUTATION
+                // ==========================================
+                const MAX_VALID_PAUSE_MS = 24 * 60 * 60 * 1000; // 24 Hours Max per pause
+                let totalPauseDeductionMs = 0;
+
+                for (let i = 0; i < chronologicalScans.length - 1; i++) {
+                    let currentScan = chronologicalScans[i];
+                    let nextScan = chronologicalScans[i + 1];
+
+                    let cpName = String(currentScan.checkpoint || '').toUpperCase();
+                    let evalStatus = String(currentScan.status || '').toUpperCase();
+                    let adminRemark = String(currentScan.eval_remarks || '').toUpperCase();
+                    let scanNotes = String(currentScan.notes || '').toUpperCase();
+
+                    // Susiha kon PAUSE ba ang maong scan
+                    let isPause = cpName.includes('PAUSE') || 
+                                  evalStatus.includes('PAUSE') || 
+                                  scanNotes.includes('[PAUSE]');
+
+                    // Kon mechanical/motor breakdown, dili i-deduct!
+                    let isMechanical = adminRemark.includes('MECHANICAL') || 
+                                       adminRemark.includes('MOTOR') || 
+                                       scanNotes.includes('MECHANICAL');
+
+                    if (isPause && !isMechanical) {
+                        let pauseStart = new Date(currentScan.time_submit);
+                        let pauseEnd = new Date(nextScan.time_submit);
+                        let pauseDuration = pauseEnd - pauseStart;
+
+                        if (pauseDuration > 0) {
+                            // Capped at exact 24 hours maximum per pause
+                            let validDeduction = Math.min(pauseDuration, MAX_VALID_PAUSE_MS);
+                            totalPauseDeductionMs += validDeduction;
+                        }
+                    }
+                }
+
+                // EFFECTIVE RUNNING TIME (TOTAL TIME MINUS VALID PAUSES)
+                let effectiveDiffMs = Math.max(0, rawDiffMs - totalPauseDeductionMs);
+
+                let totalHours = Math.floor(effectiveDiffMs / (1000 * 60 * 60));
+                let totalMinutes = Math.floor((effectiveDiffMs % (1000 * 60 * 60)) / (1000 * 60));
                 let runningTimeFormatted = `${String(totalHours).padStart(2, '0')}:${String(totalMinutes).padStart(2, '0')}:00 hms`;
+
+                // FORMATTED PAUSE DEDUCTION DISPLAY
+                let pauseHours = Math.floor(totalPauseDeductionMs / (1000 * 60 * 60));
+                let pauseMinutes = Math.floor((totalPauseDeductionMs % (1000 * 60 * 60)) / (1000 * 60));
+                let pauseTimeFormatted = `${pauseHours}h ${pauseMinutes}m`;
 
                 let startOdo = parseFloat(chronologicalScans[0].odometer) || 0;
                 let endOdo = parseFloat(chronologicalScans[chronologicalScans.length - 1].odometer) || startOdo;
                 let totalDistance = endOdo >= startOdo ? (endOdo - startOdo) : endOdo;
 
-                let speedValNum = totalHours > 0 ? (totalDistance / (diffMs / (1000 * 60 * 60))) : 0;
+                let speedValNum = effectiveDiffMs > 0 ? (totalDistance / (effectiveDiffMs / (1000 * 60 * 60))) : 0;
                 let speedVal = speedValNum > 0 ? speedValNum.toFixed(2) : "0.00";
 
                 let targetRouteKm = 655; 
@@ -391,6 +439,7 @@
                         </div>
                         <div class="summary-side">
                             <div class="summary-row"><span>running time</span><b>${runningTimeFormatted}</b></div>
+                            <div class="summary-row"><span>pause deducted</span><b style="color: #ff9900;">-${pauseTimeFormatted} (Max 24h)</b></div>
                             <div class="summary-row"><span>distance covered</span><b>${totalDistance} km</b></div>
                             <div class="summary-row"><span>target route</span><b>${targetRouteKm} km</b></div>
                             <div class="summary-row"><span>average speed</span><b>${speedVal} kph</b></div>
@@ -467,6 +516,8 @@
                                 <select id="stat-${scan.id}" class="status-dropdown status-${evalStatus}" onchange="saveEvaluation('${scan.id}')">
                                     <option value="Pending" ${evalStatus === 'Pending' ? 'selected' : ''}>⏳ Pending</option>
                                     <option value="Valid" ${evalStatus === 'Valid' ? 'selected' : ''}>✅ Valid</option>
+                                    <option value="PAUSE" ${evalStatus === 'PAUSE' ? 'selected' : ''}>⏸️ PAUSE</option>
+                                    <option value="RESUME" ${evalStatus === 'RESUME' ? 'selected' : ''}>▶️ RESUME</option>
                                     <option value="Invalid" ${evalStatus === 'Invalid' ? 'selected' : ''}>❌ Invalid</option>
                                     <option value="Hide" ${evalStatus === 'Hide' ? 'selected' : ''}>👁️‍🗨️ Hide / Ignore</option>
                                 </select>
