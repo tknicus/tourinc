@@ -23,7 +23,7 @@
         .app-logo { width: 100%; max-width: 250px; display: block; margin: 0 auto 15px auto; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
         h4 { text-align: center; color: #ffffff; margin-top: 0; text-transform: lowercase; font-style: italic; letter-spacing: 1px; font-size: 15px; }
         h2 { text-align: center; color: #ffffff; margin-top: 0; text-transform: uppercase; font-style: italic; letter-spacing: 1px; font-size: 20px; }
-        #statusIndicator, #liveLocation { text-align: center; padding: 10px; margin-bottom: 15px; border-radius: 5px; font-weight: bold; font-size: 14px; }
+        #statusIndicator, #liveLocation { text-align: center; padding: 10px; margin-bottom: 8px; border-radius: 5px; font-weight: bold; font-size: 14px; }
         #liveLocation { background-color: #2a2a2a; border: 1px solid #444; color: #ccc; }
         input[type="text"], input[type="number"], input[type="password"], textarea, select { width: 100%; padding: 12px; margin-top: 5px; margin-bottom: 15px; border: 1px solid #444; border-radius: 4px; background-color: #2a2a2a; color: #ffffff; font-size: 16px; box-sizing: border-box; transition: all 0.3s ease; font-family: Arial, sans-serif; }
         input:focus, textarea:focus, select:focus { outline: none; border-color: #cc0000; box-shadow: 0 0 5px rgba(204, 0, 0, 0.5); }
@@ -107,6 +107,12 @@
             <h2>Checkpoint Scanner</h2>
 
             <div id="liveLocation">📍 Nangita sa imong location...</div>
+            
+            <!-- 🔄 RE-SYNC GPS BUTTON UG DISTANCE DISPLAY BADGE -->
+            <button type="button" onclick="reSyncGPS()" style="background: #007bb5; color: white; padding: 10px; border: none; border-radius: 6px; font-weight: bold; font-size: 13px; margin-bottom: 12px; cursor: pointer; width: 100%;">
+                🔄 RE-SYNC GPS (REFRESH LOCATION)
+            </button>
+            <div id="distanceBadge" style="display:none; text-align:center; padding:10px; border-radius:6px; margin-bottom:15px; font-weight:bold; font-size:13px;"></div>
 
             <!-- 📡 TRACCAR CLIENT SETUP BOX 📡 -->
             <div id="setupTraccarContainer" style="display:none; text-align:left; margin-bottom:15px; background:#1a1a1a; padding:12px; border-radius:8px; border:1px solid #28a745; font-size:12px;">
@@ -221,7 +227,7 @@
 
             <div style="text-align: center; margin-top: 25px; padding-bottom: 20px; font-size: 12px; color: #aaa; border-top: 1px solid #333; padding-top: 15px;">
                 <p id="secretFooter" style="margin: 0; font-weight: bold; color: #ffcc00; cursor: pointer; -webkit-tap-highlight-color: transparent;">&copy; 2026 MasterMinds'CUP. All Rights Reserved.</p>
-                <p style="margin: 5px 0 0 0;">Build Version: <span id="appVersionText" style="color: #00ff00; font-family: monospace;">v4.4-technicus-stable</span></p>
+                <p style="margin: 5px 0 0 0;">Build Version: <span id="appVersionText" style="color: #00ff00; font-family: monospace;">v4.5-geofence-stable</span></p>
                 <p style="margin: 3px 0 0 0; font-size: 10px; color: #666;">Status: Active & Secure 🛡️</p>
             </div>
         </div>
@@ -244,12 +250,107 @@
         window.routeNames = (typeof routeNames !== 'undefined') ? routeNames : {};
         window.routeConfigs = (typeof routeCheckpoints !== 'undefined') ? routeCheckpoints : {};
         
-        // Atong ibutang ang Total KM diri kay wala man ni sa database.js
         window.routeTotalKm = { 
             "G1N": 777, "G1E": 777, "G1W": 777, "G1S": 777, 
             "G3": 3333, "G4": 444, "G5": 5555, "AS26": 628, 
             "G7": 7777, "G8": 8888, "G81": 888, "G82": 888, "G83": 888 
         };
+
+        // ==========================================
+        // 📐 HAVERSINE FORMULA (GPS DISTANCE IN METERS)
+        // ==========================================
+        function getDistanceInMeters(lat1, lon1, lat2, lon2) {
+            const R = 6371000; // Earth's radius in meters
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c; 
+        }
+
+        // ==========================================
+        // 🛡️ GEOFENCE DISTANCE VALIDATOR (200m MAX)
+        // ==========================================
+        function checkCheckpointDistance(cpCode, userLat, userLon) {
+            let currentLevel = window.activeRiderLevel || "G5";
+            let cpData = window.routeConfigs[currentLevel] || window.routeConfigs["G5"] || {};
+            
+            let cpUpper = String(cpCode || "").toUpperCase();
+            // Bypass exemptions (Pause, Resume, Emergency SOS)
+            if (cpUpper.includes("PAUSE") || cpUpper.includes("RESUME") || cpUpper.includes("SOS")) {
+                return { allowed: true, distanceMeters: 0, hasTargetCoords: false, message: "Exempted" };
+            }
+
+            let targetCP = null;
+            if (Array.isArray(cpData)) {
+                targetCP = cpData.find(c => c.val === cpCode);
+            } else if (cpData && cpData[cpCode]) {
+                targetCP = cpData[cpCode];
+            }
+
+            if (!targetCP) return { allowed: true, distanceMeters: 0, hasTargetCoords: false, message: "No CP Entry" };
+
+            let targetLat = targetCP.lat || targetCP.latitude;
+            let targetLng = targetCP.lng || targetCP.longitude || targetCP.lon;
+
+            if (!targetLat || !targetLng) {
+                return { allowed: true, distanceMeters: 0, hasTargetCoords: false, message: "No Target Coordinates" };
+            }
+
+            let parsedUserLat = parseFloat(userLat);
+            let parsedUserLon = parseFloat(userLon);
+            let parsedTargetLat = parseFloat(targetLat);
+            let parsedTargetLng = parseFloat(targetLng);
+
+            if (isNaN(parsedUserLat) || isNaN(parsedUserLon) || isNaN(parsedTargetLat) || isNaN(parsedTargetLng)) {
+                return { allowed: true, distanceMeters: 0, hasTargetCoords: false, message: "Invalid Coords" };
+            }
+
+            let distMeters = getDistanceInMeters(parsedUserLat, parsedUserLon, parsedTargetLat, parsedTargetLng);
+            let isWithinRange = distMeters <= 200; // 200 meters MAXIMUM TOLERANCE
+
+            return {
+                allowed: isWithinRange,
+                distanceMeters: distMeters,
+                hasTargetCoords: true,
+                message: isWithinRange ? "Within Range" : "Too Far"
+            };
+        }
+
+        function updateDistanceBadge() {
+            const badge = document.getElementById('distanceBadge');
+            const cpDropdown = document.getElementById('checkpoint');
+            if (!badge || !cpDropdown) return;
+
+            let selectedCP = cpDropdown.value;
+            if (!selectedCP || globalLat === "N/A" || globalLon === "N/A") {
+                badge.style.display = "none";
+                return;
+            }
+
+            let res = checkCheckpointDistance(selectedCP, globalLat, globalLon);
+            if (!res.hasTargetCoords) {
+                badge.style.display = "none";
+                return;
+            }
+
+            badge.style.display = "block";
+            let roundedDist = Math.round(res.distanceMeters);
+
+            if (res.allowed) {
+                badge.style.background = "#0f3818";
+                badge.style.border = "1px solid #28a745";
+                badge.style.color = "#28a745";
+                badge.innerHTML = `✅ DOKTOL / DAKOP SA GPS (${roundedDist}m kalay-on sa Checkpoint)`;
+            } else {
+                badge.style.background = "#3b0000";
+                badge.style.border = "1px solid #ff3333";
+                badge.style.color = "#ff3333";
+                badge.innerHTML = `⚠️ LAYO PA KA! (${roundedDist}m sa CP | Max Limit: 200m)`;
+            }
+        }
 
         // ==========================================
         // 🌐 GPS VALIDATOR HELPER
@@ -302,7 +403,6 @@
         }
 
         async function verifyAndLogin() {
-            // 🛑 1. LOCKOUT CHECK
             let lockoutUntil = localStorage.getItem("mmc_lockout_time");
             if (lockoutUntil) {
                 let now = new Date().getTime();
@@ -316,7 +416,6 @@
                 }
             }
 
-            // 🛑 2. TRACCAR CLIENT CHECK
             let isTraccarInstalled = localStorage.getItem("mmc_traccar_ready");
             if (isTraccarInstalled !== "true") {
                 let confirmInstall = confirm("⚠️ MAHINUNGDANONG PAHIBALO:\n\nPara sa Live Tracking sa MasterMinds'CUP, kinahanglan una nimo i-install ang 'Traccar Client' app.\n\nNa-install na ba nimo ang Traccar Client?");
@@ -338,7 +437,6 @@
 
             let rider = riderDatabase.find(r => r.idNum === inputtedID);
             
-            // 🛑 3. VERIFICATION PROCESS
             if (rider) {
                 let isPasscodeValid = false;
                 if (rider.passcode) {
@@ -389,9 +487,6 @@
             }
         }
 
-        // ==========================================
-        // 🚨 SECURITY: TAGA-DUMALA SA FAILED ATTEMPTS
-        // ==========================================
         function handleFailedAttempt() {
             let attempts = parseInt(localStorage.getItem("mmc_failed_attempts")) || 0;
             attempts++;
@@ -412,9 +507,6 @@
             }
         }
 
-        // ==========================================
-        // SINGLE UNIFIED EVENT LISTENER BLOCK
-        // ==========================================
         document.addEventListener("DOMContentLoaded", function() {
             setupLogoLongPress(document.getElementById('loginLogo'));
             setupLogoLongPress(document.getElementById('masterMindsLogo'));
@@ -426,7 +518,6 @@
             const traccarCheck = document.getElementById("traccarCheck");
             const proceedBtn = document.getElementById("proceedToLoginBtn");         
 
-            // GATEKEEPER LOGIC
             if (traccarCheck && proceedBtn) {
                 traccarCheck.addEventListener("change", function() {
                     if (this.checked) {
@@ -450,7 +541,6 @@
                 });
             }
 
-            // ROUTING LOGIC (Login vs Scanner)
             let gatePassed = localStorage.getItem("mmc_gatekeeper_passed") === "true";
             if (!gatePassed) {
                 if (gatekeeperContainer) gatekeeperContainer.style.display = "flex";
@@ -481,7 +571,6 @@
             }
         });
 
-        // 📡 TRACCAR CLIENT SETUP & COPY LOGIC
         function setupTraccarConfigButton(riderId) {
             const setupContainer = document.getElementById("setupTraccarContainer");
             const riderIdDisplay = document.getElementById("traccarRiderIdDisplay");
@@ -682,13 +771,16 @@
             if (Array.isArray(cpData)) {
                 cpData.forEach(cp => {
                     let opt = document.createElement('option');
-                    opt.value = cp.val; opt.textContent = `${cp.val} - ${cp.name}`;
+                    opt.value = cp.val; 
+                    opt.textContent = `${cp.val} - ${cp.name || cp.val}`;
                     dropdown.appendChild(opt);
                 });
             } else {
-                Object.entries(cpData).forEach(([val, name]) => {
+                Object.entries(cpData).forEach(([val, cpItem]) => {
                     let opt = document.createElement('option');
-                    opt.value = val; opt.textContent = `${val} - ${name}`;
+                    opt.value = val;
+                    let displayName = (typeof cpItem === 'object' && cpItem !== null) ? (cpItem.name || val) : cpItem;
+                    opt.textContent = `${val} - ${displayName}`;
                     dropdown.appendChild(opt);
                 });
             }
@@ -796,11 +888,32 @@
                         globalLat = position.coords.latitude.toFixed(6);
                         globalLon = position.coords.longitude.toFixed(6);
                         liveLocationDiv.innerHTML = `📍 <b>Lat:</b> ${globalLat} &nbsp;|&nbsp; <b>Lon:</b> ${globalLon}`;
+                        updateDistanceBadge();
                     },
                     (error) => { liveLocationDiv.innerHTML = "⚠️ Palihug i-allow ang Location / GPS."; },
                     { enableHighAccuracy: true, maximumAge: 0 }
                 );
             } else if (liveLocationDiv) { liveLocationDiv.innerHTML = "❌ GPS wala gisuportahan sa imong device."; }
+        }
+
+        function reSyncGPS() {
+            if (!navigator.geolocation) { alert("❌ Walay GPS feature ang imong device."); return; }
+            if (liveLocationDiv) liveLocationDiv.innerHTML = "🔄 Nag-ReSync sa GPS Satellite signal...";
+            
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    globalLat = position.coords.latitude.toFixed(6);
+                    globalLon = position.coords.longitude.toFixed(6);
+                    if (liveLocationDiv) liveLocationDiv.innerHTML = `📍 <b>Lat:</b> ${globalLat} &nbsp;|&nbsp; <b>Lon:</b> ${globalLon}`;
+                    updateDistanceBadge();
+                    alert(`✅ GPS RE-SYNCED!\n\nNa-update ang imong location:\nLat: ${globalLat}\nLon: ${globalLon}`);
+                },
+                (error) => {
+                    alert("⚠️ Pagpakyas sa GPS Re-Sync! Palihug siguruha nga naka-ON ang Location sa imong selpon.");
+                    showLiveLocationOnLoad();
+                },
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
+            );
         }
 
         function getLocation() {
@@ -902,7 +1015,6 @@
                 let safeLon = parseFloat(dataPayload.longitude);
                 let safeOdo = parseFloat(dataPayload.odometer);
 
-                // FINAL GUARD CLAUSE UNAD I-INSERT SA DATABASE
                 if (!isValidCoordinates(safeLat, safeLon)) {
                     console.error("🛑 GUARD TRIGGERED: Invalid GPS coordinates detected, insertion aborted.");
                     return false;
@@ -1012,10 +1124,20 @@
 
                 const gpsData = await getLocation();
 
-                // 🛑 GPS HARD GUARD: BLOCK SUBMISSION IF GPS IS INVALID OR ZERO
+                // 🛑 GPS HARD GUARD 1: BLOCK SUBMISSION IF GPS IS INVALID OR ZERO
                 if (!isValidCoordinates(gpsData.lat, gpsData.lon)) {
                     if (submitAudio) { submitAudio.pause(); submitAudio.currentTime = 0; }
                     alert("🛑 DILI MA-SUBMIT! Wala ma-detect ang imong GPS Location Coordinates.\n\nPalihug i-turn ON ang GPS / Location sa imong selpon ug siguruha nga gi-allow kini sa browser.");
+                    if(submitBtn) { submitBtn.textContent = "I-Submit ang Data"; submitBtn.disabled = false; submitBtn.style.opacity = "1"; }
+                    isSubmitting = false; return;
+                }
+
+                // 🛑 GPS HARD GUARD 2: GEOFENCE DISTANCE CHECK (MAX 200m)
+                let distCheck = checkCheckpointDistance(currentCheckpoint, gpsData.lat, gpsData.lon);
+                if (!distCheck.allowed) {
+                    if (submitAudio) { submitAudio.pause(); submitAudio.currentTime = 0; }
+                    let roundedMeters = Math.round(distCheck.distanceMeters);
+                    alert(`⚠️ DILI MA-SUBMIT! LAYO PA KA SA CHECKPOINT!\n\nNaa ka sa ${roundedMeters} meters nga kalay-on sa ${currentCheckpoint}.\n\nMaximum allowable limit: 200 meters.\n\nPalihug padol-it sa designated location sa Checkpoint o i-press ang "🔄 RE-SYNC GPS" button.`);
                     if(submitBtn) { submitBtn.textContent = "I-Submit ang Data"; submitBtn.disabled = false; submitBtn.style.opacity = "1"; }
                     isSubmitting = false; return;
                 }
@@ -1076,6 +1198,7 @@
                     
                     updateCheckpointCheckmarks(checkId);
                     updateRiderProgress(); 
+                    updateDistanceBadge();
                 }
                 if(submitBtn) { submitBtn.textContent = "I-Submit ang Data"; submitBtn.disabled = false; submitBtn.style.opacity = "1"; }
                 isSubmitting = false; 
@@ -1109,32 +1232,30 @@
             let countCompleted = 0;
             let firstUnfinishedCP = ""; 
 
+            const processItem = (cpVal, cpNameRaw) => {
+                let cpName = (typeof cpNameRaw === 'object' && cpNameRaw !== null) ? (cpNameRaw.name || cpVal) : cpNameRaw;
+                if (completedCheckpoints.includes(cpVal)) {
+                    htmlOutput += `<span style="color: #00ff00; margin-right: 8px; display: inline-block; font-weight: bold;" title="${cpName}">✓ ${cpVal}</span>`;
+                    countCompleted++;
+                } else {
+                    htmlOutput += `<span style="color: #555; margin-right: 8px; display: inline-block;" title="${cpName}">✗ ${cpVal}</span>`;
+                    if (firstUnfinishedCP === "") firstUnfinishedCP = cpVal;
+                }
+            };
+
             if (Array.isArray(cpData)) {
-                cpData.forEach(cp => {
-                    if (completedCheckpoints.includes(cp.val)) {
-                        htmlOutput += `<span style="color: #00ff00; margin-right: 8px; display: inline-block; font-weight: bold;" title="${cp.name}">✓ ${cp.val}</span>`;
-                        countCompleted++;
-                    } else {
-                        htmlOutput += `<span style="color: #555; margin-right: 8px; display: inline-block;" title="${cp.name}">✗ ${cp.val}</span>`;
-                        if (firstUnfinishedCP === "") firstUnfinishedCP = cp.val;
-                    }
-                });
+                cpData.forEach(cp => processItem(cp.val, cp.name));
             } else {
-                Object.entries(cpData).forEach(([cpVal, cpName]) => {
-                    if (completedCheckpoints.includes(cpVal)) {
-                        htmlOutput += `<span style="color: #00ff00; margin-right: 8px; display: inline-block; font-weight: bold;" title="${cpName}">✓ ${cpVal}</span>`;
-                        countCompleted++;
-                    } else {
-                        htmlOutput += `<span style="color: #555; margin-right: 8px; display: inline-block;" title="${cpName}">✗ ${cpVal}</span>`;
-                        if (firstUnfinishedCP === "") firstUnfinishedCP = cpVal;
-                    }
-                });
+                Object.entries(cpData).forEach(([cpVal, cpItem]) => processItem(cpVal, cpItem));
             }
             
             checklistDiv.innerHTML = countCompleted === 0 ? "<span style='color: #888;'>Wala pay na-submit nga Checkpoint.</span>" : htmlOutput;
             const dropdown = document.getElementById('checkpoint');
             if (dropdown && firstUnfinishedCP !== "") {
-                setTimeout(() => { dropdown.value = firstUnfinishedCP; }, 100); 
+                setTimeout(() => { 
+                    dropdown.value = firstUnfinishedCP; 
+                    updateDistanceBadge();
+                }, 100); 
             }
         }
 
@@ -1180,7 +1301,12 @@
         }
 
         let checkpointDropdown = document.getElementById("checkpoint");
-        if (checkpointDropdown) checkpointDropdown.addEventListener("change", updateRiderProgress);
+        if (checkpointDropdown) {
+            checkpointDropdown.addEventListener("change", function() {
+                updateRiderProgress();
+                updateDistanceBadge();
+            });
+        }
 
         let odometerInput = document.getElementById("odometer");
         if (odometerInput) {
@@ -1378,7 +1504,6 @@
 
             const gpsData = await getLocation();
 
-            // 🛑 SOS GPS HARD GUARD: BLOCK SOS IF GPS IS INVALID
             if (!isValidCoordinates(gpsData.lat, gpsData.lon)) {
                 alert("🚨 DILI MA-SEND ANG SOS! Walay Valid nga GPS Location Coordinates.\n\nPalihug i-turn ON ang GPS/Location sa imong selpon ug i-allow ang browser aron matultolan ka sa Command Center.");
                 if (sosBtn) { sosBtn.innerText = "🚨 MANGAYO UG TABANG (SEND SOS)"; sosBtn.disabled = false; }
