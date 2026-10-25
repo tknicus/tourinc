@@ -408,13 +408,30 @@
                     let locationName = '';
 
                     if (typeof routeCheckpoints !== 'undefined') {
-                        if (routeCheckpoints[rLevel] && routeCheckpoints[rLevel][cpCode]) {
-                            locationName = routeCheckpoints[rLevel][cpCode];
-                        } else if (routeCheckpoints["AS26"] && routeCheckpoints["AS26"][cpCode]) {
-                            locationName = routeCheckpoints["AS26"][cpCode];
+                        let routeData = routeCheckpoints[rLevel] || routeCheckpoints["AS26"];
+                        
+                        if (routeData) {
+                            // Kun Array Format: [{ val: "CP 00", name: "Lugar" }]
+                            if (Array.isArray(routeData)) {
+                                let matched = routeData.find(item => item && (item.val === cpCode || item.cp === cpCode || item.code === cpCode));
+                                if (matched) {
+                                    locationName = typeof matched === 'object' ? (matched.name || matched.location || matched.val || '') : matched;
+                                }
+                            } 
+                            // Kun Object Format: { "CP 00": { name: "Lugar" } } o { "CP 00": "Lugar" }
+                            else if (typeof routeData === 'object') {
+                                let rawVal = routeData[cpCode];
+                                if (rawVal) {
+                                    locationName = typeof rawVal === 'object' ? (rawVal.name || rawVal.location || '') : rawVal;
+                                }
+                            }
                         }
                     }
-                    if (!locationName) { locationName = scan.notes || ''; }
+
+                    // Kun walay nakit-an o kun object gihapon, gamiton ang scan.notes o space
+                    if (!locationName || typeof locationName === 'object') { 
+                        locationName = scan.notes || ''; 
+                    }
 
                     // FORMAT SA GPS COORDINATES (Lat, Lon)
                     let lat = scan.latitude ? parseFloat(scan.latitude).toFixed(5) : null;
