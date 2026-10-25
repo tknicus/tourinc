@@ -202,6 +202,21 @@
                 <img id="photoPreview" alt="Ebidensya">
                 <canvas id="photoCanvas" style="display:none;"></canvas>
 
+                <!-- ⏱️ PAUSE / RESUME PITSTOP CARD -->
+                <div style="background: #1a1a2e; border: 1px solid #3d3d6b; padding: 12px; border-radius: 8px; margin-bottom: 15px; text-align: center;">
+                    <div style="font-size: 11px; color: #aaa; font-weight: bold; margin-bottom: 8px; text-transform: uppercase;">
+                        ⏱️ PITSTOP / RIDE STATUS: <span id="currentRideState" style="color: #00ff00;">RIDING (ACTIVE)</span>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" onclick="handlePauseResume('PAUSE')" id="pauseBtn" style="background: #ff9900; color: #000; padding: 10px; font-size: 13px; border-radius: 6px; font-weight: bold; flex: 1; margin: 0; box-shadow: none;">
+                            ⏸️ PAUSE RIDE
+                        </button>
+                        <button type="button" onclick="handlePauseResume('RESUME')" id="resumeBtn" style="background: #00d2ff; color: #000; padding: 10px; font-size: 13px; border-radius: 6px; font-weight: bold; flex: 1; margin: 0; box-shadow: none;">
+                            ▶️ RESUME RIDE
+                        </button>
+                    </div>
+                </div>
+                
                 <!-- 1. SUBMIT BUTTON -->
                 <button type="submit" id="submitBtn" style="background: linear-gradient(135deg, #28a745, #218838); color: white; font-weight: bold; font-size: 16px; padding: 14px; border: none; border-radius: 8px; width: 100%; cursor: pointer; text-transform: uppercase; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(40, 167, 69, 0.4);">
                     ✅ I-SUBMIT ANG DATA
@@ -227,7 +242,7 @@
 
             <div style="text-align: center; margin-top: 25px; padding-bottom: 20px; font-size: 12px; color: #aaa; border-top: 1px solid #333; padding-top: 15px;">
                 <p id="secretFooter" style="margin: 0; font-weight: bold; color: #ffcc00; cursor: pointer; -webkit-tap-highlight-color: transparent;">&copy; 2026 MasterMinds'CUP. All Rights Reserved.</p>
-                <p style="margin: 5px 0 0 0;">Build Version: <span id="appVersionText" style="color: #00ff00; font-family: monospace;">v4.5-geofence-stable</span></p>
+                <p style="margin: 5px 0 0 0;">Build Version: <span id="appVersionText" style="color: #00ff00; font-family: monospace;">v4.7-geofence-stable</span></p>
                 <p style="margin: 3px 0 0 0; font-size: 10px; color: #666;">Status: Active & Secure 🛡️</p>
             </div>
         </div>
@@ -766,6 +781,7 @@
             }
             updateCheckpointCheckmarks(savedRiderID);
             updateRiderProgress();
+            updateRideStateUI(savedRiderID);
             initBatteryMonitor();
             showLiveLocationOnLoad();
         }
@@ -1493,6 +1509,87 @@
                 }
             });
         }
+
+        // ==========================================
+        // ⏱️ PAUSE & RESUME RIDE LOGIC
+        // ==========================================
+        async function handlePauseResume(type) {
+            const riderId = document.getElementById('idNum') ? document.getElementById('idNum').value.trim() : "";
+            const riderName = document.getElementById('name') ? document.getElementById('name').value.trim() : "";
+            const notesInput = document.getElementById('notes') ? document.getElementById('notes').value.trim() : "";
+            const odoInput = document.getElementById('odometer') ? document.getElementById('odometer').value.trim() : "";
+
+            if (!riderId || !riderName || riderName.includes("❌")) {
+                alert("🛑 DILI MA-RECORD! Palihug i-verify muna ang imong Rider ID.");
+                return;
+            }
+
+            let defaultMsg = (type === 'PAUSE') ? 'Pitstop / Rest / Refuel' : 'Back on road';
+            let userReason = prompt((type === 'PAUSE' ? '⏸️ RASSON SA PAG-PAUSE (Rest/Food/Gas/Repair):' : '▶️ RESUME REMARKS:'), notesInput || defaultMsg);
+            
+            if (userReason === null) return; // Gi-cancel sa user
+
+            let confirmAction = confirm(`${type === 'PAUSE' ? '⏸️ PAUSE' : '▶️ RESUME'} CONFIRMATION:\n\nKumpirmahon ba nimo ang pag-log sa ${type} status sa Command Center?`);
+            if (!confirmAction) return;
+
+            const gpsData = await getLocation();
+
+            if (!isValidCoordinates(gpsData.lat, gpsData.lon)) {
+                alert("🚨 DILI MA-SEND! Walay valid nga GPS Coordinates. Palihug i-turn ON ang GPS.");
+                return;
+            }
+
+            const payload = {
+                idNum: riderId,
+                name: riderName,
+                checkpoint: (type === 'PAUSE') ? "⏸️ PAUSE" : "▶️ RESUME",
+                odometer: odoInput || 0,
+                notes: `[${type}] ${userReason}`,
+                photo: compressedPhotoBase64 || "Walay Ebidensya",
+                timestamp: new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' }),
+                location: gpsData.link,
+                latitude: gpsData.lat,
+                longitude: gpsData.lon,
+                locationTime: gpsData.time,
+                level: window.activeRiderLevel || "G5"
+            };
+
+            let isStable = await checkInternetStability();
+            if (isStable) {
+                let success = await sendDataToServer(payload);
+                if (success) {
+                    alert(`✅ ${type} STATUS LOGGED!\n\nNa-update na sa Command Center Dashboard.`);
+                } else {
+                    saveToOfflineStorage(payload);
+                    alert(`⚠️ Na-save sa Offline Storage ang ${type}! I-sync ra inig ka-signal.`);
+                }
+            } else {
+                saveToOfflineStorage(payload);
+                alert(`⚠️ WALAY INTERNET! Gi-save sa Offline Storage ang ${type}.`);
+            }
+
+            localStorage.setItem('rideState_' + riderId, type);
+            updateRideStateUI(riderId);
+        }
+
+        function updateRideStateUI(riderId) {
+            if (!riderId) {
+                const idBox = document.getElementById('idNum');
+                riderId = idBox && idBox.value ? idBox.value.trim() : "";
+            }
+            let state = localStorage.getItem('rideState_' + riderId) || 'RESUME';
+            let stateElem = document.getElementById('currentRideState');
+            if (stateElem) {
+                if (state === 'PAUSE') {
+                    stateElem.innerText = "⏸️ PAUSED (PITSTOP / REST)";
+                    stateElem.style.color = "#ff9900";
+                } else {
+                    stateElem.innerText = "▶️ RIDING (ACTIVE)";
+                    stateElem.style.color = "#00ff00";
+                }
+            }
+        }
+        
 
         // ==========================================
         // 🚨 SOS EMERGENCY TRANSMITTER
