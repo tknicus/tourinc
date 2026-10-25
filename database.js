@@ -463,7 +463,7 @@ const routeCheckpoints = {
         "CP 38": { lat: 7.133989, lng: 125.894490, name: "Jolibee Panntukan" },
         "CP 39": { lat: 7.465980, lng: 125.805213, name: "ELKAPITAN's Headstone" },
         "CP xx": "Stand By Me",
-        "CP oo": { lat: 7.439413, lng: 125.795689, name: "balay",
+        "CP oo": { lat: 7.439413, lng: 125.795689, name: "balay" },
     },
 
     // --- Route 7777 ---

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mmc-scanner-v4.02'; // ⬅️ GI-UPDATE NATO ANG VERSION
+const CACHE_NAME = 'mmc-scanner-v4.03'; // ⬅️ GI-UPDATE NATO ANG VERSION
 
 // KINI ANG MGA FILES NGA I-DOWNLOAD UG I-SAVE SA SELPON
 const assetsToCache = [
