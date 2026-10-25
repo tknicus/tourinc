@@ -250,10 +250,10 @@
         window.routeNames = (typeof routeNames !== 'undefined') ? routeNames : {};
         window.routeConfigs = (typeof routeCheckpoints !== 'undefined') ? routeCheckpoints : {};
         
-        window.routeTotalKm = { 
+        window.routeTotalKm = (typeof routeDistances !== 'undefined') ? routeDistances : { 
             "G1N": 777, "G1E": 777, "G1W": 777, "G1S": 777, 
-            "G3": 3333, "G4": 444, "G5": 5555, "AS26": 628, 
-            "G7": 7777, "G8": 8888, "G81": 888, "G82": 888, "G83": 888 
+            "G3": 3296.8, "G4": 1000, "G5": 5455.7, "AS26": 628, 
+            "G7": 7777, "G81": 1053.2, "G82": 888, "G83": 888, "DO01": 1200
         };
 
         // ==========================================
@@ -269,6 +269,16 @@
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             return R * c; 
         }
+
+        // 📏 AUTO-FORMAT DISTANCE (KM kung >= 1000m, METERS kung < 1000m)
+        function formatDistance(distMeters) {
+            if (distMeters >= 1000) {
+                return (distMeters / 1000).toFixed(2) + " km"; // e.g. "2.97 km"
+            } else {
+                return Math.round(distMeters) + " meters";     // e.g. "450 meters"
+            }
+        }        
+
 
         // ==========================================
         // 🛡️ GEOFENCE DISTANCE VALIDATOR (200m MAX)
@@ -337,18 +347,18 @@
             }
 
             badge.style.display = "block";
-            let roundedDist = Math.round(res.distanceMeters);
+            let formattedDist = formatDistance(res.distanceMeters);
 
             if (res.allowed) {
                 badge.style.background = "#0f3818";
                 badge.style.border = "1px solid #28a745";
                 badge.style.color = "#28a745";
-                badge.innerHTML = `✅ DOKTOL / DAKOP SA GPS (${roundedDist}m kalay-on sa Checkpoint)`;
+                badge.innerHTML = `✅ DOKTOL / DAKOP SA GPS (${formattedDist} kalay-on sa Checkpoint)`;
             } else {
                 badge.style.background = "#3b0000";
                 badge.style.border = "1px solid #ff3333";
                 badge.style.color = "#ff3333";
-                badge.innerHTML = `⚠️ LAYO PA KA! (${roundedDist}m sa CP | Max Limit: 200m)`;
+                badge.innerHTML = `⚠️ LAYO PA KA! (${formattedDist} sa CP | Max Limit: 200m)`;
             }
         }
 
@@ -1136,8 +1146,12 @@
                 let distCheck = checkCheckpointDistance(currentCheckpoint, gpsData.lat, gpsData.lon);
                 if (!distCheck.allowed) {
                     if (submitAudio) { submitAudio.pause(); submitAudio.currentTime = 0; }
-                    let roundedMeters = Math.round(distCheck.distanceMeters);
-                    alert(`⚠️ DILI MA-SUBMIT! LAYO PA KA SA CHECKPOINT!\n\nNaa ka sa ${roundedMeters} meters nga kalay-on sa ${currentCheckpoint}.\n\nMaximum allowable limit: 200 meters.\n\nPalihug padol-it sa designated location sa Checkpoint o i-press ang "🔄 RE-SYNC GPS" button.`);
+                    
+                    // I-format ang distansya gamit ang atong helper function
+                    let formattedDistAlert = formatDistance(distCheck.distanceMeters);
+
+                    alert(`⚠️ DILI MA-SUBMIT! LAYO PA KA SA CHECKPOINT!\n\nNaa ka sa ${formattedDistAlert} nga kalay-on sa ${currentCheckpoint}.\n\nMaximum allowable limit: 200 meters.\n\nPalihug padol-it sa designated location sa Checkpoint o i-press ang "🔄 RE-SYNC GPS" button.`);
+                    
                     if(submitBtn) { submitBtn.textContent = "I-Submit ang Data"; submitBtn.disabled = false; submitBtn.style.opacity = "1"; }
                     isSubmitting = false; return;
                 }
@@ -1260,8 +1274,7 @@
         }
 
         function updateRiderProgress() {
-            let lvlElem = document.getElementById("level");
-            let levelField = lvlElem && lvlElem.value ? lvlElem.value.trim() : "";
+            let rLevel = window.activeRiderLevel || "G5";
             let odoElem = document.getElementById("odometer");
             let typedOdo = (odoElem && odoElem.value !== "") ? parseFloat(odoElem.value) : NaN;
             let idElem = document.getElementById("idNum");
@@ -1280,8 +1293,9 @@
             let savedLastOdo = parseFloat(localStorage.getItem('lastOdo_' + currentId)) || activeStartOdo;
             let activeOdo = isNaN(typedOdo) ? savedLastOdo : typedOdo;
 
-            if (routeTotalKm[levelField]) {
-                let totalRoute = routeTotalKm[levelField];
+            let totalRoute = window.routeTotalKm[rLevel] || 0;
+
+            if (totalRoute > 0) {
                 let nadagan = 0;
                 if (currentCP === "CP 00") nadagan = 0; 
                 else if (activeStartOdo > 0 && activeOdo >= activeStartOdo) nadagan = activeOdo - activeStartOdo;
@@ -1293,7 +1307,9 @@
                 let txtNadagan = document.getElementById("txtNadagan");
                 let txtNabilin = document.getElementById("txtNabilin");
 
-                if (dispLevel) dispLevel.innerText = levelField;
+                let fullRouteName = (window.routeNames && window.routeNames[rLevel]) ? window.routeNames[rLevel] : rLevel;
+
+                if (dispLevel) dispLevel.innerText = fullRouteName;
                 if (txtNadagan) txtNadagan.innerText = nadagan.toLocaleString() + " KM";
                 if (txtNabilin) txtNabilin.innerText = nabilin.toLocaleString() + " KM";
                 card.style.display = (activeOdo > 0 || activeStartOdo > 0) ? "block" : "none";
