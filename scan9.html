@@ -1567,6 +1567,9 @@
         // ==========================================
         // ⏱️ PAUSE & RESUME RIDE LOGIC (FIXED SYNTAX)
         // ==========================================
+        // ==========================================
+        // ⏱️ PAUSE & RESUME RIDE LOGIC (BULLETPROOF GLOBAL PHOTO CATCHER)
+        // ==========================================
         async function handlePauseResume(type) {
             const riderId = document.getElementById('idNum') ? document.getElementById('idNum').value.trim() : "";
             const riderName = document.getElementById('name') ? document.getElementById('name').value.trim() : "";
@@ -1576,6 +1579,12 @@
             if (!riderId || !riderName || riderName.includes("❌")) {
                 alert("🛑 DILI MA-RECORD! Palihug i-verify muna ang imong Rider ID.");
                 return;
+            }
+
+            // 📸 KUHAON ANG LITRATO SA GLOBAL VARIABLE SA DI PA MO-LTAW ANG PROMPT
+            let finalPhotoPayload = "Walay Ebidensya";
+            if (typeof compressedPhotoBase64 !== 'undefined' && compressedPhotoBase64 && compressedPhotoBase64.includes('base64')) {
+                finalPhotoPayload = compressedPhotoBase64;
             }
 
             let defaultMsg = (type === 'PAUSE') ? 'Pitstop / Rest / Refuel' : 'Back on road';
@@ -1593,63 +1602,13 @@
                 return;
             }
 
-            // 📸 KUHAON DIRETSO ANG FILE GIKAN SA CAMERA INPUT ARON DILI MAPAKYAS
-            let finalPhotoPayload = "Walay Ebidensya";
-            const camInput = document.getElementById('cameraInput');
-
-            if (camInput && camInput.files && camInput.files[0]) {
-                try {
-                    finalPhotoPayload = await new Promise((resolve) => {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            const img = new Image();
-                            img.onload = function() {
-                                const canvas = document.getElementById('photoCanvas');
-                                const ctx = canvas.getContext("2d");
-                                const MAX_WIDTH = 600;
-                                const scaleSize = MAX_WIDTH / img.width;
-                                canvas.width = MAX_WIDTH;
-                                canvas.height = img.height * scaleSize;
-                                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-                                ctx.fillStyle = "white"; ctx.strokeStyle = "black"; 
-                                ctx.lineWidth = 3; ctx.font = "bold 16px Arial"; ctx.textAlign = "right";
-                                const now = new Date();
-                                const militaryDateTime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-                                
-                                ctx.strokeText(`ID: ${riderId} (${riderName})`, canvas.width - 10, canvas.height - 55);
-                                ctx.fillText(`ID: ${riderId} (${riderName})`, canvas.width - 10, canvas.height - 55);
-                                ctx.strokeText(`Date/Time: ${militaryDateTime}`, canvas.width - 10, canvas.height - 35);
-                                ctx.fillText(`Date/Time: ${militaryDateTime}`, canvas.width - 10, canvas.height - 35);
-                                ctx.strokeText(`${globalLat}, ${globalLon}`, canvas.width - 10, canvas.height - 15);
-                                ctx.fillText(`${globalLat}, ${globalLon}`, canvas.width - 10, canvas.height - 15);
-
-                                resolve(canvas.toDataURL("image/jpeg", 0.5));
-                            };
-                            img.src = e.target.result;
-                        };
-                        reader.readAsDataURL(camInput.files[0]);
-                    });
-                } catch (err) {
-                    console.error("Error sa pagproseso sa litrato:", err);
-                }
-            } else if (typeof compressedPhotoBase64 !== 'undefined' && compressedPhotoBase64 && compressedPhotoBase64.includes('base64')) {
-                finalPhotoPayload = compressedPhotoBase64;
-            }
-
-            // 🛑 KUHANG-KAHANG: DILI PAREHONG MAPAS-AN KUNG WALAY LITRATO
-            if (finalPhotoPayload === "Walay Ebidensya") {
-                alert("🚨 KINAHANGLAN OG EBIDENSYA! Palihug pag-kuha sa daan og litrato gamit ang camera bago i-click ang Pause o Resume.");
-                return;
-            }
-
             const payload = {
                 idNum: riderId,
                 name: riderName,
                 checkpoint: (type === 'PAUSE') ? "⏸️ PAUSE" : "▶️ RESUME",
                 odometer: odoInput || 0,
                 notes: `[${type}] ${userReason}`,
-                photo: finalPhotoPayload,
+                photo: finalPhotoPayload, // Direkta na nga madala ang litrato gikan sa memory!
                 timestamp: new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' }),
                 location: gpsData.link,
                 latitude: gpsData.lat,
@@ -1675,9 +1634,10 @@
             localStorage.setItem('rideState_' + riderId, type);
             updateRideStateUI(riderId);
 
-            // Limpyohan ang input ug preview human ma-save
-            if (camInput) camInput.value = "";
+            // Limpyohan ang global photo variable ug preview human ma-save
             compressedPhotoBase64 = "";
+            const camInput = document.getElementById('cameraInput');
+            if (camInput) camInput.value = "";
             const photoPreview = document.getElementById('photoPreview');
             if (photoPreview) {
                 photoPreview.src = "";
