@@ -1511,7 +1511,7 @@
         }
 
         // ==========================================
-        // ⏱️ PAUSE & RESUME RIDE LOGIC
+        // ⏱️ PAUSE & RESUME RIDE LOGIC (WITH IMMEDIATE PHOTO CLEAR)
         // ==========================================
         async function handlePauseResume(type) {
             const riderId = document.getElementById('idNum') ? document.getElementById('idNum').value.trim() : "";
@@ -1524,13 +1524,32 @@
                 return;
             }
 
+            // 📸 SIGURADUHON NGA NAA NAY NAKUHA NGA LITRATO SA DILI PA MAG-PROMPT
+            if (!compressedPhotoBase64 || !compressedPhotoBase64.includes('base64')) {
+                alert("📸 DILI MA-SAVE! Palihug pagkuha una og Ebidensya/Picture bago i-click ang Pause o Resume.");
+                return;
+            }
+
             let defaultMsg = (type === 'PAUSE') ? 'Pitstop / Rest / Refuel' : 'Back on road';
-            let userReason = prompt((type === 'PAUSE' ? '⏸️ RASSON SA PAG-PAUSE (Rest/Food/Gas/Repair):' : '▶️ RESUME REMARKS:'), notesInput || defaultMsg);
+            let userReason = prompt((type === 'PAUSE' ? '⏸️ RASON SA PAG-PAUSE (Rest/Food/Gas/Repair):' : '▶️ RESUME REMARKS:'), notesInput || defaultMsg);
             
             if (userReason === null) return; // Gi-cancel sa user
 
             let confirmAction = confirm(`${type === 'PAUSE' ? '⏸️ PAUSE' : '▶️ RESUME'} CONFIRMATION:\n\nKumpirmahon ba nimo ang pag-log sa ${type} status sa Command Center?`);
             if (!confirmAction) return;
+
+            // Kuhaon dayon ang temporary photo base64 aron ma-clear nato ang screen
+            let activePhotoBase64 = compressedPhotoBase64;
+
+            // 🧹 I-CLEAR DAYON ANG SCREEN UG PREVIEW ARON DILI NA MAParehas sa kuha sa screenshot!
+            compressedPhotoBase64 = "";
+            const camInput = document.getElementById('cameraInput');
+            if (camInput) camInput.value = "";
+            const photoPreview = document.getElementById('photoPreview');
+            if (photoPreview) {
+                photoPreview.src = "";
+                photoPreview.style.display = "none";
+            }
 
             const gpsData = await getLocation();
 
@@ -1539,13 +1558,31 @@
                 return;
             }
 
+            // 📸 I-UPLOAD SA SUPABASE STORAGE
+            let finalPhotoUrl = "Walay Ebidensya";
+            try {
+                const blob = b64toBlob(activePhotoBase64, 'image/jpeg');
+                const cleanCp = type === 'PAUSE' ? 'PAUSE' : 'RESUME';
+                const fileName = `${riderId}_${cleanCp}_${new Date().getTime()}.jpg`;
+                
+                const { data: uploadData, error: uploadError } = await supabaseLiveClient.storage.from('photos').upload(fileName, blob, { contentType: 'image/jpeg' });
+                if (!uploadError) {
+                    const { data: publicUrlData } = supabaseLiveClient.storage.from('photos').getPublicUrl(fileName);
+                    finalPhotoUrl = publicUrlData.publicUrl;
+                } else {
+                    console.error("Error sa pag-upload sa litrato:", uploadError.message);
+                }
+            } catch (err) {
+                console.error("Exception sa pagproseso sa litrato:", err);
+            }
+
             const payload = {
                 idNum: riderId,
                 name: riderName,
                 checkpoint: (type === 'PAUSE') ? "⏸️ PAUSE" : "▶️ RESUME",
                 odometer: odoInput || 0,
                 notes: `[${type}] ${userReason}`,
-                photo: compressedPhotoBase64 || "Walay Ebidensya",
+                photo: finalPhotoUrl,
                 timestamp: new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' }),
                 location: gpsData.link,
                 latitude: gpsData.lat,
@@ -1556,12 +1593,29 @@
 
             let isStable = await checkInternetStability();
             if (isStable) {
-                let success = await sendDataToServer(payload);
-                if (success) {
-                    alert(`✅ ${type} STATUS LOGGED!\n\nNa-update na sa Command Center Dashboard.`);
+                let safeLat = parseFloat(payload.latitude);
+                let safeLon = parseFloat(payload.longitude);
+                let safeOdo = parseFloat(payload.odometer);
+
+                const { error: dbError } = await supabaseLiveClient.from('rally_scans').insert([{
+                    qr_code: String(payload.idNum), 
+                    rider_name: payload.name, 
+                    rider_level: payload.level,
+                    checkpoint: payload.checkpoint, 
+                    odometer: isNaN(safeOdo) ? 0 : safeOdo, 
+                    notes: payload.notes || "",
+                    latitude: safeLat, 
+                    longitude: safeLon,
+                    location_address: payload.location || "", 
+                    photo_url: payload.photo,
+                    time_submit: payload.timestamp 
+                }]);
+
+                if (!dbError) {
+                    alert(`✅ ${type} STATUS LOGGED!\n\nNa-save na sa Database upod ang ebidensya.`);
                 } else {
                     saveToOfflineStorage(payload);
-                    alert(`⚠️ Na-save sa Offline Storage ang ${type}! I-sync ra inig ka-signal.`);
+                    alert(`⚠️ Nagkaaberya sa Database. Na-save sa Offline Storage ang ${type}!`);
                 }
             } else {
                 saveToOfflineStorage(payload);
