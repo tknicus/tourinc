@@ -1612,7 +1612,6 @@
                                 canvas.height = img.height * scaleSize;
                                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                                // Ibutang ang watermark para pareho sa normal checkpoint
                                 ctx.fillStyle = "white"; ctx.strokeStyle = "black"; 
                                 ctx.lineWidth = 3; ctx.font = "bold 16px Arial"; ctx.textAlign = "right";
                                 const now = new Date();
@@ -1636,6 +1635,12 @@
                 }
             } else if (typeof compressedPhotoBase64 !== 'undefined' && compressedPhotoBase64 && compressedPhotoBase64.includes('base64')) {
                 finalPhotoPayload = compressedPhotoBase64;
+            }
+
+            // 🛑 KUHANG-KAHANG: DILI PAREHONG MAPAS-AN KUNG WALAY LITRATO
+            if (finalPhotoPayload === "Walay Ebidensya") {
+                alert("🚨 KINAHANGLAN OG EBIDENSYA! Palihug pag-kuha sa daan og litrato gamit ang camera bago i-click ang Pause o Resume.");
+                return;
             }
 
             const payload = {
