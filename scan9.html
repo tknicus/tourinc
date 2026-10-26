@@ -1540,6 +1540,9 @@
         // ==========================================
         // ⏱️ PAUSE & RESUME RIDE LOGIC (FIXED PHOTO RESET)
         // ==========================================
+        // ==========================================
+        // ⏱️ PAUSE & RESUME RIDE LOGIC (FIXED PHOTO PAYLOAD)
+        // ==========================================
         async function handlePauseResume(type) {
             const riderId = document.getElementById('idNum') ? document.getElementById('idNum').value.trim() : "";
             const riderName = document.getElementById('name') ? document.getElementById('name').value.trim() : "";
@@ -1551,9 +1554,16 @@
                 return;
             }
 
+            // Kuhaon ang pinakabag-o nga Base64 gikan sa photoPreview src kung gi-blanko sa uban
+            let activePhoto = compressedPhotoBase64;
+            const photoPreview = document.getElementById('photoPreview');
+            if ((!activePhoto || !activePhoto.includes('base64')) && photoPreview && photoPreview.src && photoPreview.src.includes('base64')) {
+                activePhoto = photoPreview.src;
+            }
+
             // 🛑 MANDATORY PICTURE CHECK PARA SA PAUSE / RESUME 🛑
-            if (!compressedPhotoBase64 || compressedPhotoBase64 === "" || !compressedPhotoBase64.includes('base64')) {
-                alert(`📸 DILI MA-${type}! Kinahanglan naay kauban nga picture (ebidensya) una i-send ang ${type} status!`);
+            if (!activePhoto || activePhoto === "" || !activePhoto.includes('base64')) {
+                alert(`📸 DILI MA-${type}! Kinahanglan naay kauban nga picture (ebidensya) una i-send ang ${type} status! Palihug pagkuha og picture gamit ang camera button.`);
                 return;
             }
 
@@ -1578,7 +1588,7 @@
                 checkpoint: (type === 'PAUSE') ? "⏸️ PAUSE" : "▶️ RESUME",
                 odometer: odoInput || 0,
                 notes: `[${type}] ${userReason}`,
-                photo: compressedPhotoBase64, // Naa na gyud ang picture dinhi
+                photo: activePhoto, // Gigamit na ang giseguro nga activePhoto base64
                 timestamp: new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' }),
                 location: gpsData.link,
                 latitude: gpsData.lat,
@@ -1604,9 +1614,8 @@
             localStorage.setItem('rideState_' + riderId, type);
             updateRideStateUI(riderId);
 
-            // 🧹 LIMPIYOHAN ANG PICTURE PREgVIEW UG BASE64 HUMAN MA-SEND ARON DILI MA-REUSE
+            // 🧹 LIMPIYOHAN ANG PICTURE PREVIEW UG VARIABLES HUMAN MA-SEND
             compressedPhotoBase64 = "";
-            const photoPreview = document.getElementById('photoPreview');
             if (photoPreview) {
                 photoPreview.src = "";
                 photoPreview.style.display = "none";
