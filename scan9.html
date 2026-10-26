@@ -1537,10 +1537,8 @@
             });
         }
 
-
-
         // ==========================================
-        // ⏱️ PAUSE & RESUME RIDE LOGIC
+        // ⏱️ PAUSE & RESUME RIDE LOGIC (FIXED PHOTO RESET)
         // ==========================================
         async function handlePauseResume(type) {
             const riderId = document.getElementById('idNum') ? document.getElementById('idNum').value.trim() : "";
@@ -1606,10 +1604,16 @@
             localStorage.setItem('rideState_' + riderId, type);
             updateRideStateUI(riderId);
 
-            // Limpyohan ang picture preview human ma-send
+            // 🧹 LIMPIYOHAN ANG PICTURE PREgVIEW UG BASE64 HUMAN MA-SEND ARON DILI MA-REUSE
             compressedPhotoBase64 = "";
             const photoPreview = document.getElementById('photoPreview');
-            if (photoPreview) photoPreview.style.display = "none";
+            if (photoPreview) {
+                photoPreview.src = "";
+                photoPreview.style.display = "none";
+            }
+            if (document.getElementById('cameraInput')) {
+                document.getElementById('cameraInput').value = "";
+            }
         }
 
         function updateRideStateUI(riderId) {
