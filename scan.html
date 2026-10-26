@@ -109,6 +109,13 @@
 
             <div id="liveLocation">📍 Nangita sa imong location...</div>
 
+            <!-- 🔄 RE-SYNC GPS BUTTON UG DISTANCE DISPLAY BADGE -->
+            <button type="button" onclick="reSyncGPS()" style="background: #007bb5; color: white; padding: 10px; border: none; border-radius: 6px; font-weight: bold; font-size: 13px; margin-bottom: 12px; cursor: pointer; width: 100%; margin-top: 10px;">
+                🔄 RE-SYNC GPS (REFRESH LOCATION)
+            </button>
+            <div id="distanceBadge" style="display:none; text-align:center; padding:10px; border-radius:6px; margin-bottom:15px; font-weight:bold; font-size:13px;"></div>
+                        
+
             <div id="setupOwntracksContainer" style="display:none; text-align:center; margin-bottom:15px; background:#1a1a1a; padding:12px; border-radius:8px; border:1px solid #28a745;">
                 <p style="color: #ff9900; font-size: 12px; margin-top:0; margin-bottom:8px; font-weight:bold;">LAKBANG 2: IKONEKTA ANG OWNTRACKS</p>
                 <a id="oneTapConfigBtn" href="#" style="background: #28a745; color: white; padding: 10px 15px; text-decoration: none; border-radius: 6px; font-weight: bold; display: block; font-size: 14px;">
@@ -251,6 +258,110 @@
             "G7": 7777, "G8": 8888, "G81": 888, "G82": 888, "G83": 888 
         };        
 
+        // ==========================================
+        // 📐 HAVERSINE FORMULA (GPS DISTANCE IN METERS)
+        // ==========================================
+        function getDistanceInMeters(lat1, lon1, lat2, lon2) {
+            const R = 6371000;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c; 
+        }
+
+        // 📏 AUTO-FORMAT DISTANCE (KM kung >= 1000m, METERS kung < 1000m)
+        function formatDistance(distMeters) {
+            if (distMeters >= 1000) {
+                return (distMeters / 1000).toFixed(2) + " km"; 
+            } else {
+                return Math.round(distMeters) + " meters";     
+            }
+        }
+
+        // ==========================================
+        // 🛡️ GEOFENCE DISTANCE VALIDATOR (200m MAX)
+        // ==========================================
+        function checkCheckpointDistance(cpCode, userLat, userLon) {
+            let currentLevel = window.activeRiderLevel || "G5";
+            let cpData = window.routeConfigs[currentLevel] || window.routeConfigs["G5"] || {};
+            
+            let cpUpper = String(cpCode || "").toUpperCase();
+            if (cpUpper.includes("PAUSE") || cpUpper.includes("RESUME") || cpUpper.includes("SOS")) {
+                return { allowed: true, distanceMeters: 0, hasTargetCoords: false, message: "Exempted" };
+            }
+
+            let targetCP = null;
+            if (Array.isArray(cpData)) {
+                targetCP = cpData.find(c => c.val === cpCode);
+            } else if (cpData && cpData[cpCode]) {
+                targetCP = cpData[cpCode];
+            }
+
+            if (!targetCP) return { allowed: true, distanceMeters: 0, hasTargetCoords: false, message: "No CP Entry" };
+
+            let targetLat = targetCP.lat || targetCP.latitude;
+            let targetLng = targetCP.lng || targetCP.longitude || targetCP.lon;
+
+            if (!targetLat || !targetLng) {
+                return { allowed: true, distanceMeters: 0, hasTargetCoords: false, message: "No Target Coordinates" };
+            }
+
+            let parsedUserLat = parseFloat(userLat);
+            let parsedUserLon = parseFloat(userLon);
+            let parsedTargetLat = parseFloat(targetLat);
+            let parsedTargetLng = parseFloat(targetLng);
+
+            if (isNaN(parsedUserLat) || isNaN(parsedUserLon) || isNaN(parsedTargetLat) || isNaN(parsedTargetLng)) {
+                return { allowed: true, distanceMeters: 0, hasTargetCoords: false, message: "Invalid Coords" };
+            }
+
+            let distMeters = getDistanceInMeters(parsedUserLat, parsedUserLon, parsedTargetLat, parsedTargetLng);
+            let isWithinRange = distMeters <= 200; // 200 meters MAXIMUM TOLERANCE
+
+            return {
+                allowed: isWithinRange,
+                distanceMeters: distMeters,
+                hasTargetCoords: true,
+                message: isWithinRange ? "Within Range" : "Too Far"
+            };
+        }
+
+        function updateDistanceBadge() {
+            const badge = document.getElementById('distanceBadge');
+            const cpDropdown = document.getElementById('checkpoint');
+            if (!badge || !cpDropdown) return;
+
+            let selectedCP = cpDropdown.value;
+            if (!selectedCP || globalLat === "N/A" || globalLon === "N/A") {
+                badge.style.display = "none";
+                return;
+            }
+
+            let res = checkCheckpointDistance(selectedCP, globalLat, globalLon);
+            if (!res.hasTargetCoords) {
+                badge.style.display = "none";
+                return;
+            }
+
+            badge.style.display = "block";
+            let formattedDist = formatDistance(res.distanceMeters);
+
+            if (res.allowed) {
+                badge.style.background = "#0f3818";
+                badge.style.border = "1px solid #28a745";
+                badge.style.color = "#28a745";
+                badge.innerHTML = `✅ DOKTOL / DAKOP SA GPS (${formattedDist} kalay-on sa Checkpoint)`;
+            } else {
+                badge.style.background = "#3b0000";
+                badge.style.border = "1px solid #ff3333";
+                badge.style.color = "#ff3333";
+                badge.innerHTML = `⚠️ LAYO PA KA! (${formattedDist} sa CP | Max Limit: 200m)`;
+            }
+        }
+        
         // ==========================================
         // 🌐 GPS VALIDATOR HELPER
         // ==========================================
@@ -817,11 +928,32 @@
                         globalLat = position.coords.latitude.toFixed(6);
                         globalLon = position.coords.longitude.toFixed(6);
                         liveLocationDiv.innerHTML = `📍 <b>Lat:</b> ${globalLat} &nbsp;|&nbsp; <b>Lon:</b> ${globalLon}`;
+                        updateDistanceBadge();
                     },
                     (error) => { liveLocationDiv.innerHTML = "⚠️ Palihug i-allow ang Location / GPS."; },
                     { enableHighAccuracy: true, maximumAge: 0 }
                 );
             } else if (liveLocationDiv) { liveLocationDiv.innerHTML = "❌ GPS wala gisuportahan sa imong device."; }
+        }
+
+        function reSyncGPS() {
+            if (!navigator.geolocation) { alert("❌ Walay GPS feature ang imong device."); return; }
+            if (liveLocationDiv) liveLocationDiv.innerHTML = "🔄 Nag-ReSync sa GPS Satellite signal...";
+            
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    globalLat = position.coords.latitude.toFixed(6);
+                    globalLon = position.coords.longitude.toFixed(6);
+                    if (liveLocationDiv) liveLocationDiv.innerHTML = `📍 <b>Lat:</b> ${globalLat} &nbsp;|&nbsp; <b>Lon:</b> ${globalLon}`;
+                    updateDistanceBadge();
+                    alert(`✅ GPS RE-SYNCED!\n\nNa-update ang imong location:\nLat: ${globalLat}\nLon: ${globalLon}`);
+                },
+                (error) => {
+                    alert("⚠️ Pagpakyas sa GPS Re-Sync! Palihug siguruha nga naka-ON ang Location sa imong selpon.");
+                    showLiveLocationOnLoad();
+                },
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
+            );
         }
 
         function getLocation() {
@@ -1047,6 +1179,19 @@
                     isSubmitting = false; 
                     return;
                 }
+
+                // 🛑 GPS HARD GUARD 2: GEOFENCE DISTANCE CHECK (MAX 200m)
+                let distCheck = checkCheckpointDistance(currentCheckpoint, gpsData.lat, gpsData.lon);
+                if (!distCheck.allowed) {
+                    if (submitAudio) { submitAudio.pause(); submitAudio.currentTime = 0; }
+                    
+                    let formattedDistAlert = formatDistance(distCheck.distanceMeters);
+
+                    alert(`⚠️ DILI MA-SUBMIT! LAYO PA KA SA CHECKPOINT!\n\nNaa ka sa ${formattedDistAlert} nga kalay-on sa ${currentCheckpoint}.\n\nMaximum allowable limit: 200 meters.\n\nPalihug padol-it sa designated location sa Checkpoint o i-press ang "🔄 RE-SYNC GPS" button.`);
+                    
+                    if(submitBtn) { submitBtn.textContent = "I-Submit ang Data"; submitBtn.disabled = false; submitBtn.style.opacity = "1"; }
+                    isSubmitting = false; return;
+                }                
                 
                 if (!compressedPhotoBase64 || compressedPhotoBase64 === "" || !compressedPhotoBase64.includes('base64')) {
                     if (submitAudio) { submitAudio.pause(); submitAudio.currentTime = 0; }
@@ -1104,6 +1249,7 @@
                     
                     updateCheckpointCheckmarks(checkId);
                     updateRiderProgress(); 
+                    updateDistanceBadge(); // <--- IDUGANG KINI PARA MA WALA ANG BADGE INIG HUMAN SUBMIT
                 }
                 if(submitBtn) { submitBtn.textContent = "I-Submit ang Data"; submitBtn.disabled = false; submitBtn.style.opacity = "1"; }
                 isSubmitting = false; 
@@ -1208,7 +1354,12 @@
         }
 
         let checkpointDropdown = document.getElementById("checkpoint");
-        if (checkpointDropdown) checkpointDropdown.addEventListener("change", updateRiderProgress);
+        if (checkpointDropdown) {
+            checkpointDropdown.addEventListener("change", function() {
+                updateRiderProgress();
+                updateDistanceBadge();
+            });
+        }
 
         let odometerInput = document.getElementById("odometer");
         if (odometerInput) {
