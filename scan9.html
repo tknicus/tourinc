@@ -1546,6 +1546,9 @@
         // ==========================================
         // ⏱️ PAUSE & RESUME RIDE LOGIC (GINSUGOD SA NORMAL SUBMIT LOGIC)
         // ==========================================
+        // ==========================================
+        // ⏱️ PAUSE & RESUME RIDE LOGIC (WITH SMART PHOTO CHECK)
+        // ==========================================
         async function handlePauseResume(type) {
             const riderId = document.getElementById('idNum') ? document.getElementById('idNum').value.trim() : "";
             const riderName = document.getElementById('name') ? document.getElementById('name').value.trim() : "";
@@ -1557,18 +1560,12 @@
                 return;
             }
 
-            // 🛑 GINSUGOD SA NORMAL SUBMIT: Susiha ang compressedPhotoBase64 pareho sa regular submit
-            if (!compressedPhotoBase64 || compressedPhotoBase64 === "" || !compressedPhotoBase64.includes('base64')) {
-                alert(`📸 DILI MA-${type}! Kinahanglan naay kauban nga picture (ebidensya) una i-send ang ${type} status!`);
-                return;
-            }
-
             let defaultMsg = (type === 'PAUSE') ? 'Pitstop / Rest / Refuel' : 'Back on road';
             let userReason = prompt((type === 'PAUSE' ? '⏸️ RASON SA PAG-PAUSE (Rest/Food/Gas/Repair):' : '▶️ RESUME REMARKS:'), notesInput || defaultMsg);
             
             if (userReason === null) return; // Gi-cancel sa user
 
-            let confirmAction = confirm(`${type === 'PAUSE' ? '⏸️ PAUSE' : '▶️ RESUME'} CONFIRMATION:\n\nKumpirmahon ba nimo ang pag-log sa ${type} status uban ang ebidensya nga picture?`);
+            let confirmAction = confirm(`${type === 'PAUSE' ? '⏸️ PAUSE' : '▶️ RESUME'} CONFIRMATION:\n\nKumpirmahon ba nimo ang pag-log sa ${type} status sa Command Center?`);
             if (!confirmAction) return;
 
             const gpsData = await getLocation();
@@ -1578,14 +1575,19 @@
                 return;
             }
 
-            // Eksaktong pormat sa payload pareho sa normal submit block
-            const data = {
+            // 📸 SMART PHOTO CAPTURE: Kung naay gikuha nga picture, gamita. Kung wala, i-default sa "Walay Ebidensya".
+            let photoPayload = "Walay Ebidensya";
+            if (typeof compressedPhotoBase64 !== 'undefined' && compressedPhotoBase64 && compressedPhotoBase64.includes('base64')) {
+                photoPayload = compressedPhotoBase64;
+            }
+
+            const payload = {
                 idNum: riderId,
                 name: riderName,
                 checkpoint: (type === 'PAUSE') ? "⏸️ PAUSE" : "▶️ RESUME",
                 odometer: odoInput || 0,
                 notes: `[${type}] ${userReason}`,
-                photo: compressedPhotoBase64, // Gikuha direkta sa global compressedPhotoBase64
+                photo: photoPayload, // Dinhi ma-detect sa sendDataToServer ug i-upload sa Supabase Storage kung base64 siya!
                 timestamp: new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' }),
                 location: gpsData.link,
                 latitude: gpsData.lat,
@@ -1595,33 +1597,28 @@
             };
 
             let isStable = await checkInternetStability();
-            let isDataSaved = false;
-
             if (isStable) {
-                if (await sendDataToServer(data)) {
-                    alert(`✅ Success! Na-save na sa MasterMinds'CUP Database ang ${type} uban ang picture!`);
-                    isDataSaved = true;
+                let success = await sendDataToServer(payload);
+                if (success) {
+                    alert(`✅ ${type} STATUS LOGGED!\n\nNa-update na sa Command Center Dashboard.`);
                 } else {
-                    saveToOfflineStorage(data);
-                    alert(`⚠️ Na-save sa Offline Storage ang ${type} uban ang picture!`);
-                    isDataSaved = true;
+                    saveToOfflineStorage(payload);
+                    alert(`⚠️ Na-save sa Offline Storage ang ${type}! I-sync ra inig ka-signal.`);
                 }
             } else {
-                saveToOfflineStorage(data);
-                alert(`⚠️ Walay internet! Gi-save sa Offline Data ang ${type} uban ang picture.`);
-                isDataSaved = true;
+                saveToOfflineStorage(payload);
+                alert(`⚠️ WALAY INTERNET! Gi-save sa Offline Storage ang ${type}.`);
             }
 
-            if (isDataSaved) {
-                localStorage.setItem('rideState_' + riderId, type);
-                updateRideStateUI(riderId);
+            localStorage.setItem('rideState_' + riderId, type);
+            updateRideStateUI(riderId);
 
-                // Limpyohi ang input fields ug ang photo preview pareho sa normal submit
-                document.getElementById('notes').value = "";
-                compressedPhotoBase64 = ""; 
-                const photoPreview = document.getElementById('photoPreview');
-                if (photoPreview) photoPreview.style.display = "none";
-                if (document.getElementById('cameraInput')) document.getElementById('cameraInput').value = "";
+            // Limpyohan ang photo preview human ma-save aron dili masagol sasunod
+            compressedPhotoBase64 = "";
+            const photoPreview = document.getElementById('photoPreview');
+            if (photoPreview) {
+                photoPreview.src = "";
+                photoPreview.style.display = "none";
             }
         }
 
