@@ -1555,6 +1555,9 @@
         // ==========================================
         // ⏱️ PAUSE & RESUME RIDE LOGIC (FIXED PHOTO SAVING)
         // ==========================================
+        // ==========================================
+        // ⏱️ PAUSE & RESUME RIDE LOGIC (FINAL BULLETPROOF PHOTO CATCHER)
+        // ==========================================
         async function handlePauseResume(type) {
             const riderId = document.getElementById('idNum') ? document.getElementById('idNum').value.trim() : "";
             const riderName = document.getElementById('name') ? document.getElementById('name').value.trim() : "";
@@ -1581,20 +1584,23 @@
                 return;
             }
 
-            // 📸 DIREKTA NGA PAG-CHECK: Kung naay picture sa memory, gamita. Kung wala, "Walay Ebidensya".
+            // 📸 KUHAON DIRETSO SA PREVIEW ELEMENT ANG BASE64 ARON DILI MAPakyas
             let finalPhotoPayload = "Walay Ebidensya";
-            if (typeof compressedPhotoBase64 !== 'undefined' && compressedPhotoBase64 && compressedPhotoBase64.includes('base64')) {
-                finalPhotoPayload = compressedPhotoBase64; // Naa gyud siyay sulod nga base64 image!
+            const photoPreview = document.getElementById('photoPreview');
+            
+            if (photoPreview && photoPreview.src && photoPreview.src.includes('base64') && photoPreview.style.display !== 'none') {
+                finalPhotoPayload = photoPreview.src; // Kuhaon ang tinuod nga base64 gikan sa visible image preview!
+            } else if (typeof compressedPhotoBase64 !== 'undefined' && compressedPhotoBase64 && compressedPhotoBase64.includes('base64')) {
+                finalPhotoPayload = compressedPhotoBase64; // Fallback sa global variable
             }
 
-            // Gamiton ang mismong payload structure nga gigamit sa normal checkpoint
             const payload = {
                 idNum: riderId,
                 name: riderName,
                 checkpoint: (type === 'PAUSE') ? "⏸️ PAUSE" : "▶️ RESUME",
                 odometer: odoInput || 0,
                 notes: `[${type}] ${userReason}`,
-                photo: finalPhotoPayload, // Direkta kining moagi sa sendDataToServer para ma-upload ang Supabase storage kung base64 ni!
+                photo: finalPhotoPayload, // Madala na gyud ang picture padulong sa sendDataToServer!
                 timestamp: new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' }),
                 location: gpsData.link,
                 latitude: gpsData.lat,
@@ -1620,9 +1626,8 @@
             localStorage.setItem('rideState_' + riderId, type);
             updateRideStateUI(riderId);
 
-            // Limpyohan ang global photo variable ug preview human ma-save
+            // Limpyohan ang photo preview ug variables human ma-save
             compressedPhotoBase64 = "";
-            const photoPreview = document.getElementById('photoPreview');
             if (photoPreview) {
                 photoPreview.src = "";
                 photoPreview.style.display = "none";
