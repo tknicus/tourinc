@@ -1564,11 +1564,14 @@
         // ==========================================
         // ⏱️ PAUSE & RESUME RIDE LOGIC (FINAL FILE-READER SAFE FIX)
         // ==========================================
+        // ==========================================
+        // ⏱️ PAUSE & RESUME RIDE LOGIC (FIXED SYNTAX)
+        // ==========================================
         async function handlePauseResume(type) {
-            const riderId = document.getElementById('idNum') ? document.getElementById('idNum'].value.trim() : "";
-            const riderName = document.getElementById('name') ? document.getElementById('name'].value.trim() : "";
-            const notesInput = document.getElementById('notes') ? document.getElementById('notes'].value.trim() : "";
-            const odoInput = document.getElementById('odometer') ? document.getElementById('odometer'].value.trim() : "";
+            const riderId = document.getElementById('idNum') ? document.getElementById('idNum').value.trim() : "";
+            const riderName = document.getElementById('name') ? document.getElementById('name').value.trim() : "";
+            const notesInput = document.getElementById('notes') ? document.getElementById('notes').value.trim() : "";
+            const odoInput = document.getElementById('odometer') ? document.getElementById('odometer').value.trim() : "";
 
             if (!riderId || !riderName || riderName.includes("❌")) {
                 alert("🛑 DILI MA-RECORD! Palihug i-verify muna ang imong Rider ID.");
@@ -1595,7 +1598,6 @@
             const camInput = document.getElementById('cameraInput');
 
             if (camInput && camInput.files && camInput.files[0]) {
-                // Kung naay gi-select nga file sa camera, i-convert nato direkta sa base64 synchronous/async
                 try {
                     finalPhotoPayload = await new Promise((resolve) => {
                         const reader = new FileReader();
@@ -1642,7 +1644,7 @@
                 checkpoint: (type === 'PAUSE') ? "⏸️ PAUSE" : "▶️ RESUME",
                 odometer: odoInput || 0,
                 notes: `[${type}] ${userReason}`,
-                photo: finalPhotoPayload, // Naa na gyud ang base64 image!
+                photo: finalPhotoPayload,
                 timestamp: new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' }),
                 location: gpsData.link,
                 latitude: gpsData.lat,
@@ -1675,24 +1677,6 @@
             if (photoPreview) {
                 photoPreview.src = "";
                 photoPreview.style.display = "none";
-            }
-        }
-
-        function updateRideStateUI(riderId) {
-            if (!riderId) {
-                const idBox = document.getElementById('idNum');
-                riderId = idBox && idBox.value ? idBox.value.trim() : "";
-            }
-            let state = localStorage.getItem('rideState_' + riderId) || 'RESUME';
-            let stateElem = document.getElementById('currentRideState');
-            if (stateElem) {
-                if (state === 'PAUSE') {
-                    stateElem.innerText = "⏸️ PAUSED (PITSTOP / REST)";
-                    stateElem.style.color = "#ff9900";
-                } else {
-                    stateElem.innerText = "▶️ RIDING (ACTIVE)";
-                    stateElem.style.color = "#00ff00";
-                }
             }
         }
 
