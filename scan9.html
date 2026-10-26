@@ -1552,6 +1552,9 @@
         // ==========================================
         // ⏱️ PAUSE & RESUME RIDE LOGIC (UNIFIED WITH RALLY SCANS TABLE)
         // ==========================================
+        // ==========================================
+        // ⏱️ PAUSE & RESUME RIDE LOGIC (FIXED PHOTO SAVING)
+        // ==========================================
         async function handlePauseResume(type) {
             const riderId = document.getElementById('idNum') ? document.getElementById('idNum').value.trim() : "";
             const riderName = document.getElementById('name') ? document.getElementById('name').value.trim() : "";
@@ -1578,20 +1581,20 @@
                 return;
             }
 
-            // Gamiton ang compressedPhotoBase64 kung naay gikuha nga picture, kung wala, "Walay Ebidensya"
+            // 📸 DIREKTA NGA PAG-CHECK: Kung naay picture sa memory, gamita. Kung wala, "Walay Ebidensya".
             let finalPhotoPayload = "Walay Ebidensya";
             if (typeof compressedPhotoBase64 !== 'undefined' && compressedPhotoBase64 && compressedPhotoBase64.includes('base64')) {
-                finalPhotoPayload = compressedPhotoBase64;
+                finalPhotoPayload = compressedPhotoBase64; // Naa gyud siyay sulod nga base64 image!
             }
 
-            // Pareho gyud sa format sa normal checkpoint submit data payload!
-            const pauseResumePayload = {
+            // Gamiton ang mismong payload structure nga gigamit sa normal checkpoint
+            const payload = {
                 idNum: riderId,
                 name: riderName,
                 checkpoint: (type === 'PAUSE') ? "⏸️ PAUSE" : "▶️ RESUME",
                 odometer: odoInput || 0,
                 notes: `[${type}] ${userReason}`,
-                photo: finalPhotoPayload, // Direkta nga moagi sa sendDataToServer para ma-upload ang pic kung naa!
+                photo: finalPhotoPayload, // Direkta kining moagi sa sendDataToServer para ma-upload ang Supabase storage kung base64 ni!
                 timestamp: new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' }),
                 location: gpsData.link,
                 latitude: gpsData.lat,
@@ -1602,22 +1605,22 @@
 
             let isStable = await checkInternetStability();
             if (isStable) {
-                let success = await sendDataToServer(pauseResumePayload);
+                let success = await sendDataToServer(payload);
                 if (success) {
-                    alert(`✅ ${type} STATUS LOGGED!\n\nNa-save na sa rally_scans database.`);
+                    alert(`✅ ${type} STATUS LOGGED!\n\nNa-save na sa Database upod ang ebidensya (kung naa).`);
                 } else {
-                    saveToOfflineStorage(pauseResumePayload);
+                    saveToOfflineStorage(payload);
                     alert(`⚠️ Na-save sa Offline Storage ang ${type}! I-sync ra inig ka-signal.`);
                 }
             } else {
-                saveToOfflineStorage(pauseResumePayload);
+                saveToOfflineStorage(payload);
                 alert(`⚠️ WALAY INTERNET! Gi-save sa Offline Storage ang ${type}.`);
             }
 
             localStorage.setItem('rideState_' + riderId, type);
             updateRideStateUI(riderId);
 
-            // Limpyohan ang photo preview human ma-save
+            // Limpyohan ang global photo variable ug preview human ma-save
             compressedPhotoBase64 = "";
             const photoPreview = document.getElementById('photoPreview');
             if (photoPreview) {
