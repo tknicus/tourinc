@@ -808,21 +808,28 @@
             const dropdown = document.getElementById('checkpoint');
             if (!dropdown) return;
             dropdown.innerHTML = '<option value="" disabled selected>-- PILIA ANG CHECKPOINT -- (I-scan usa ang Rider)</option>';
-            let cpData = window.routeConfigs[riderLevel] || window.routeConfigs["G5"] || [];
+            let cpData = window.routeConfigs[riderLevel] || window.routeConfigs["G5"] || {};
 
-            if (Array.isArray(cpData)) {
-                cpData.forEach(cp => {
-                    let opt = document.createElement('option');
-                    opt.value = cp.val; opt.textContent = `${cp.val} - ${cp.name}`;
-                    dropdown.appendChild(opt);
-                });
-            } else {
-                Object.entries(cpData).forEach(([val, name]) => {
-                    let opt = document.createElement('option');
-                    opt.value = val; opt.textContent = `${val} - ${name}`;
-                    dropdown.appendChild(opt);
-                });
-            }
+            // Nasayaat ken nabalitawan a panag-handle ti Array wenno Object format
+            let cpEntries = Array.isArray(cpData) 
+                ? cpData.map((cp, idx) => [cp.val || `CP ${idx}`, cp]) 
+                : Object.entries(cpData);
+
+            cpEntries.forEach(([val, cpVal]) => {
+                let opt = document.createElement('option');
+                opt.value = val;
+                
+                // Siguraduwen no object wenno string ti checkpoint data
+                let cpName = "";
+                if (typeof cpVal === 'object' && cpVal !== null) {
+                    cpName = cpVal.name || cpVal.val || val;
+                } else {
+                    cpName = String(cpVal);
+                }
+
+                opt.textContent = `${val} - ${cpName}`;
+                dropdown.appendChild(opt);
+            });
         }
 
         function initBatteryMonitor() {
@@ -1278,37 +1285,34 @@
             });
 
             let currentLevel = window.activeRiderLevel || "G5";
-            let cpData = window.routeConfigs[currentLevel] || window.routeConfigs["G5"] || [];
+            let cpData = window.routeConfigs[currentLevel] || window.routeConfigs["G5"] || {};
             let htmlOutput = "";
             let countCompleted = 0;
             let firstUnfinishedCP = ""; 
 
-            if (Array.isArray(cpData)) {
-                cpData.forEach(cp => {
-                    if (completedCheckpoints.includes(cp.val)) {
-                        htmlOutput += `<span style="color: #00ff00; margin-right: 8px; display: inline-block; font-weight: bold;" title="${cp.name}">✓ ${cp.val}</span>`;
-                        countCompleted++;
-                    } else {
-                        htmlOutput += `<span style="color: #555; margin-right: 8px; display: inline-block;" title="${cp.name}">✗ ${cp.val}</span>`;
-                        if (firstUnfinishedCP === "") firstUnfinishedCP = cp.val;
-                    }
-                });
-            } else {
-                Object.entries(cpData).forEach(([cpVal, cpName]) => {
-                    if (completedCheckpoints.includes(cpVal)) {
-                        htmlOutput += `<span style="color: #00ff00; margin-right: 8px; display: inline-block; font-weight: bold;" title="${cpName}">✓ ${cpVal}</span>`;
-                        countCompleted++;
-                    } else {
-                        htmlOutput += `<span style="color: #555; margin-right: 8px; display: inline-block;" title="${cpName}">✗ ${cpVal}</span>`;
-                        if (firstUnfinishedCP === "") firstUnfinishedCP = cpVal;
-                    }
-                });
-            }
+            let cpEntries = Array.isArray(cpData) 
+                ? cpData.map((cp, idx) => [cp.val || `CP ${idx}`, cp]) 
+                : Object.entries(cpData);
+
+            cpEntries.forEach(([cpVal, cpDetails]) => {
+                let cpName = (typeof cpDetails === 'object' && cpDetails !== null) ? (cpDetails.name || cpDetails.val || cpVal) : String(cpDetails);
+
+                if (completedCheckpoints.includes(cpVal)) {
+                    htmlOutput += `<span style="color: #00ff00; margin-right: 8px; display: inline-block; font-weight: bold;" title="${cpName}">✓ ${cpVal}</span>`;
+                    countCompleted++;
+                } else {
+                    htmlOutput += `<span style="color: #555; margin-right: 8px; display: inline-block;" title="${cpName}">✗ ${cpVal}</span>`;
+                    if (firstUnfinishedCP === "") firstUnfinishedCP = cpVal;
+                }
+            });
             
             checklistDiv.innerHTML = countCompleted === 0 ? "<span style='color: #888;'>Wala pay na-submit nga Checkpoint.</span>" : htmlOutput;
             const dropdown = document.getElementById('checkpoint');
             if (dropdown && firstUnfinishedCP !== "") {
-                setTimeout(() => { dropdown.value = firstUnfinishedCP; }, 100); 
+                setTimeout(() => { 
+                    dropdown.value = firstUnfinishedCP; 
+                    updateDistanceBadge();
+                }, 100); 
             }
         }
 
