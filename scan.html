@@ -37,13 +37,7 @@
         .camera-btn:hover { background-color: #555; }
         .camera-btn-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; height: 100%; width: 100%; }
         #photoPreview { max-width: 100%; border: 2px dashed #cc0000; border-radius: 5px; margin-bottom: 15px; display: none; }
-        /* Kini ang sekreto aron dili mu-zoom, mu-highlight, o mu-pop up ang menu sa logo */
-        #secretLogo {
-            -webkit-touch-callout: none; /* iOS Safari */
-            -webkit-user-select: none;   /* Safari */
-            user-select: none;           /* Standard */
-            cursor: pointer;
-        }        
+        #secretLogo { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; cursor: pointer; }        
     </style>
 </head>
 <body>
@@ -242,6 +236,14 @@
             } catch (err) { return ""; }
         }
 
+        if (typeof window.routeNames === 'undefined') {
+            window.routeNames = { "AS26": "628 ALL STAR", "G5": "MAN OF STEEL", "G4": "4W RIDERS", "G3": "Mindanao Coastal Gaming", "G1N": "NORTH - MaKahulogan", "G1E": "EASTT - LoCoCaMaMa", "G1W": "WEST - DaDiPaPi", "G1S": "SOUTH - JAS-T'Boli" };
+        }
+
+        if (typeof window.routeTotalKm === 'undefined') {
+            window.routeTotalKm = { "G1N": 777, "G1E": 777, "G1W": 777, "G1S": 777, "G3": 3333, "G4": 444, "G5": 5555, "AS26": 628 };
+        }
+
         if (Object.keys(window.routeConfigs).length === 0) {
             window.routeConfigs = {
                 "G1N": [{ val: "CP 00", name: "#00 Starting Grid" }, { val: "CP 01", name: "#01 San Fernando Municipal Plaza" }, { val: "CP 02", name: "#02 Iba Central Elementary School 25km" }, { val: "CP FL", name: "#FL Ending Grid" }],
@@ -256,22 +258,6 @@
         }
 
         async function verifyAndLogin() {
-            // 🛑 1. LOCKOUT CHECK (Susiha kung naka-lock pa ba ang user)
-            let lockoutUntil = localStorage.getItem("mmc_lockout_time");
-            if (lockoutUntil) {
-                let now = new Date().getTime();
-                if (now < parseInt(lockoutUntil)) {
-                    let remainingMinutes = Math.ceil((parseInt(lockoutUntil) - now) / 60000);
-                    alert(`🚨 ACCOUNT LOCKED!\n\nNasayop ka og 3 ka beses. Palihug paghulat og ${remainingMinutes} ka minuto una ka mosulay usab.`);
-                    return; // Ihunong ang pag-login
-                } else {
-                    // Kung lapas na sa 5 mins, i-reset ang ilang penalty
-                    localStorage.removeItem("mmc_lockout_time");
-                    localStorage.setItem("mmc_failed_attempts", "0");
-                }
-            }
-
-            // 🛑 2. OWNTRACKS CHECK
             let isOwnTracksInstalled = localStorage.getItem("mmc_owntracks_ready");
             if (isOwnTracksInstalled !== "true") {
                 let confirmInstall = confirm("⚠️ MAHINUNGDANONG PAHIBALO:\n\nPara sa Life360-style Live Tracking sa MasterMinds'CUP, kinahanglan una nimo i-install ang 'OwnTracks' app.\n\nNa-install na ba nimo ang OwnTracks?");
@@ -292,32 +278,25 @@
             if (typeof riderDatabase === 'undefined') { alert("CRITICAL ERROR: Wala makit-an ang database.js!"); return; }
 
             let rider = riderDatabase.find(r => r.idNum === inputtedID);
-            
-            // 🛑 3. VERIFICATION PROCESS
             if (rider) {
                 let isPasscodeValid = false;
                 if (rider.passcode) {
                     let hashedInputPass = await sha256Hash(inputtedPass);
-                    if (hashedInputPass === rider.passcode) {
-                        isPasscodeValid = true;
-                    } else { 
-                        handleFailedAttempt(); // TAWAGON ANG PENALTY KUNG SAYOP ANG PASSCODE
-                        return; 
-                    }
+                    if (hashedInputPass === rider.passcode) isPasscodeValid = true;
+                    else { alert("ACCESS DENIED: Sayop ang imong Passcode!"); return; }
                 } else { isPasscodeValid = true; }
 
                 if (isPasscodeValid) {
-                    // ✅ SUCCESS LOGIN! I-reset ang mga sayop.
-                    localStorage.setItem("mmc_failed_attempts", "0");
-                    
+                    // 🛑 SUGOD SA EXPIRY CHECK SA LOGIN 🛑
                     if (rider.expiry) {
                         let riderExpiry = new Date(rider.expiry + "T23:59:59");
                         let today = new Date();
                         if (today > riderExpiry) {
                             alert(`ACCESS DENIED: Pasensya Master ${rider.fullname}, expired na ang imong account (Kutob ra sa ${rider.expiry}).`);
-                            return; 
+                            return;
                         }
                     }
+                    // 🛑 KATAPUSAN SA EXPIRY CHECK 🛑
                     
                     localStorage.setItem("tourRiderID", rider.idNum);
                     localStorage.setItem("defaultRiderID", rider.idNum);
@@ -332,38 +311,15 @@
                         localStorage.setItem("tourIsMarshal", "false");
                         localStorage.setItem("marshalMode", "false");
                     }
-                    
                     document.getElementById("loginScreenContainer").style.display = "none";
                     document.getElementById("scannerScreenContainer").style.display = "flex";
                     initScannerApp(rider.idNum);
-                    
                     const scanQrBtn = document.getElementById('scanQrBtn');
                     if (scanQrBtn) scanQrBtn.style.display = (rider.isMarshal === true) ? "block" : "none";
                 }
             } else {
-                handleFailedAttempt(); // TAWAGON ANG PENALTY KUNG WALA ANG ID SA DATABASE
-            }
-        }
-
-        // ==========================================
-        // 🚨 SECURITY: TAGA-DUMALA SA FAILED ATTEMPTS
-        // ==========================================
-        function handleFailedAttempt() {
-            let attempts = parseInt(localStorage.getItem("mmc_failed_attempts")) || 0;
-            attempts++;
-            localStorage.setItem("mmc_failed_attempts", attempts.toString());
-
-            if (attempts >= 3) {
-                let lockoutTime = new Date().getTime() + (5 * 60 * 1000); // Ma-lock og 5 minutes (300,000 ms)
-                localStorage.setItem("mmc_lockout_time", lockoutTime.toString());
-                
-                alert("🚨 SECURITY ALERT: Nasayop ka og 3 ka beses!\n\nNa-lock ang imong app aron protektahan ang sistema. Palihug paghulat og 5 ka minuto una ka mosulay usab.");
-                
+                alert("ACCESS DENIED: Ang maong ID# kay walay labot o dili rehistrado.");
                 document.getElementById("riderIdInput").value = "";
-                document.getElementById("riderPassInput").value = "";
-            } else {
-                let remaining = 3 - attempts;
-                alert(`❌ ACCESS DENIED: Sayop ang imong ID o Passcode!\n\nNaa na lang kay ${remaining} ka attempt(s) nabilin usa ka ma-lock.`);
                 document.getElementById("riderPassInput").value = "";
             }
         }
@@ -558,13 +514,13 @@
 
             // 🛑 PANGITAA ANG RIDER SA DATABASE PARA KUHAON ANG IYANG EXPIRY 🛑
             let currentRider = (typeof riderDatabase !== 'undefined') ? riderDatabase.find(r => r.idNum === riderID) : null;
-            // Kung walay expiry nabutang, mag-set ta og default universal expiry isip backup
-            let expiryDateStr = (currentRider && currentRider.expiry) ? currentRider.expiry : '2026-10-01'; 
             
-            // I-set ang oras sa alas 11:59:59 sa gabii sa maong petsa
+            // Gi-update nako padulong 2026-12-31 ang default expiry aron dili ma-lockout ang tanang riders!
+            let expiryDateStr = (currentRider && currentRider.expiry) ? currentRider.expiry : '2026-12-31'; 
+            
             const eventExpiryDate = new Date(expiryDateStr + 'T23:59:59');
-
             const today = new Date();
+            
             if (today > eventExpiryDate || appStatus === 'F') {
                 localStorage.setItem('mmc_app_status', 'F');
                 let riderName = localStorage.getItem('offlineName_' + riderID) || "MasterMinds Marshal";
@@ -716,7 +672,6 @@
                                 const riderID = idElem && idElem.value ? idElem.value : "WALA I-SCAN";
                                 const riderName = nameElem && nameElem.value ? nameElem.value : "Wala Kaila";
                                 
-                                // Luwas ug hapsay nga PHT Timestamp para sa picture watermark
                                 const now = new Date();
                                 const militaryDateTime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
 
@@ -788,14 +743,11 @@
             });
         }
 
-        // ==========================================
-        // 🚀 FIXED: INTERNET CHECK WITH TIMEOUT
-        // ==========================================
         async function checkInternetStability() {
             if (!navigator.onLine) return false;
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3000); // 3-second timeout aron dili mo-hang
+                const timeoutId = setTimeout(() => controller.abort(), 3000);
                 await fetch('https://www.google.com/favicon.ico?rand=' + Math.random(), { 
                     mode: 'no-cors', 
                     cache: 'no-store',
@@ -849,7 +801,6 @@
                     }
                 }
 
-                // 🛑 I-APIL DIRI ANG SCANNED_AT O TIMESTAMP NGA GIPADALA SA PAYLOAD:
                 const { error: dbError } = await supabaseLiveClient.from('rally_scans').insert([{
                     qr_code: dataPayload.idNum, 
                     rider_name: dataPayload.name, 
@@ -896,9 +847,6 @@
             updateDashboardCounters();
         }
 
-        // ==========================================
-        // 🚀 FIXED: LOCALSTORAGE 5MB BOMB GUARD
-        // ==========================================
         function saveToOfflineStorage(recordData) {
             let savedData = JSON.parse(localStorage.getItem('offlineData')) || [];
             savedData.push(recordData);
@@ -908,7 +856,7 @@
             } catch (e) {
                 if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
                     alert("🚨 PUNO NA ANG STORAGE SA CELPON! Palihug pangita og internet/signal aron maka-sync, kay dili na maka-save og bag-ong picture ang Offline Mode.");
-                    savedData.pop(); // Tangtangon ang last item nga nakapa-puno aron dili ma-corrupt
+                    savedData.pop();
                 }
             }
         }
@@ -951,6 +899,14 @@
                 if (checkId === "" || checkName === "" || checkName.includes("❌")) {
                     if (submitAudio) { submitAudio.pause(); submitAudio.currentTime = 0; }
                     alert("🛑 DILI MA-SAVE! Blangko o sipyat ang Rider ID.");
+                    if(submitBtn) { submitBtn.textContent = "I-Submit ang Data"; submitBtn.disabled = false; submitBtn.style.opacity = "1"; }
+                    isSubmitting = false; return;
+                }
+
+                // Gidugang nako ning strict validation sa Checkpoint aron dili makalahutay ang form og blank submission
+                if (currentCheckpoint === "") {
+                    if (submitAudio) { submitAudio.pause(); submitAudio.currentTime = 0; }
+                    alert("🛑 DILI MA-SAVE! Palihug pilia ang Checkpoint gikan sa dropdown menu.");
                     if(submitBtn) { submitBtn.textContent = "I-Submit ang Data"; submitBtn.disabled = false; submitBtn.style.opacity = "1"; }
                     isSubmitting = false; return;
                 }
@@ -1258,11 +1214,10 @@
                 clearTimeout(tapTimeout);
                 tapTimeout = setTimeout(() => { 
                     tapCount = 0; 
-                }, 800); // 0.8 seconds window para ma-complete ang 3 ka tap
+                }, 800); 
 
                 if (tapCount === 3) {
                     tapCount = 0;
-                    // DIRETSO NGA MOABLI SA MENU.HTML
                     window.location.href = "menu.html";
                 }
             });
@@ -1281,16 +1236,14 @@
                 clearTimeout(tapTimeout);
                 tapTimeout = setTimeout(() => { 
                     tapCount = 0; 
-                }, 800); // 0.8 seconds window para ma-complete ang 3 ka tap
+                }, 800); 
 
                 if (tapCount === 3) {
                     tapCount = 0;
-                    // DIRETSO NGA MOABLI SA MENU.HTML
                     window.location.href = "menu.html";
                 }
             });
         }
-
     </script>
 </body>
 </html>
