@@ -607,9 +607,18 @@
                     dropdown.appendChild(opt);
                 });
             } else {
-                Object.entries(cpData).forEach(([val, name]) => {
+                Object.entries(cpData).forEach(([val, cpInfo]) => {
                     let opt = document.createElement('option');
-                    opt.value = val; opt.textContent = `${val} - ${name}`;
+                    opt.value = val;
+                    
+                    // FIX PARA DILI MA-OBJECT OBJECT
+                    let displayName = cpInfo;
+                    if (typeof cpInfo === 'object' && cpInfo !== null) {
+                        // Kuhaon ang 'name', 'title', o 'desc' kung object man gani ang data
+                        displayName = cpInfo.name || cpInfo.title || cpInfo.desc || val;
+                    }
+                    
+                    opt.textContent = `${val} - ${displayName}`;
                     dropdown.appendChild(opt);
                 });
             }
@@ -1013,7 +1022,13 @@
                     }
                 });
             } else {
-                Object.entries(cpData).forEach(([cpVal, cpName]) => {
+                Object.entries(cpData).forEach(([cpVal, cpInfo]) => {
+                    // FIX PARA DILI MA-OBJECT OBJECT SA CHECKLIST TOOLTIP
+                    let cpName = cpInfo;
+                    if (typeof cpInfo === 'object' && cpInfo !== null) {
+                        cpName = cpInfo.name || cpInfo.title || cpInfo.desc || cpVal;
+                    }
+
                     if (completedCheckpoints.includes(cpVal)) {
                         htmlOutput += `<span style="color: #00ff00; margin-right: 8px; display: inline-block; font-weight: bold;" title="${cpName}">✓ ${cpVal}</span>`;
                         countCompleted++;
