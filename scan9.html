@@ -1573,6 +1573,9 @@
         // ==========================================
         // ⏱️ PAUSE & RESUME RIDE LOGIC (FIXED STORAGE UPLOAD)
         // ==========================================
+        // ==========================================
+        // ⏱️ PAUSE & RESUME RIDE LOGIC (WITH IMMEDIATE PHOTO CLEAR)
+        // ==========================================
         async function handlePauseResume(type) {
             const riderId = document.getElementById('idNum') ? document.getElementById('idNum').value.trim() : "";
             const riderName = document.getElementById('name') ? document.getElementById('name').value.trim() : "";
@@ -1584,6 +1587,12 @@
                 return;
             }
 
+            // 📸 SIGURADUHON NGA NAA NAY NAKUHA NGA LITRATO SA DILI PA MAG-PROMPT
+            if (!compressedPhotoBase64 || !compressedPhotoBase64.includes('base64')) {
+                alert("📸 DILI MA-SAVE! Palihug pagkuha una og Ebidensya/Picture bago i-click ang Pause o Resume.");
+                return;
+            }
+
             let defaultMsg = (type === 'PAUSE') ? 'Pitstop / Rest / Refuel' : 'Back on road';
             let userReason = prompt((type === 'PAUSE' ? '⏸️ RASON SA PAG-PAUSE (Rest/Food/Gas/Repair):' : '▶️ RESUME REMARKS:'), notesInput || defaultMsg);
             
@@ -1592,6 +1601,19 @@
             let confirmAction = confirm(`${type === 'PAUSE' ? '⏸️ PAUSE' : '▶️ RESUME'} CONFIRMATION:\n\nKumpirmahon ba nimo ang pag-log sa ${type} status sa Command Center?`);
             if (!confirmAction) return;
 
+            // Kuhaon dayon ang temporary photo base64 aron ma-clear nato ang screen
+            let activePhotoBase64 = compressedPhotoBase64;
+
+            // 🧹 I-CLEAR DAYON ANG SCREEN UG PREVIEW ARON DILI NA MAParehas sa kuha sa screenshot!
+            compressedPhotoBase64 = "";
+            const camInput = document.getElementById('cameraInput');
+            if (camInput) camInput.value = "";
+            const photoPreview = document.getElementById('photoPreview');
+            if (photoPreview) {
+                photoPreview.src = "";
+                photoPreview.style.display = "none";
+            }
+
             const gpsData = await getLocation();
 
             if (!isValidCoordinates(gpsData.lat, gpsData.lon)) {
@@ -1599,24 +1621,22 @@
                 return;
             }
 
-            // 📸 KUHAON ANG LITRATO UG I-UPLOAD SA SUPABASE STORAGE (Pariho sa normal submit)
+            // 📸 I-UPLOAD SA SUPABASE STORAGE
             let finalPhotoUrl = "Walay Ebidensya";
-            if (typeof compressedPhotoBase64 !== 'undefined' && compressedPhotoBase64 && compressedPhotoBase64.includes('base64')) {
-                try {
-                    const blob = b64toBlob(compressedPhotoBase64, 'image/jpeg');
-                    const cleanCp = type === 'PAUSE' ? 'PAUSE' : 'RESUME';
-                    const fileName = `${riderId}_${cleanCp}_${new Date().getTime()}.jpg`;
-                    
-                    const { data: uploadData, error: uploadError } = await supabaseLiveClient.storage.from('photos').upload(fileName, blob, { contentType: 'image/jpeg' });
-                    if (!uploadError) {
-                        const { data: publicUrlData } = supabaseLiveClient.storage.from('photos').getPublicUrl(fileName);
-                        finalPhotoUrl = publicUrlData.publicUrl;
-                    } else {
-                        console.error("Error sa pag-upload sa litrato:", uploadError.message);
-                    }
-                } catch (err) {
-                    console.error("Exception sa pagproseso sa litrato:", err);
+            try {
+                const blob = b64toBlob(activePhotoBase64, 'image/jpeg');
+                const cleanCp = type === 'PAUSE' ? 'PAUSE' : 'RESUME';
+                const fileName = `${riderId}_${cleanCp}_${new Date().getTime()}.jpg`;
+                
+                const { data: uploadData, error: uploadError } = await supabaseLiveClient.storage.from('photos').upload(fileName, blob, { contentType: 'image/jpeg' });
+                if (!uploadError) {
+                    const { data: publicUrlData } = supabaseLiveClient.storage.from('photos').getPublicUrl(fileName);
+                    finalPhotoUrl = publicUrlData.publicUrl;
+                } else {
+                    console.error("Error sa pag-upload sa litrato:", uploadError.message);
                 }
+            } catch (err) {
+                console.error("Exception sa pagproseso sa litrato:", err);
             }
 
             const payload = {
@@ -1625,7 +1645,7 @@
                 checkpoint: (type === 'PAUSE') ? "⏸️ PAUSE" : "▶️ RESUME",
                 odometer: odoInput || 0,
                 notes: `[${type}] ${userReason}`,
-                photo: finalPhotoUrl, // Na-upload na gyud ug nakuha ang public URL!
+                photo: finalPhotoUrl,
                 timestamp: new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' }),
                 location: gpsData.link,
                 latitude: gpsData.lat,
@@ -1636,7 +1656,6 @@
 
             let isStable = await checkInternetStability();
             if (isStable) {
-                // Direktang i-insert sa database kay naa na man ang public URL sa photo
                 let safeLat = parseFloat(payload.latitude);
                 let safeLon = parseFloat(payload.longitude);
                 let safeOdo = parseFloat(payload.odometer);
@@ -1668,16 +1687,6 @@
 
             localStorage.setItem('rideState_' + riderId, type);
             updateRideStateUI(riderId);
-
-            // Limpyohan ang global photo variable ug preview human ma-save
-            compressedPhotoBase64 = "";
-            const camInput = document.getElementById('cameraInput');
-            if (camInput) camInput.value = "";
-            const photoPreview = document.getElementById('photoPreview');
-            if (photoPreview) {
-                photoPreview.src = "";
-                photoPreview.style.display = "none";
-            }
         }
 
 
