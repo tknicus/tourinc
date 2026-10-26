@@ -38,12 +38,12 @@
         .camera-btn-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; height: 100%; width: 100%; }
         #photoPreview { max-width: 100%; border: 2px dashed #cc0000; border-radius: 5px; margin-bottom: 15px; display: none; }
         /* Kini ang sekreto aron dili mu-zoom, mu-highlight, o mu-pop up ang menu sa logo */
-        #secretLogo {
-            -webkit-touch-callout: none; /* iOS Safari */
-            -webkit-user-select: none;   /* Safari */
-            user-select: none;           /* Standard */
+        #loginLogo, #masterMindsLogo {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
             cursor: pointer;
-        }        
+        }     
     </style>
 </head>
 <body>
@@ -252,11 +252,11 @@
         window.routeConfigs = (typeof routeCheckpoints !== 'undefined') ? routeCheckpoints : {};
         
         // Atong ibutang ang Total KM diri kay wala man ni sa database.js
-        window.routeTotalKm = { 
+        window.routeTotalKm = (typeof routeDistances !== 'undefined') ? routeDistances : { 
             "G1N": 777, "G1E": 777, "G1W": 777, "G1S": 777, 
-            "G3": 3333, "G4": 444, "G5": 5555, "AS26": 628, 
-            "G7": 7777, "G8": 8888, "G81": 888, "G82": 888, "G83": 888 
-        };        
+            "G3": 3296.8, "G4": 1000, "G5": 5455.7, "AS26": 628, 
+            "G7": 7777, "G8": 8888, "G81": 1053.2, "G82": 888, "G83": 888, "DO01": 1200 // 👈 SIGUROA NGA NAA ANG "G8": 8888
+        };
 
         // ==========================================
         // 📐 HAVERSINE FORMULA (GPS DISTANCE IN METERS)
@@ -555,8 +555,9 @@
                     }
                 });
                 proceedBtn.addEventListener("click", function() {
-                    if (owntracksCheck.checked) {
+                    if (traccarCheck.checked) {
                         localStorage.setItem("mmc_gatekeeper_passed", "true");
+                        localStorage.setItem("mmc_traccar_ready", "true"); // 👈 IDUGANG KINI NGA LINYA
                         if (gatekeeperContainer) gatekeeperContainer.style.display = "none";
                         if (loginContainer) loginContainer.style.display = "flex";
                     }
@@ -1110,7 +1111,7 @@
                 localStorage.removeItem('offlineData');
                 alert("✅ Naka-Sync na ang tanang Offline Data padulong sa MasterMinds'CUP database");
             }
-            if(submitBtn) { submitBtn.textContent = "I-Submit ang Data"; submitBtn.disabled = false; }
+            if(submitBtn) { submitBtn.innerHTML = "✅ I-SUBMIT ANG DATA"; submitBtn.disabled = false; }
             isSyncing = false; 
             updateDashboardCounters();
         }
@@ -1170,7 +1171,7 @@
                 if (checkId === "" || checkName === "" || checkName.includes("❌")) {
                     if (submitAudio) { submitAudio.pause(); submitAudio.currentTime = 0; }
                     alert("🛑 DILI MA-SAVE! Blangko o sipyat ang Rider ID.");
-                    if(submitBtn) { submitBtn.textContent = "I-Submit ang Data"; submitBtn.disabled = false; submitBtn.style.opacity = "1"; }
+                    if(submitBtn) { submitBtn.innerHTML = "✅ I-SUBMIT ANG DATA"; submitBtn.disabled = false; submitBtn.style.opacity = "1"; }
                     isSubmitting = false; return;
                 }
 
@@ -1194,14 +1195,14 @@
 
                     alert(`⚠️ DILI MA-SUBMIT! LAYO PA KA SA CHECKPOINT!\n\nNaa ka sa ${formattedDistAlert} nga kalay-on sa ${currentCheckpoint}.\n\nMaximum allowable limit: 200 meters.\n\nPalihug padol-it sa designated location sa Checkpoint o i-press ang "🔄 RE-SYNC GPS" button.`);
                     
-                    if(submitBtn) { submitBtn.textContent = "I-Submit ang Data"; submitBtn.disabled = false; submitBtn.style.opacity = "1"; }
+                    if(submitBtn) { submitBtn.innerHTML = "✅ I-SUBMIT ANG DATA"; submitBtn.disabled = false; submitBtn.style.opacity = "1"; }
                     isSubmitting = false; return;
                 }                
                 
                 if (!compressedPhotoBase64 || compressedPhotoBase64 === "" || !compressedPhotoBase64.includes('base64')) {
                     if (submitAudio) { submitAudio.pause(); submitAudio.currentTime = 0; }
                     alert("📸 DILI MA-SAVE! Palihug pagkuha una og Ebidensya/Picture.");
-                    if(submitBtn) { submitBtn.textContent = "I-Submit ang Data"; submitBtn.disabled = false; submitBtn.style.opacity = "1"; }
+                    if(submitBtn) { submitBtn.innerHTML = "✅ I-SUBMIT ANG DATA"; submitBtn.disabled = false; submitBtn.style.opacity = "1"; }
                     isSubmitting = false; return; 
                 }
                 
@@ -1256,7 +1257,7 @@
                     updateRiderProgress(); 
                     updateDistanceBadge(); // <--- IDUGANG KINI PARA MA WALA ANG BADGE INIG HUMAN SUBMIT
                 }
-                if(submitBtn) { submitBtn.textContent = "I-Submit ang Data"; submitBtn.disabled = false; submitBtn.style.opacity = "1"; }
+                if(submitBtn) { submitBtn.innerHTML = "✅ I-SUBMIT ANG DATA"; submitBtn.disabled = false; submitBtn.style.opacity = "1"; }
                 isSubmitting = false; 
             });
         }
