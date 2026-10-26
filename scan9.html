@@ -1553,12 +1553,18 @@
                 return;
             }
 
+            // 🛑 MANDATORY PICTURE CHECK PARA SA PAUSE / RESUME 🛑
+            if (!compressedPhotoBase64 || compressedPhotoBase64 === "" || !compressedPhotoBase64.includes('base64')) {
+                alert(`📸 DILI MA-${type}! Kinahanglan naay kauban nga picture (ebidensya) una i-send ang ${type} status!`);
+                return;
+            }
+
             let defaultMsg = (type === 'PAUSE') ? 'Pitstop / Rest / Refuel' : 'Back on road';
-            let userReason = prompt((type === 'PAUSE' ? '⏸️ RASSON SA PAG-PAUSE (Rest/Food/Gas/Repair):' : '▶️ RESUME REMARKS:'), notesInput || defaultMsg);
+            let userReason = prompt((type === 'PAUSE' ? '⏸️ RASON SA PAG-PAUSE (Rest/Food/Gas/Repair):' : '▶️ RESUME REMARKS:'), notesInput || defaultMsg);
             
             if (userReason === null) return; // Gi-cancel sa user
 
-            let confirmAction = confirm(`${type === 'PAUSE' ? '⏸️ PAUSE' : '▶️ RESUME'} CONFIRMATION:\n\nKumpirmahon ba nimo ang pag-log sa ${type} status sa Command Center?`);
+            let confirmAction = confirm(`${type === 'PAUSE' ? '⏸️ PAUSE' : '▶️ RESUME'} CONFIRMATION:\n\nKumpirmahon ba nimo ang pag-log sa ${type} status uban ang ebidensya nga picture?`);
             if (!confirmAction) return;
 
             const gpsData = await getLocation();
@@ -1574,7 +1580,7 @@
                 checkpoint: (type === 'PAUSE') ? "⏸️ PAUSE" : "▶️ RESUME",
                 odometer: odoInput || 0,
                 notes: `[${type}] ${userReason}`,
-                photo: compressedPhotoBase64 || "Walay Ebidensya",
+                photo: compressedPhotoBase64, // Naa na gyud ang picture dinhi
                 timestamp: new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' }),
                 location: gpsData.link,
                 latitude: gpsData.lat,
@@ -1587,18 +1593,23 @@
             if (isStable) {
                 let success = await sendDataToServer(payload);
                 if (success) {
-                    alert(`✅ ${type} STATUS LOGGED!\n\nNa-update na sa Command Center Dashboard.`);
+                    alert(`✅ ${type} STATUS LOGGED!\n\nNa-update na sa Command Center Dashboard uban ang picture.`);
                 } else {
                     saveToOfflineStorage(payload);
-                    alert(`⚠️ Na-save sa Offline Storage ang ${type}! I-sync ra inig ka-signal.`);
+                    alert(`⚠️ Na-save sa Offline Storage ang ${type} uban ang picture! I-sync ra inig ka-signal.`);
                 }
             } else {
                 saveToOfflineStorage(payload);
-                alert(`⚠️ WALAY INTERNET! Gi-save sa Offline Storage ang ${type}.`);
+                alert(`⚠️ WALAY INTERNET! Gi-save sa Offline Storage ang ${type} uban ang picture.`);
             }
 
             localStorage.setItem('rideState_' + riderId, type);
             updateRideStateUI(riderId);
+
+            // Limpyohan ang picture preview human ma-send
+            compressedPhotoBase64 = "";
+            const photoPreview = document.getElementById('photoPreview');
+            if (photoPreview) photoPreview.style.display = "none";
         }
 
         function updateRideStateUI(riderId) {
