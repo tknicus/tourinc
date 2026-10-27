@@ -862,3 +862,24 @@ const routeDistances = {
     "G83": 888,
     "DO01": 1200
 };
+
+
+// ==========================================
+// 4. ROUTE TOTAL CHECKPOINTS (Pila ka Checkpoints ang Kinahanglan)
+// ==========================================
+const routeTotalCheckpoints = {
+    "G1N": 10,   // Ilisi sa saktong numero
+    "G1E": 10,
+    "G1W": 10,
+    "G1S": 10,
+    "G3": 108,   // Gikan CP 000 hangtod CP 107 (Total 108 ka checkpoints apil ang FL)
+    "G4": 10,
+    "G5": 186,   // Gikan CP 000 hangtod CP 185
+    "AS26": 40,  // Gikan CP 00 hangtod CP 39
+    "G7": 111,   // Gikan CP 000 hangtod CP 110
+    "G81": 71,   // Gikan CP 00 hangtod CP 70
+    "G82": 10,
+    "G83": 10,
+    "G88": 148,  // Tour de Filipinas (CP 000 - CP 147)
+    "DO01": 15
+};
