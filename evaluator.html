@@ -409,12 +409,23 @@
                     targetRouteKm = parseFloat(routeDistances[riderLevel]);
                 }
 
+                // KUHAON ANG TOTAL REQUIRED CHECKPOINTS PARA SA RUTA NGA KINI
+                let requiredTotalCP = 100; // Default fallback
+                if (typeof routeTotalCheckpoints !== 'undefined' && routeTotalCheckpoints[riderLevel]) {
+                    requiredTotalCP = routeTotalCheckpoints[riderLevel];
+                }
+
+                // IHAPON PILA KA UNIQUE O VALID CHECKPOINTS ANG NA-SCAN SA RIDER
+                let uniqueScannedCP = new Set(scans.map(s => String(s.checkpoint).trim())).size;
+
                 let remainingKm = Math.max(0, targetRouteKm - totalDistance);
                 let etaFormatted = "N/A";
 
-                if (remainingKm === 0) {
+                // KINAHANGLAN MAABOT ANG DISTANCE OG MA-HIT/MA-SURPASS ANG TOTAL REQUIRED CHECKPOINTS
+                if (totalDistance >= targetRouteKm && uniqueScannedCP >= requiredTotalCP) {
                     etaFormatted = "🏁 ARRIVED (FINISHED)";
-                } else if (speedValNum > 0 && lastScanTime) {
+                } else if (remainingKm === 0 && uniqueScannedCP < requiredTotalCP) {
+                    etaFormatted = `⏳ ON GOING (${uniqueScannedCP}/${requiredTotalCP} CPs)`;} else if (speedValNum > 0 && lastScanTime) {
                     let hoursNeeded = remainingKm / speedValNum;
                     let etaTimeMs = lastScanTime.getTime() + (hoursNeeded * 60 * 60 * 1000);
                     let etaDate = new Date(etaTimeMs);
