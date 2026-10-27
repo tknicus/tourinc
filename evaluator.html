@@ -279,6 +279,19 @@
             }
         }
 
+        // Direkta nga ihap sa mga Checkpoints kada ruta
+        const routeTotalCheckpoints = {
+            "G1N": 10, "G1E": 10, "G1W": 10, "G1S": 10,
+            "G3": 108,   // 3333 Coastal Gaming
+            "G4": 10,
+            "G5": 186,   // Man of Steel
+            "AS26": 40,  // All Star Extreme
+            "G7": 111,
+            "G81": 71,
+            "G88": 148,
+            "DO01": 15
+        };
+
         async function generateReport() {
             const targetId = document.getElementById('searchIdInput').value.trim();
             const container = document.getElementById('reportContent');
