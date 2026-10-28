@@ -404,24 +404,71 @@
                 let speedValNum = effectiveDiffMs > 0 ? (totalDistance / (effectiveDiffMs / (1000 * 60 * 60))) : 0;
                 let speedVal = speedValNum > 0 ? speedValNum.toFixed(2) : "0.00";
 
+
+
+
                 let targetRouteKm = 655; 
                 if (typeof routeDistances !== 'undefined' && routeDistances[riderLevel]) {
                     targetRouteKm = parseFloat(routeDistances[riderLevel]);
                 }
 
+                // 1. DIRECT TOTAL CHECKPOINTS DECLARATION
+                let requiredTotalCP = 100; // Default fallback
+                const routeTotalCPs = {
+                    "G1N": 10, "G1E": 10, "G1W": 10, "G1S": 10,
+                    "G3": 108,   // 3333 Coastal Gaming
+                    "G4": 10,
+                    "G5": 186,   // Man of Steel
+                    "AS26": 40,  // All Star Extreme
+                    "G7": 111,
+                    "G81": 71,
+                    "G82": 10, "G83": 10,
+                    "G88": 148,  // Tour de Filipinas
+                    "DO01": 15
+                };
+                let cleanLevel = String(riderLevel || '').trim();
+                if (routeTotalCPs[cleanLevel] !== undefined) {
+                    requiredTotalCP = routeTotalCPs[cleanLevel];
+                }
+
+                // 2. IHAPON ANG UNIQUE CHECKPOINTS (Tangtangon ang mga Doble ug PAUSE/RESUME)
+                let validCheckpoints = scans.filter(s => {
+                    let cp = String(s.checkpoint).toUpperCase();
+                    return !cp.includes("PAUSE") && !cp.includes("RESUME");
+                });
+                let scannedCheckpointsSet = new Set(validCheckpoints.map(s => String(s.checkpoint).trim()));
+                let uniqueScannedCP = scannedCheckpointsSet.size;
+
+                // 3. CHECK KUNG NA-SCAN BA NIYA ANG FINISH LINE
+                let hasReachedFinishLine = scannedCheckpointsSet.has("CP FL") || 
+                                           Array.from(scannedCheckpointsSet).some(cp => cp.toUpperCase().includes("FINISH LINE"));
+
                 let remainingKm = Math.max(0, targetRouteKm - totalDistance);
                 let etaFormatted = "N/A";
 
-                if (remainingKm === 0) {
-                    etaFormatted = "🏁 ARRIVED (FINISHED)";
-                } else if (speedValNum > 0 && lastScanTime) {
-                    let hoursNeeded = remainingKm / speedValNum;
-                    let etaTimeMs = lastScanTime.getTime() + (hoursNeeded * 60 * 60 * 1000);
-                    let etaDate = new Date(etaTimeMs);
-                    etaFormatted = formatPhilippineTime(etaDate.toISOString());
+                // 4. ANG SAKTONG EVALUATION LOGIC (GI-AYO PARA SA NASAAG)
+                if (hasReachedFinishLine) {
+                    // NAKAABOT NA GYUD SA FINISH LINE ("CP FL")
+                    if (uniqueScannedCP >= requiredTotalCP) {
+                        etaFormatted = "🏆 OFFICIAL FINISHER";
+                    } else {
+                        // Nakaabot sa FL PERO KULANG ANG CHECKPOINTS
+                        etaFormatted = `<span style="color:#cc0000;">⚠️ FINISHED (MISSING CPs: ${uniqueScannedCP}/${requiredTotalCP})</span>`;
+                    }
                 } else {
-                    etaFormatted = "⏳ N/A (Stationary)";
+                    // WALA PA SA FINISH LINE (Bisan pag nilapaw na ang kilometro)
+                    if (remainingKm > 0 && speedValNum > 0 && lastScanTime) {
+                        let hoursNeeded = remainingKm / speedValNum;
+                        let etaTimeMs = lastScanTime.getTime() + (hoursNeeded * 60 * 60 * 1000);
+                        let etaDate = new Date(etaTimeMs);
+                        etaFormatted = formatPhilippineTime(etaDate.toISOString());
+                    } else {
+                        // Kung ang remainingKm is 0 (kay nilapaw) pero wala pa sa FL
+                        etaFormatted = `⏳ ON GOING (${uniqueScannedCP}/${requiredTotalCP} CPs)`;
+                    }
                 }
+
+
 
                 let html = `<div id="captureArea">
                     <!-- 🌊 WATERMARK IMAGE -->
@@ -434,18 +481,21 @@
                             <div><b>fullname</b> ${fullName}</div>
                             <div><b>motor vehicle</b> ${vehicleName}</div>
                             <div><b>Route Name</b> ${routeFullName}</div>
-                            <div><b>Total Checkpoints</b> ${scans.length}</div>
+                            <div><b>Total Checkpoints</b> ${uniqueScannedCP} / ${requiredTotalCP}</div>
+                            
+                            <!-- GIBALHIN NGA ETA SECTION -->
+                            <div style="margin-top: 15px; padding: 8px 12px; background-color: #fffde7; border-left: 5px solid #cc0000; display: inline-block;">
+                                <b style="color: #cc0000; width: auto; margin-right: 10px;">EST. ARRIVAL (ETA):</b> 
+                                <span style="color: #cc0000; font-weight: bold; font-size: 13px;">${etaFormatted}</span>
+                            </div>
                         </div>
+                        
                         <div class="summary-side">
                             <div class="summary-row"><span>running time</span><b>${runningTimeFormatted}</b></div>
                             <div class="summary-row"><span>pause deducted</span><b style="color: #ff9900;">-${pauseTimeFormatted}</b></div>
                             <div class="summary-row"><span>distance covered</span><b>${totalDistance} km</b></div>
                             <div class="summary-row"><span>target route</span><b>${targetRouteKm} km</b></div>
                             <div class="summary-row"><span>average speed</span><b>${speedVal} kph</b></div>
-                            <div class="summary-row" style="background-color: #fffde7;">
-                                <span style="font-weight: bold; color: #cc0000;">EST. ARRIVAL (ETA)</span>
-                                <b style="color: #cc0000; font-size: 12px;">${etaFormatted}</b>
-                            </div>
                         </div>
                     </div>
 
