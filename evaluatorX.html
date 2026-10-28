@@ -482,17 +482,20 @@
                             <div><b>motor vehicle</b> ${vehicleName}</div>
                             <div><b>Route Name</b> ${routeFullName}</div>
                             <div><b>Total Checkpoints</b> ${uniqueScannedCP} / ${requiredTotalCP}</div>
+                            
+                            <!-- GIBALHIN NGA ETA SECTION -->
+                            <div style="margin-top: 15px; padding: 8px 12px; background-color: #fffde7; border-left: 5px solid #cc0000; display: inline-block;">
+                                <b style="color: #cc0000; width: auto; margin-right: 10px;">EST. ARRIVAL (ETA):</b> 
+                                <span style="color: #cc0000; font-weight: bold; font-size: 13px;">${etaFormatted}</span>
+                            </div>
                         </div>
+                        
                         <div class="summary-side">
                             <div class="summary-row"><span>running time</span><b>${runningTimeFormatted}</b></div>
                             <div class="summary-row"><span>pause deducted</span><b style="color: #ff9900;">-${pauseTimeFormatted}</b></div>
                             <div class="summary-row"><span>distance covered</span><b>${totalDistance} km</b></div>
                             <div class="summary-row"><span>target route</span><b>${targetRouteKm} km</b></div>
                             <div class="summary-row"><span>average speed</span><b>${speedVal} kph</b></div>
-                            <div class="summary-row" style="background-color: #fffde7;">
-                                <span style="font-weight: bold; color: #cc0000;">EST. ARRIVAL (ETA)</span>
-                                <b style="color: #cc0000; font-size: 12px;">${etaFormatted}</b>
-                            </div>
                         </div>
                     </div>
 
