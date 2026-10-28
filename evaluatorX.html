@@ -446,27 +446,27 @@
                 let remainingKm = Math.max(0, targetRouteKm - totalDistance);
                 let etaFormatted = "N/A";
 
-                // 4. ANG SAKTONG EVALUATION LOGIC
-                if (hasReachedFinishLine || totalDistance >= targetRouteKm) {
-                    // Nakalampas sa distansya o naka-scan sa Finish Line
+                // 4. ANG SAKTONG EVALUATION LOGIC (GI-AYO PARA SA NASAAG)
+                if (hasReachedFinishLine) {
+                    // NAKAABOT NA GYUD SA FINISH LINE ("CP FL")
                     if (uniqueScannedCP >= requiredTotalCP) {
                         etaFormatted = "🏆 OFFICIAL FINISHER";
                     } else {
-                        // Nakalampas sa distansya PERO KULANG ANG CHECKPOINT (Nasaag o nakalimot)
+                        // Nakaabot sa FL PERO KULANG ANG CHECKPOINTS
                         etaFormatted = `<span style="color:#cc0000;">⚠️ FINISHED (MISSING CPs: ${uniqueScannedCP}/${requiredTotalCP})</span>`;
                     }
                 } else {
-                    // WALA PA NAHUMAN, NAGPADAYON PA
-                    if (speedValNum > 0 && lastScanTime) {
+                    // WALA PA SA FINISH LINE (Bisan pag nilapaw na ang kilometro)
+                    if (remainingKm > 0 && speedValNum > 0 && lastScanTime) {
                         let hoursNeeded = remainingKm / speedValNum;
                         let etaTimeMs = lastScanTime.getTime() + (hoursNeeded * 60 * 60 * 1000);
                         let etaDate = new Date(etaTimeMs);
                         etaFormatted = formatPhilippineTime(etaDate.toISOString());
                     } else {
+                        // Kung ang remainingKm is 0 (kay nilapaw) pero wala pa sa FL
                         etaFormatted = `⏳ ON GOING (${uniqueScannedCP}/${requiredTotalCP} CPs)`;
                     }
                 }
-
 
 
 
