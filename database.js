@@ -13,7 +13,7 @@ const riderDatabase = [
     { idNum: "1000", fullname: "Selected Ind", nickname: "Secret", level: "G4", category: "Adventure", classification: "MASTER", vehicle: "BMW", passcode: "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4", isMarshal: true, expiry: "2026-10-31" },
     { idNum: "1242", fullname: "Mark Anthony Buyo", nickname: "Mr SMB", level: "DO01", category: "Adventure", classification: "MASTER", vehicle: "DUCATI 1260", passcode: "c2946bf3f4a5749a102e80ef1ded8eac74e261b728021c949b72b24c0e3df248", isMarshal: false, expiry: "2026-12-31" },
     { idNum: "1605", fullname: "Jabla, Joshua ", nickname: "JOSHUA", level: "AS26", category: "LONEWOLF", classification: "MASTER", vehicle: "", passcode: "5492dcdcf24546ce707e4c6e370ab4a0736d0defa0cbbf6f66798e57a309c6a1", isMarshal: false, expiry: "2026-10-30" },
-    { idNum: "1609", fullname: "PADRONES, ROCKY", nickname: "RaKiE", level: "AS26", category: "LONEWOLF", classification: "MASTER", vehicle: "", passcode: "e40e0225f947f1ae6cba2245dd9a1a50361512bb718c1ca1ce3f983fe3b3aa4e", isMarshal: false, expiry: "2026-10-30" },
+    { idNum: "1609", fullname: "PADRONES, ROCKY", nickname: "RaKiE", level: "AS26", category: "LONEWOLF", classification: "MASTER", vehicle: "", passcode: "e40e0225f947f1ae6cba2245dd9a1a50361512bb718c1ca1ce3f983fe3b3aa4e", isMarshal: false, expiry: "2027-10-30" },
     { idNum: "1617", fullname: "REMOLLENO, ALEXANDER ", nickname: "XRM SAKALAM", level: "AS26", category: "LONEWOLF", classification: "MASTER", vehicle: "", passcode: "9f2ca3ad31656671b9e0bf12509c9e71dac5b8e8834145767f684bf193945d33", isMarshal: true, expiry: "2026-10-30" },
     { idNum: "1634", fullname: "Galvadores, Riche Val", nickname: "Long Way PH", level: "AS26", category: "LONEWOLF", classification: "MASTER", vehicle: "", passcode: "e40e0225f947f1ae6cba2245dd9a1a50361512bb718c1ca1ce3f983fe3b3aa4e", isMarshal: true, expiry: "2027-12-31" },
     { idNum: "1635", fullname: "German, Henry Gulle", nickname: "technicus", level: "G0", category: "LONEWOLF", classification: "MASTER", vehicle: "", passcode: "4c327801d652b4e7b3449684f83febb4fea62dbd2c80ee4136f32ecbccc0f45e", isMarshal: false, expiry: "2028-12-31" },
@@ -72,7 +72,7 @@ const routeNames = {
     "G82": "888 Route 2",
     "G83": "888 Route 3",
     "G83": "8888 TOUR de FILIPINAS",
-    "DO01": "Rocky MAY 2027 "
+    "DO01": "MAY 2027 by ROCKY"
 };
 
 
@@ -822,7 +822,7 @@ const routeCheckpoints = {
 "CP 147": { lat: 7.440733, lng: 125.825961, name: "Tagum City Hall" },
     },
 
-    // --- Route Mindanao Adventourrally L3 by SMB---
+    // --- Route 2027 MAY by ROCKY---
     "DO01": {
         "CP 00": "Balutan sa Pantukan",
         "CP 01": "Laak Municipal Hall",
