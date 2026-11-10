@@ -72,7 +72,9 @@ const routeNames = {
     "G82": "888 Route 2",
     "G83": "888 Route 3",
     "G83": "8888 TOUR de FILIPINAS",
-    "DO01": "MAY 2027 by ROCKY"
+    "DO01": "Mindanao Motourally v3 by SMB",
+    "R01": "1500 MAY 2027 by ROCKY",
+    "R02": "888 MAY 2027 by ROCKY"
 };
 
 
@@ -822,7 +824,7 @@ const routeCheckpoints = {
 "CP 147": { lat: 7.440733, lng: 125.825961, name: "Tagum City Hall" },
     },
 
-    // --- Route 2027 MAY by ROCKY---
+    // --- Route 1200 Mindanao Motourally v3 by SMB---
     "DO01": {
         "CP 00": "Balutan sa Pantukan",
         "CP 01": "Laak Municipal Hall",
@@ -840,7 +842,42 @@ const routeCheckpoints = {
         "CP 13": "Cape San Agustin, Governor Generoso, Davao Oriental",
         "CP 14": "Pantukan, Davao Oriental"
     },
-
+    // --- Route 1500 2027 MAY by ROCKY---
+    "R01": {
+        "CP 00": "Balutan sa Pantukan",
+        "CP 01": "Laak Municipal Hall",
+        "CP 02": "Loreto Municipal Hall",
+        "CP 03": "Talacogon",
+        "CP 04": "Esperanza Bridge",
+        "CP 05": "Mainit, Surigao del Norte",
+        "CP 06": "Carrascal, Surigao del Sur",
+        "CP 07": "Tandag, Surigao del Sur",
+        "CP 08": "Enchanted Kingdom",
+        "CP 09": "Hinatuan, Surigaao del Sur",
+        "CP 10": "Aliwagwag Falls, Cateel, Davao Oriental",
+        "CP 11": "Pusan Point, Davao Oriental",
+        "CP 12": "Mati, Davao Oriental",
+        "CP 13": "Cape San Agustin, Governor Generoso, Davao Oriental",
+        "CP 14": "Pantukan, Davao Oriental"
+    },    
+    // --- Route 888 2027 MAY by ROCKY---
+    "R02": {
+        "CP 00": "Balutan sa Pantukan",
+        "CP 01": "Laak Municipal Hall",
+        "CP 02": "Loreto Municipal Hall",
+        "CP 03": "Talacogon",
+        "CP 04": "Esperanza Bridge",
+        "CP 05": "Mainit, Surigao del Norte",
+        "CP 06": "Carrascal, Surigao del Sur",
+        "CP 07": "Tandag, Surigao del Sur",
+        "CP 08": "Enchanted Kingdom",
+        "CP 09": "Hinatuan, Surigaao del Sur",
+        "CP 10": "Aliwagwag Falls, Cateel, Davao Oriental",
+        "CP 11": "Pusan Point, Davao Oriental",
+        "CP 12": "Mati, Davao Oriental",
+        "CP 13": "Cape San Agustin, Governor Generoso, Davao Oriental",
+        "CP 14": "Pantukan, Davao Oriental"
+    },
 };
 
 
@@ -881,5 +918,7 @@ const routeTotalCheckpoints = {
     "G82": 10,
     "G83": 10,
     "G88": 148,  // Tour de Filipinas (CP 000 - CP 147)
+    "R01": 30,
+    "R02": 20,
     "DO01": 15
 };
