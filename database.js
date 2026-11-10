@@ -72,7 +72,7 @@ const routeNames = {
     "G82": "888 Route 2",
     "G83": "888 Route 3",
     "G83": "8888 TOUR de FILIPINAS",
-    "DO01": "1200 Mindanao Adventourrally L3 by SMB"
+    "DO01": "Rocky MAY 2027 "
 };
 
 
