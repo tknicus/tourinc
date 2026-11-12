@@ -74,9 +74,8 @@ const routeNames = {
     "G83": "8888 TOUR de FILIPINAS",
     "DO01": "Mindanao Motourally v3 by SMB",
     "R01": "01 1500 MAY 2027 by ROCKY",
-    "R02": "02 0888 MAY 2027 by ROCKY"
-    "R03": "03 1500 MAY 2027 by ROCKY"
-
+    "R02": "02 0888 MAY 2027 by ROCKY",
+    "R03": "03 1500 MAY 2027 by ROCKY",
 };
 
 
@@ -917,7 +916,10 @@ const routeDistances = {
     "G81": 1053.2,
     "G82": 888,
     "G83": 888,
-    "DO01": 1200
+    "R01": 1500,
+    "R02": 0800,
+    "R03": 1500,
+    "DO01": 1200,
 };
 
 
@@ -940,6 +942,6 @@ const routeTotalCheckpoints = {
     "G88": 148,  // Tour de Filipinas (CP 000 - CP 147)
     "R01": 30,
     "R02": 20,
-    "R03": 20,
-    "DO01": 15
+    "R03": 40,
+    "DO01": 15,
 };
