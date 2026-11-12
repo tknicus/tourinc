@@ -73,8 +73,10 @@ const routeNames = {
     "G83": "888 Route 3",
     "G83": "8888 TOUR de FILIPINAS",
     "DO01": "Mindanao Motourally v3 by SMB",
-    "R01": "1500 MAY 2027 by ROCKY",
-    "R02": "888 MAY 2027 by ROCKY"
+    "R01": "01 1500 MAY 2027 by ROCKY",
+    "R02": "02 0888 MAY 2027 by ROCKY"
+    "R03": "03 1500 MAY 2027 by ROCKY"
+
 };
 
 
@@ -878,6 +880,24 @@ const routeCheckpoints = {
         "CP 13": "Cape San Agustin, Governor Generoso, Davao Oriental",
         "CP 14": "Pantukan, Davao Oriental"
     },
+    // --- Route 888 2027 MAY by ROCKY---
+    "R03": {
+        "CP 00": "Balutan sa Pantukan",
+        "CP 01": "Laak Municipal Hall",
+        "CP 02": "Loreto Municipal Hall",
+        "CP 03": "Talacogon",
+        "CP 04": "Esperanza Bridge",
+        "CP 05": "Mainit, Surigao del Norte",
+        "CP 06": "Carrascal, Surigao del Sur",
+        "CP 07": "Tandag, Surigao del Sur",
+        "CP 08": "Enchanted Kingdom",
+        "CP 09": "Hinatuan, Surigaao del Sur",
+        "CP 10": "Aliwagwag Falls, Cateel, Davao Oriental",
+        "CP 11": "Pusan Point, Davao Oriental",
+        "CP 12": "Mati, Davao Oriental",
+        "CP 13": "Cape San Agustin, Governor Generoso, Davao Oriental",
+        "CP 14": "Pantukan, Davao Oriental"
+    },
 };
 
 
@@ -920,5 +940,6 @@ const routeTotalCheckpoints = {
     "G88": 148,  // Tour de Filipinas (CP 000 - CP 147)
     "R01": 30,
     "R02": 20,
+    "R03": 20,
     "DO01": 15
 };
