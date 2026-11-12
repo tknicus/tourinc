@@ -895,7 +895,7 @@ const routeCheckpoints = {
         "CP 11": "Pusan Point, Davao Oriental",
         "CP 12": "Mati, Davao Oriental",
         "CP 13": "Cape San Agustin, Governor Generoso, Davao Oriental",
-        "CP 14": "Pantukan, Davao Oriental"
+        "CP 14": "Pantukan, Davao Oriental",
     },
 };
 
