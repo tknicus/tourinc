@@ -1184,7 +1184,7 @@
                             // 🛡️ UBANG ADMIN: Tanang regular riders (ang "R" ug "D" na-block na sa ibabaw)
                         } else if (currentUserRole.isMarshal) {
                             // 🛡️ MARSHAL: G81, G3, G5 ra
-                            if (!["G81", "G3", "G5", "G83"].includes(routeKey)) return;
+                            if (!["AS26", "G81", "G3", "G5", "G88"].includes(routeKey)) return;
                         } else {
                             // 👤 REGULAR USER: Ang iya ra nga assigned route level
                             if (routeKey !== currentUserRole.userLevel) return;
