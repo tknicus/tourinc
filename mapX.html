@@ -265,12 +265,13 @@
                 errorMsg.style.display = 'none';
 
                 let userId = String(foundUser.idNum || "").trim();
+                let cleanId = userId.replace(/^0+/, ''); // "001" o "0001" -> "1", "1609" -> "1609"
                 let isAdminUser = (foundUser.isAdmin === true || String(foundUser.isAdmin).toLowerCase() === 'true');
                 let isMarshalUser = (foundUser.isMarshal === true || String(foundUser.isMarshal).toLowerCase() === 'true');
                 let userLevel = (foundUser.level || "").toUpperCase();
 
-                // 🌟 GAHUM PARA SA "R" ROUTES (0001 Admin ug 1609 Marshal ra)
-                let canAccessR = (userId === "0001" || userId === "1609");
+                // 🌟 GAHUM PARA SA "R" ROUTES (001/0001 Admin ug 1609 Rocky ra)
+                let canAccessR = (cleanId === "1" || cleanId === "1609");
 
                 // Store in Global State
                 currentUserRole.idNum = userId;
@@ -279,7 +280,7 @@
                 currentUserRole.userLevel = userLevel;
                 currentUserRole.canAccessR = canAccessR;
 
-                // 1️⃣ ADMIN: Makita tanang routes, PERO ang "R" routes kay para ra sa 0001
+                // 1️⃣ ADMIN: Makita tanang routes, PERO ang "R" routes kay para ra sa 001/0001
                 if (isAdminUser) {
                     for (let option of selectElem.options) {
                         let optVal = option.value.toUpperCase();
@@ -292,7 +293,7 @@
                     selectElem.value = "all";
                     switchRoute();
                 } 
-                // 2️⃣ MARSHAL: G81, G3, G5, ALL, UG NONE RA ANG MAKITA
+                // 2️⃣ MARSHAL: G81, G3, G5, ALL, NONE (+ tanang "R" routes kung si 1609)
                 else if (isMarshalUser) {
                     const marshalRoutes = ["ALL", "G81", "G3", "G5", "NONE"];
 
@@ -307,14 +308,14 @@
                     selectElem.value = "all";
                     switchRoute();
                 } 
-                // 3️⃣ REGULAR USER: Iya ra nga route level
+                // 3️⃣ REGULAR USER: Iya nga route level (+ tanang "R" routes kung si 1609)
                 else {
                     let hasMatchingOption = false;
 
                     for (let option of selectElem.options) {
                         let optVal = option.value.toUpperCase();
-                        if (optVal.startsWith("R") && !canAccessR) {
-                            option.style.display = "none";
+                        if (optVal.startsWith("R") && canAccessR) {
+                            option.style.display = "";
                         } else if (optVal === userLevel || optVal === "NONE") {
                             option.style.display = "";
                             if (optVal === userLevel) hasMatchingOption = true;
@@ -323,7 +324,8 @@
                         }
                     }
 
-                    if (!hasMatchingOption && userLevel && (!userLevel.startsWith("R") || canAccessR)) {let newOpt = document.createElement("option");
+                    if (!hasMatchingOption && userLevel && (!userLevel.startsWith("R") || canAccessR)) {
+                        let newOpt = document.createElement("option");
                         newOpt.value = userLevel;
                         newOpt.text = `Route ${userLevel}`;
                         selectElem.appendChild(newOpt);
@@ -332,6 +334,10 @@
 
                     if (hasMatchingOption) {
                         selectElem.value = userLevel;
+                    } else if (canAccessR) {
+                        selectElem.value = "R01";
+                    } else {
+                        selectElem.value = "none";
                     }
                     switchRoute();
                 }
@@ -1030,31 +1036,12 @@
         // 4. KUHAON ANG LIVE RIDERS GIKAN SA SUPABASE (rally_scans)
         // ==========================================
         async function loadRidersToMap(selectedRoute = "all") {
-            // 🎯 KOREHIYO SA FILTERING LOGIC DEPENDI SA LOGIN ROLE:
-            if (routeKey.startsWith("R") && !currentUserRole.canAccessR) return;
-
-            if (selectedRoute.toLowerCase() === "all") {
-                if (currentUserRole.isAdmin) {
-                    // 🌟 ADMIN: Makita TANANG riders (gawas sa R-routes kung dili 0001/1609)
-                } else if (currentUserRole.isMarshal) {
-                    // 🛡️ MARSHAL: G81, G3, G5 (+ R-routes kung si 1609)
-                    const allowedMarshal = ["G81", "G3", "G5"].includes(routeKey) || (currentUserRole.canAccessR && routeKey.startsWith("R"));
-                    if (!allowedMarshal) return;
-                } else {
-                    // 👤 REGULAR USER: Ang iya ra nga assigned route level
-                    if (routeKey !== currentUserRole.userLevel) return;
-                }
-            } else {
-                // 📌 SPECIFIC ROUTE OPTION: Ang napili ra nga ruta ang makita
-                if (routeKey !== selectedRoute.toUpperCase()) return;
+            if (selectedRoute.toLowerCase() === "none") {
+                markerLayer.clearLayers();
+                document.getElementById('riderCountBadge').innerText = "Riders: 0";
+                if (document.getElementById('sosAlertBadge')) document.getElementById('sosAlertBadge').style.display = "none";
+                return;
             }
-            
-            //if (selectedRoute === "none") {
-            //    markerLayer.clearLayers();
-            //    document.getElementById('riderCountBadge').innerText = "Riders: 0";
-            //    if(document.getElementById('sosAlertBadge')) document.getElementById('sosAlertBadge').style.display = "none";
-            //    return;
-            //}
 
             try {
                 let allScans = [];
@@ -1103,22 +1090,28 @@
                     let lat = parseFloat(rider.latitude);
                     let lon = parseFloat(rider.longitude);
                     let routeKey = (rider.rider_level || "G5").toUpperCase();
-                    
+
                     // 🎯 KOREHIYO SA FILTERING LOGIC DEPENDI SA LOGIN ROLE:
+                    if (routeKey.startsWith("R") && !currentUserRole.canAccessR) return;
+
                     if (selectedRoute.toLowerCase() === "all") {
                         if (currentUserRole.isAdmin) {
-                            // 🌟 ADMIN: Makita TANANG riders sa tanang ruta!
+                            // 🌟 ADMIN: Makita TANANG riders (gawas sa R-routes kung dili 001/1609)
                         } else if (currentUserRole.isMarshal) {
-                            // 🛡️ MARSHAL: G81, G3, ug G5 ra ang makita sa "all" view
-                            if (!["G81", "G3", "G5"].includes(routeKey)) return;
+                            // 🛡️ MARSHAL: G81, G3, G5 (+ R-routes kung si 1609)
+                            const allowedMarshal = ["G81", "G3", "G5"].includes(routeKey) || (currentUserRole.canAccessR && routeKey.startsWith("R"));
+                            if (!allowedMarshal) return;
                         } else {
-                            // 👤 REGULAR USER: Ang iya ra nga assigned route level
-                            if (routeKey !== currentUserRole.userLevel) return;
+                            // 👤 REGULAR USER: Ang iya ra nga assigned route level (+ R-routes kung si 1609)
+                            const allowedUser = (routeKey === currentUserRole.userLevel) || (currentUserRole.canAccessR && routeKey.startsWith("R"));
+                            if (!allowedUser) return;
                         }
                     } else {
                         // 📌 SPECIFIC ROUTE OPTION: Ang napili ra nga ruta ang makita
                         if (routeKey !== selectedRoute.toUpperCase()) return;
                     }
+
+
 
                     if (!isNaN(lat) && !isNaN(lon) && lat !== 0 && lon !== 0) {
                         validRiderCount++;
