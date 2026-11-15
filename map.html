@@ -175,7 +175,7 @@
                 <option value="G3">3333 Conqueror's Coastal Gaming</option>
                 <option value="G5">5555 MAN OF STEEL</option>
                 <option value="AS26">628 ALL STAR EXTREME</option>
-                <option value="DO01">MAY 2027 by ROCKY</option>
+                <option value="DO01">Mindanao Adventourally by SMB</option>
                 <option value="R01">01 1500 KM MAY 2027 by ROCKY</option>
                 <option value="R02">02 0888 km MAY 2027 by ROCKY</option>
                 <option value="R03">03 1500 km MAY 2027 by ROCKY</option>
@@ -221,12 +221,25 @@
         
         const supabaseLiveClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
 
+
+
+
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // 🔑 CURRENT USER ROLE STATE
         let currentUserRole = {
+            idNum: "",
+            cleanId: "",
+            isSuperAdmin: false,
             isAdmin: false,
             isMarshal: false,
             userLevel: ""
         };
+
+        let allRouteOptions = [];
 
         // ==========================================
         // 🔐 PASSCODE CHECKER LOGIC
@@ -255,70 +268,133 @@
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             const hashedInput = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-            // Pangitaon ang user sa riderDatabase
-            let foundUser = riderDatabase.find(r => r.passcode === hashedInput);
+            // Pangitaon TANANG matching passcode aron dili maunhan sa duplicate entry
+            let matchedUsers = riderDatabase.filter(r => r.passcode === hashedInput);
 
-            if (foundUser) {
+            if (matchedUsers.length > 0) {
+                const getCleanId = (r) => String(r.idNum || "").trim().replace(/^0+/, '');
+
+                // I-prioritize ang 0001, 1609, 1242, Admin, dayon Marshal kung naay parehas og passcode
+                let foundUser = matchedUsers.find(r => getCleanId(r) === "1")
+                             || matchedUsers.find(r => getCleanId(r) === "1609")
+                             || matchedUsers.find(r => getCleanId(r) === "1242")
+                             || matchedUsers.find(r => r.isAdmin === true || r.isAdmin === 1 || String(r.isAdmin || "").trim().toLowerCase() === 'true')
+                             || matchedUsers.find(r => r.isMarshal === true || r.isMarshall === true || String(r.isMarshal || "").trim().toLowerCase() === 'true')
+                             || matchedUsers[0];
+
                 document.getElementById('passcodeModal').style.display = 'none';
                 errorMsg.style.display = 'none';
 
-                let isAdminUser = (foundUser.isAdmin === true || String(foundUser.isAdmin).toLowerCase() === 'true');
-                let isMarshalUser = (foundUser.isMarshal === true || String(foundUser.isMarshal).toLowerCase() === 'true');
-                let userLevel = (foundUser.level || "").toUpperCase();
+                let userId = String(foundUser.idNum || "").trim();
+                let cleanId = getCleanId(foundUser); // "0001" -> "1", "1609" -> "1609", "1242" -> "1242"
+                let isSuperAdmin = (cleanId === "1");
+                let isAdminUser = isSuperAdmin || (foundUser.isAdmin === true || foundUser.isAdmin === 1 || String(foundUser.isAdmin || "").trim().toLowerCase() === 'true');
+                let isMarshalUser = (foundUser.isMarshal === true || foundUser.isMarshall === true || String(foundUser.isMarshal || "").trim().toLowerCase() === 'true');
+                let userLevel = (foundUser.level || "").trim().toUpperCase();
 
                 // Store in Global State
+                currentUserRole.idNum = userId;
+                currentUserRole.cleanId = cleanId;
+                currentUserRole.isSuperAdmin = isSuperAdmin;
                 currentUserRole.isAdmin = isAdminUser;
                 currentUserRole.isMarshal = isMarshalUser;
                 currentUserRole.userLevel = userLevel;
 
-                // 1️⃣ ADMIN: Makita tanang routes sa dropdown
-                if (isAdminUser) {
-                    for (let option of selectElem.options) {
-                        option.style.display = ""; 
-                    }
-                    selectElem.value = "all";
-                    switchRoute();
-                } 
-                // 2️⃣ MARSHAL: G81, G3, G5, ALL, UG NONE RA ANG MAKITA
-                else if (isMarshalUser) {
-                    const marshalRoutes = ["ALL", "G81", "G3", "G5", "NONE"];
+                // I-display sa header kung kinsa ang naka-login
+                let roleTag = isSuperAdmin ? "SUPER ADMIN" : (isAdminUser ? "ADMIN" : (isMarshalUser ? "MARSHAL" : "RIDER"));
+                let userBadge = document.getElementById('loggedUserBadge');
+                if (!userBadge) {
+                    userBadge = document.createElement('div');
+                    userBadge.id = 'loggedUserBadge';
+                    userBadge.className = 'distance-badge';
+                    userBadge.style.color = '#00ccff';
+                    document.querySelector('.header-controls').prepend(userBadge);
+                }
+                userBadge.innerText = `👤 #${userId} (${roleTag})`;
 
-                    for (let option of selectElem.options) {
-                        let optVal = option.value.toUpperCase();
-                        if (marshalRoutes.includes(optVal)) {
-                            option.style.display = "";
-                        } else {
-                            option.style.display = "none";
-                        }
-                    }
+                // I-rebuild ang dropdown options
+                selectElem.innerHTML = "";
+
+                // 1️⃣ 0001 (SUPER ADMIN): Makita TANANG ruta (apil "R" ug "D")
+                if (isSuperAdmin) {
+                    allRouteOptions.forEach(opt => {
+                        selectElem.add(new Option(opt.text, opt.value));
+                    });
                     selectElem.value = "all";
                     switchRoute();
-                } 
-                // 3️⃣ REGULAR USER: Iya ra nga route level
+                }
+                // 2️⃣ 1609: Iyang na-register nga ruta + tanang "R" + NONE (walay labot sa "D")
+                else if (cleanId === "1609") {
+                    let hasRegisteredOpt = false;
+                    allRouteOptions.forEach(opt => {
+                        let optVal = opt.value.toUpperCase();
+                        if ((optVal === userLevel && !optVal.startsWith("D")) || optVal.startsWith("R") || optVal === "NONE") {
+                            selectElem.add(new Option(opt.text, opt.value));
+                            if (optVal === userLevel) hasRegisteredOpt = true;
+                        }
+                    });
+                    if (!hasRegisteredOpt && userLevel && !userLevel.startsWith("D") && !userLevel.startsWith("R")) {
+                        selectElem.add(new Option(`Route ${userLevel}`, userLevel));
+                    }
+                    selectElem.value = userLevel || "R01";
+                    switchRoute();
+                }
+                // 3️⃣ 1242: Iyang na-register nga ruta + tanang "D" + NONE (walay labot sa "R")
+                else if (cleanId === "1242") {
+                    let hasRegisteredOpt = false;
+                    allRouteOptions.forEach(opt => {
+                        let optVal = opt.value.toUpperCase();
+                        if ((optVal === userLevel && !optVal.startsWith("R")) || optVal.startsWith("D") || optVal === "NONE") {
+                            selectElem.add(new Option(opt.text, opt.value));
+                            if (optVal === userLevel) hasRegisteredOpt = true;
+                        }
+                    });
+                    if (!hasRegisteredOpt && userLevel && !userLevel.startsWith("R") && !userLevel.startsWith("D")) {
+                        selectElem.add(new Option(`Route ${userLevel}`, userLevel));
+                    }
+                    selectElem.value = userLevel || "DO01";
+                    switchRoute();
+                }
+                // 4️⃣ UBANG ADMIN: Regular routes ra, WALAY labot sa "R" ug "D"
+                else if (isAdminUser) {
+                    allRouteOptions.forEach(opt => {
+                        let optVal = opt.value.toUpperCase();
+                        if (!optVal.startsWith("R") && !optVal.startsWith("D")) {
+                            selectElem.add(new Option(opt.text, opt.value));
+                        }
+                    });
+                    selectElem.value = "all";
+                    switchRoute();
+                }
+                // 5️⃣ MARSHAL: G81, G3, G5, ALL, NONE ra (WALAY labot sa "R" ug "D")
+                else if (isMarshalUser) {
+                    const marshalRoutes = ["ALL", "AS26", "G81", "G3", "G5", "NONE"];
+                    allRouteOptions.forEach(opt => {
+                        let optVal = opt.value.toUpperCase();
+                        if (marshalRoutes.includes(optVal)) {
+                            selectElem.add(new Option(opt.text, opt.value));
+                        }
+                    });
+                    selectElem.value = "all";
+                    switchRoute();
+                }
+                // 6️⃣ REGULAR USER: Iya ra nga registered route + NONE (WALAY labot sa "R" ug "D")
                 else {
                     let hasMatchingOption = false;
-
-                    for (let option of selectElem.options) {
-                        let optVal = option.value.toUpperCase();
-                        if (optVal === userLevel || optVal === "NONE") {
-                            option.style.display = "";
+                    allRouteOptions.forEach(opt => {
+                        let optVal = opt.value.toUpperCase();
+                        if ((optVal === userLevel && !optVal.startsWith("R") && !optVal.startsWith("D")) || optVal === "NONE") {
+                            selectElem.add(new Option(opt.text, opt.value));
                             if (optVal === userLevel) hasMatchingOption = true;
-                        } else {
-                            option.style.display = "none";
                         }
-                    }
+                    });
 
-                    if (!hasMatchingOption && userLevel) {
-                        let newOpt = document.createElement("option");
-                        newOpt.value = userLevel;
-                        newOpt.text = `Route ${userLevel}`;
-                        selectElem.appendChild(newOpt);
+                    if (!hasMatchingOption && userLevel && !userLevel.startsWith("R") && !userLevel.startsWith("D")) {
+                        selectElem.add(new Option(`Route ${userLevel}`, userLevel));
                         hasMatchingOption = true;
                     }
 
-                    if (hasMatchingOption) {
-                        selectElem.value = userLevel;
-                    }
+                    selectElem.value = hasMatchingOption ? userLevel : "none";
                     switchRoute();
                 }
             } else {
@@ -327,6 +403,11 @@
                 document.getElementById('accessCodeInput').value = "";
             }
         }
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
         // 1. I-center ang mapa sa Mindanao
         const map = L.map('map').setView([7.4392, 125.7956], 8);
@@ -1016,10 +1097,10 @@
         // 4. KUHAON ANG LIVE RIDERS GIKAN SA SUPABASE (rally_scans)
         // ==========================================
         async function loadRidersToMap(selectedRoute = "all") {
-            if (selectedRoute === "none") {
+            if (selectedRoute.toLowerCase() === "none") {
                 markerLayer.clearLayers();
                 document.getElementById('riderCountBadge').innerText = "Riders: 0";
-                if(document.getElementById('sosAlertBadge')) document.getElementById('sosAlertBadge').style.display = "none";
+                if (document.getElementById('sosAlertBadge')) document.getElementById('sosAlertBadge').style.display = "none";
                 return;
             }
 
@@ -1070,14 +1151,40 @@
                     let lat = parseFloat(rider.latitude);
                     let lon = parseFloat(rider.longitude);
                     let routeKey = (rider.rider_level || "G5").toUpperCase();
-                    
-                    // 🎯 KOREHIYO SA FILTERING LOGIC DEPENDI SA LOGIN ROLE:
+
+                     // 🎯 FILTERING LOGIC DEPENDI SA LOGIN ROLE:
+                    if (routeKey.startsWith("R") && !currentUserRole.canAccessR) return;
+
+
+
+                    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                    // 🎯 FILTERING LOGIC DEPENDI SA LOGIN ROLE:
+                    let cId = currentUserRole.cleanId;
+
+                    // 🔒 Strict Access para sa "R" ug "D":
+                    // - "R" -> 0001 ug 1609 ra
+                    // - "D" -> 0001 ug 1242 ra
+                    // - Ubang Admin, Marshal, ug Regular Rider -> WALA silay labot sa "R" ug "D"
+                    if (routeKey.startsWith("R") && cId !== "1" && cId !== "1609") return;
+                    if (routeKey.startsWith("D") && cId !== "1" && cId !== "1242") return;
+
                     if (selectedRoute.toLowerCase() === "all") {
-                        if (currentUserRole.isAdmin) {
-                            // 🌟 ADMIN: Makita TANANG riders sa tanang ruta!
+                        if (currentUserRole.isSuperAdmin) {
+                            // 🌟 0001: Makita TANAN ruta ug riders
+                        } else if (cId === "1609") {
+                            // 🎯 1609: Iyang registered route + tanang "R" ra
+                            if (routeKey !== currentUserRole.userLevel && !routeKey.startsWith("R")) return;
+                        } else if (cId === "1242") {
+                            // 🎯 1242: Iyang registered route + tanang "D" ra
+                            if (routeKey !== currentUserRole.userLevel && !routeKey.startsWith("D")) return;
+                        } else if (currentUserRole.isAdmin) {
+                            // 🛡️ UBANG ADMIN: Tanang regular riders (ang "R" ug "D" na-block na sa ibabaw)
                         } else if (currentUserRole.isMarshal) {
-                            // 🛡️ MARSHAL: G81, G3, ug G5 ra ang makita sa "all" view
-                            if (!["G81", "G3", "G5"].includes(routeKey)) return;
+                            // 🛡️ MARSHAL: G81, G3, G5 ra
+                            if (!["AS26", "G81", "G3", "G5"].includes(routeKey)) return;
                         } else {
                             // 👤 REGULAR USER: Ang iya ra nga assigned route level
                             if (routeKey !== currentUserRole.userLevel) return;
@@ -1086,6 +1193,13 @@
                         // 📌 SPECIFIC ROUTE OPTION: Ang napili ra nga ruta ang makita
                         if (routeKey !== selectedRoute.toUpperCase()) return;
                     }
+                    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
 
                     if (!isNaN(lat) && !isNaN(lon) && lat !== 0 && lon !== 0) {
                         validRiderCount++;
@@ -1184,18 +1298,19 @@
         // 🚀 INITIALIZATION LOGIC
         // ==========================================
         document.addEventListener("DOMContentLoaded", () => {
-            // Tagoan usab ang dropdown options samtang wala pa nakapasa sa passcode
             let selectElem = document.getElementById('routeSelect');
-            for (let option of selectElem.options) {
-                option.style.display = "none";
-            }
+            allRouteOptions = Array.from(selectElem.options).map(opt => ({
+                value: opt.value,
+                text: opt.text
+            }));
+            selectElem.innerHTML = ""; // Tagoan samtang wala pa naka-login
 
             // Auto-refresh loop kada 30 seconds
             setInterval(() => {
                 let modal = document.getElementById('passcodeModal');
                 if (modal && modal.style.display === 'none') {
                     let sel = document.getElementById('routeSelect').value;
-                    if (sel !== 'none') {
+                    if (sel && sel !== 'none') {
                         loadRidersToMap(sel);
                     }
                 }
